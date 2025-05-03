@@ -73,7 +73,7 @@ object DatabaseModule {
      * @param db The `EchoDatabase` instance.
      * @return An instance of `TransferDao`.
      */
-    @Provides fun provideTransferLogDao(db: EchoDatabase): TransferDao = db.transferDao()
+    @Provides fun provideTransferDao(db: EchoDatabase): TransferDao = db.transferDao()
 
 
 }

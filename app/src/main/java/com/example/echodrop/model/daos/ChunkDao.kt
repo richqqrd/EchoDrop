@@ -38,5 +38,5 @@ interface ChunkDao {
      * @param fid The ID of the file whose chunks should be deleted.
      */
     @Query("DELETE FROM chunk WHERE fileId = :fid")
-    suspend fun deleteByFile(fid: String)
+    suspend fun deleteByFile(fid: String): Int
 }

@@ -2,6 +2,7 @@ package com.example.echodrop.model.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import com.example.echodrop.model.domain.TransferState
 
 /**
@@ -27,6 +28,10 @@ import com.example.echodrop.model.domain.TransferState
             childColumns = ["peerId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["paketId"]),
+        Index(value = ["peerId"])
     ]
 )
 data class TransferLogEntity(

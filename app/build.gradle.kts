@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    kotlin("kapt")
+    id("com.google.devtools.ksp") version "2.0.21-1.0.28"// KSP für Kotlin 2.0.21
     id("com.google.dagger.hilt.android") version "2.48" apply true
 }
 
@@ -56,7 +56,6 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.firebase.crashlytics.buildtools)
-    testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -64,15 +63,27 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("com.google.dagger:hilt-android:2.48")
-    kapt("com.google.dagger:hilt-compiler:2.48")
+    ksp("com.google.dagger:hilt-compiler:2.48")
 
     implementation("com.google.code.gson:gson:2.10.1")
 
+   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.1")
+    
+    // JUnit Platform für Android Studio
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
 
+
+    ksp("androidx.room:room-compiler:2.7.1")
 
     // Room components
-    implementation("androidx.room:room-runtime:2.5.2")
-    kapt("androidx.room:room-compiler:2.5.2")
+    implementation("androidx.room:room-runtime:2.7.1")
     // Coroutines support
-    implementation("androidx.room:room-ktx:2.5.2")
+    implementation("androidx.room:room-ktx:2.7.1")
+    testImplementation(kotlin("test"))
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
 }

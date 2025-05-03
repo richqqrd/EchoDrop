@@ -3,6 +3,7 @@ package com.example.echodrop.model.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
+import androidx.room.Index
 
 /**
  * Represents a chunk of a file stored in the database.
@@ -23,6 +24,9 @@ import androidx.room.ForeignKey
             childColumns = ["fileId"],
             onDelete = ForeignKey.CASCADE
         )
+    ],
+    indices = [
+        Index(value = ["fileId"])
     ]
 )
 data class ChunkEntity(

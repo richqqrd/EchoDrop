@@ -23,7 +23,7 @@ import com.example.echodrop.model.entities.TransferLogEntity
  */
 @Database(
     version = 1,
-    exportSchema = true,
+    exportSchema = false,
     entities = [
         PaketEntity::class,
         FileEntryEntity::class,

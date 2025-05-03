@@ -48,5 +48,5 @@ interface TransferDao {
      * @param peer The ID of the peer associated with the transfer log.
      */
     @Query("DELETE FROM transfer_log WHERE paketId = :pid AND peerId = :peer")
-    suspend fun delete(pid: String, peer: String)
+    suspend fun delete(pid: String, peer: String): Int
 }
