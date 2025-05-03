@@ -18,7 +18,7 @@ class TransferStateTest {
   @DisplayName("Enum contains all expected states")
   fun enumContainsAllExpectedStates() {
    // Assert that all required states exist
-   val states = TransferState.values()
+   val states = TransferState.entries.toTypedArray()
 
    assertEquals(4, states.size)
    assertTrue(states.contains(TransferState.QUEUED))
