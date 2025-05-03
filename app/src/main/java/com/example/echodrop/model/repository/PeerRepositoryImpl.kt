@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+/**
+ * Implementation of the `PeerRepository` interface.
+ *
+ * @property peerDao The DAO used to access peer data in the database.
+ */
 class PeerRepositoryImpl @Inject constructor(
     private val peerDao: PeerDao
 ) : PeerRepository{

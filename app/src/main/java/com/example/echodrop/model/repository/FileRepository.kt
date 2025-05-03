@@ -4,22 +4,31 @@ import com.example.echodrop.model.domain.FileEntry
 import com.example.echodrop.model.domain.PaketId
 
 /**
- * Interface for a repository of files
+ * Interface for managing file-related operations
+ *
  */
 interface FileRepository {
 
     /**
-     * Get all files for a package
+     * Retrieves all files associated with the given package ID.
+     *
+     * @param paketId The unique identifier of the package.
+     * @return A list of file entries associated with the package.
      */
     suspend fun getFilesFor(paketId: PaketId): List<FileEntry>
 
     /**
-     * Insert all files for a package
+     * Inserts a list of files for the given package ID into the repository.
+     *
+     * @param paketId The unique identifier of the package.
+     * @param files The list of file entries to be inserted.
      */
     suspend fun insertAll(paketId: PaketId, files: List<FileEntry>)
 
     /**
-     * Delete all files for a package
+     * Deletes all files associated with the given package ID from the repository.
+     *
+     * @param paketId The unique identifier of the package.
      */
     suspend fun deleteFor(paketId: PaketId)
 }

@@ -15,6 +15,12 @@ import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject
 
+/**
+ * Implementation of the `PaketRepository` interface.
+ *
+ * @property paketDao The DAO used to access package data in the database.
+ * @property fileEntryDao The DAO used to access file entry data in the database.
+ */
 class PaketRepositoryImpl @Inject constructor(
     private val paketDao: PaketDao,
     private val fileEntryDao: FileEntryDao

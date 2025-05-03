@@ -7,37 +7,56 @@ import com.example.echodrop.model.domain.PaketMeta
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Interface for a repository of packages (meta and files).
+ * Interface for managing package-related operations
+ *
  */
 interface PaketRepository {
 
     /**
-     * Observe changes to the inbox
+     * Observes changes to the inbox.
+     *
+     * @return A flow emitting a list of packages in the inbox.
      */
     fun observeInbox(): Flow<List<Paket>>
 
     /**
-     * Get a single package by its ID
+     * Retrieves a single package by its ID.
+     *
+     * @param id The unique identifier of the package.
+     * @return The package with the specified ID, or null if not found.
      */
     suspend fun getPaket(id: PaketId): Paket?
 
     /**
-     * Insert a package into the repository
+     * Inserts a package into the repository.
+     *
+     * @param meta The metadata of the package.
+     * @param files The list of files associated with the package.
+     * @return The unique identifier of the newly inserted package.
      */
     suspend fun insert(meta: PaketMeta, files: List<FileEntry>): PaketId
 
     /**
-     * Update a package's metadata
+     * Updates the metadata of a package.
+     *
+     * @param id The unique identifier of the package.
+     * @param ttlSeconds The new time-to-live (TTL) value in seconds.
+     * @param priority The new priority level of the package.
      */
     suspend fun updateMeta(id: PaketId, ttlSeconds: Int, priority: Int)
 
     /**
-     * Delete a package from the repository
+     * Deletes a package from the repository.
+     *
+     * @param id The unique identifier of the package to be deleted.
      */
     suspend fun delete(id: PaketId)
 
     /**
-     * Purge expired packages from the repository
+     * Purges expired packages from the repository.
+     *
+     * @param nowUtc The current timestamp (in UTC) used to determine expiration.
+     * @return The number of packages that were purged.
      */
     suspend fun purgeExpire(nowUtc: Long): Int
 

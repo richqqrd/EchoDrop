@@ -4,6 +4,13 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import com.example.echodrop.model.domain.TransferState
 
+/**
+ * Represents a peer in the system.
+ *
+ * @property peerId The unique identifier of the peer.
+ * @property alias An optional alias or nickname for the peer.
+ * @property lastSeenUtc The timestamp (in UTC) when the peer was last seen.
+ */
 @Entity(
     tableName = "transfer_log",
     primaryKeys = ["paketId", "peerId"],

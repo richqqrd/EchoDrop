@@ -8,6 +8,11 @@ import java.util.UUID
 import javax.inject.Inject
 import com.example.echodrop.model.entities.toDomain
 
+/**
+ * Implementation of the `FileRepository` interface.
+ *
+ * @property fileEntryDao The DAO used to access file entry data in the database.
+ */
 class FileRepositoryImpl @Inject constructor(
     private val fileEntryDao: FileEntryDao
 ) : FileRepository {

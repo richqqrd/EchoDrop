@@ -9,6 +9,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
+/**
+ * Implementation of the `TransferRepository` interface.
+ *
+ * @property transferDao The DAO used to access transfer data in the database.
+ */
 class TransferRepositoryImpl @Inject constructor(
     private val transferDao: TransferDao
 ) : TransferRepository{

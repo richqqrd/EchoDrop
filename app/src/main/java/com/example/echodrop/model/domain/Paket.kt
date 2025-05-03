@@ -1,7 +1,15 @@
 package com.example.echodrop.model.domain
 
 /**
- * data class for a whole package (meta and files)
+ * Represents a package containing metadata and associated files.
+ *
+ * @property id The unique identifier of the package.
+ * @property meta The metadata associated with the package.
+ * @property sizeBytes The total size of the package in bytes.
+ * @property sha256 The SHA-256 checksum of the package.
+ * @property fileCount The total number of files in the package.
+ * @property createdUtc The timestamp (in UTC) when the package was created.
+ * @property files The list of files included in the package.
  */
 data class Paket (
     val id: PaketId,
