@@ -80,7 +80,7 @@ class ConvertersTest {
   @DisplayName("Convert TransferState to string and back")
   fun convertTransferStateToStringAndBack() {
    // Test all enum values
-   TransferState.values().forEach { state ->
+   TransferState.entries.forEach { state ->
     // Act
     val string = converters.fromTransferState(state)
     val convertedState = converters.toTransferState(string)

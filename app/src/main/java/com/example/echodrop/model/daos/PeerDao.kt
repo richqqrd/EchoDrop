@@ -37,6 +37,6 @@ interface PeerDao {
      * @param cutoffUtc The cutoff UTC time in milliseconds. Peers last seen before this time will be deleted.
      * @return The number of rows deleted.
      */
-    @Query("DELETE FROM peer WHERE lastSeenUtc > :cutoffUtc")
+    @Query("DELETE FROM peer WHERE lastSeenUtc < :cutoffUtc")
     suspend fun purgeStale(cutoffUtc: Long): Int
 }
