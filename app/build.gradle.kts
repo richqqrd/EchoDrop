@@ -82,6 +82,16 @@ dependencies {
     // Coroutines support
     implementation("androidx.room:room-ktx:2.7.1")
     testImplementation(kotlin("test"))
+
+    // Mockito for JUnit 5
+    testImplementation("org.mockito:mockito-core:5.8.0")
+    testImplementation("org.mockito:mockito-junit-jupiter:5.8.0")
+
+    // Mockito-Kotlin
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+
+    // Coroutines test
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 }
 
 tasks.withType<Test> {
