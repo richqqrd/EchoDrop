@@ -1,7 +1,7 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.PaketId
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.PaketId
 
 /**
  * Interface for managing file-related operations

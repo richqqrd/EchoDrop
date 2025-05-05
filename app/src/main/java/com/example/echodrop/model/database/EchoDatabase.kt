@@ -3,16 +3,17 @@ package com.example.echodrop.model.database
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.echodrop.model.daos.ChunkDao
-import com.example.echodrop.model.daos.FileEntryDao
-import com.example.echodrop.model.daos.PaketDao
-import com.example.echodrop.model.daos.PeerDao
-import com.example.echodrop.model.daos.TransferDao
-import com.example.echodrop.model.entities.ChunkEntity
-import com.example.echodrop.model.entities.FileEntryEntity
-import com.example.echodrop.model.entities.PaketEntity
-import com.example.echodrop.model.entities.PeerEntity
-import com.example.echodrop.model.entities.TransferLogEntity
+import com.example.echodrop.domain.model.Converters
+import com.example.echodrop.model.database.daos.ChunkDao
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.model.database.daos.PeerDao
+import com.example.echodrop.model.database.daos.TransferDao
+import com.example.echodrop.model.database.entities.ChunkEntity
+import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.PaketEntity
+import com.example.echodrop.model.database.entities.PeerEntity
+import com.example.echodrop.model.database.entities.TransferLogEntity
 
 /**
  * Main database class for the Echo application.
@@ -27,7 +28,7 @@ import com.example.echodrop.model.entities.TransferLogEntity
     entities = [
         PaketEntity::class,
         FileEntryEntity::class,
-        ChunkEntity::class, 
+        ChunkEntity::class,
         PeerEntity::class,
         TransferLogEntity::class
     ]

@@ -1,16 +1,15 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.FileEntryDao
-import com.example.echodrop.model.daos.PaketDao
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.Paket
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PaketMeta
-import com.example.echodrop.model.entities.FileEntryEntity
-import com.example.echodrop.model.entities.PaketEntity
-import com.example.echodrop.model.entities.toDomain
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.Paket
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PaketMeta
+import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.PaketEntity
+import com.example.echodrop.model.database.entities.toDomain
 import kotlinx.coroutines.flow.Flow
-import java.nio.file.FileStore
 import kotlinx.coroutines.flow.map
 import java.util.UUID
 import javax.inject.Inject

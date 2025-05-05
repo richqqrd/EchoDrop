@@ -1,6 +1,6 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.domain.Peer
+import com.example.echodrop.domain.model.Peer
 import kotlinx.coroutines.flow.Flow
 
 /**

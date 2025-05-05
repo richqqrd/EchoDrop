@@ -1,10 +1,12 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.TransferDao
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PeerId
-import com.example.echodrop.model.domain.TransferLog
-import com.example.echodrop.model.domain.TransferState
+import com.example.echodrop.model.database.daos.TransferDao
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.domain.model.TransferLog
+import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.domain.transport.TransportManager
+import com.example.echodrop.model.database.entities.TransferLogEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -15,7 +17,9 @@ import javax.inject.Inject
  * @property transferDao The DAO used to access transfer data in the database.
  */
 class TransferRepositoryImpl @Inject constructor(
-    private val transferDao: TransferDao
+    private val transferDao: TransferDao,
+    private val transport: TransportManager
+
 ) : TransferRepository{
     override fun observeTransfers(): Flow<List<TransferLog>> {
         return transferDao.observeAll().map{entityList ->
@@ -26,7 +30,25 @@ class TransferRepositoryImpl @Inject constructor(
                     state = entity.state,
                     progressPct = entity.progressPct, 
                     lastUpdateUtc = entity.lastUpdateUtc
-                )}}
+                )
+            }}
+    }
+
+    override suspend fun startTransfer(paketId: PaketId, peerId: PeerId) {
+        val now = System.currentTimeMillis()
+        val existing = transferDao.findById(paketId.value, peerId.value)
+        val toSave = if (existing != null) {
+            existing.copy(state = TransferState.ACTIVE, lastUpdateUtc = now)
+        } else {
+            TransferLogEntity(
+                paketId       = paketId.value,
+                peerId        = peerId.value,
+                state         = TransferState.ACTIVE,
+                progressPct   = 0,
+                lastUpdateUtc = now
+            )
+        }
+        transferDao.upsert(toSave)
     }
 
     override suspend fun pause(paketId: PaketId, peerId: PeerId) {

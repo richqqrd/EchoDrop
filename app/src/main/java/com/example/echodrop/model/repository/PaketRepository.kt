@@ -1,9 +1,9 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.Paket
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PaketMeta
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.Paket
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PaketMeta
 import kotlinx.coroutines.flow.Flow
 
 /**

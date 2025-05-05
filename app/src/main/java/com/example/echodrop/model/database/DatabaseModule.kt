@@ -2,11 +2,11 @@ package com.example.echodrop.model.database
 
 import android.content.Context
 import androidx.room.Room
-import com.example.echodrop.model.daos.ChunkDao
-import com.example.echodrop.model.daos.FileEntryDao
-import com.example.echodrop.model.daos.PaketDao
-import com.example.echodrop.model.daos.PeerDao
-import com.example.echodrop.model.daos.TransferDao
+import com.example.echodrop.model.database.daos.ChunkDao
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.model.database.daos.PeerDao
+import com.example.echodrop.model.database.daos.TransferDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
