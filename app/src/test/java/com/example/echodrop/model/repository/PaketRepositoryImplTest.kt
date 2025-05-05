@@ -1,13 +1,12 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.FileEntryDao
-import com.example.echodrop.model.daos.PaketDao
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.Paket
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PaketMeta
-import com.example.echodrop.model.entities.FileEntryEntity
-import com.example.echodrop.model.entities.PaketEntity
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PaketMeta
+import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.PaketEntity
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*

@@ -1,11 +1,10 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.TransferDao
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PeerId
-import com.example.echodrop.model.domain.TransferLog
-import com.example.echodrop.model.domain.TransferState
-import com.example.echodrop.model.entities.TransferLogEntity
+import com.example.echodrop.model.database.daos.TransferDao
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.model.database.entities.TransferLogEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest

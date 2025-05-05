@@ -1,5 +1,9 @@
 package com.example.echodrop.model.domain
 
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.domain.model.TransferLog
+import com.example.echodrop.domain.model.TransferState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

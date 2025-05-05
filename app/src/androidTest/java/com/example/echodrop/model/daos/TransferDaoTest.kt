@@ -4,10 +4,13 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.echodrop.model.database.EchoDatabase
-import com.example.echodrop.model.domain.TransferState
-import com.example.echodrop.model.entities.PaketEntity
-import com.example.echodrop.model.entities.PeerEntity
-import com.example.echodrop.model.entities.TransferLogEntity
+import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.model.database.daos.PeerDao
+import com.example.echodrop.model.database.daos.TransferDao
+import com.example.echodrop.model.database.entities.PaketEntity
+import com.example.echodrop.model.database.entities.PeerEntity
+import com.example.echodrop.model.database.entities.TransferLogEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After

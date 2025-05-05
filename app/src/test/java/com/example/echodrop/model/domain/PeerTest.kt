@@ -1,5 +1,7 @@
 package com.example.echodrop.model.domain
 
+import com.example.echodrop.domain.model.Peer
+import com.example.echodrop.domain.model.PeerId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

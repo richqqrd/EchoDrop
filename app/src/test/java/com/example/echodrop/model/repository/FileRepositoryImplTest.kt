@@ -1,15 +1,14 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.FileEntryDao
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.entities.FileEntryEntity
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.model.database.entities.FileEntryEntity
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify

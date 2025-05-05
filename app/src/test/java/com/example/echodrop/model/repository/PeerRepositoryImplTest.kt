@@ -1,9 +1,9 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.daos.PeerDao
-import com.example.echodrop.model.domain.Peer
-import com.example.echodrop.model.domain.PeerId
-import com.example.echodrop.model.entities.PeerEntity
+import com.example.echodrop.model.database.daos.PeerDao
+import com.example.echodrop.domain.model.Peer
+import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.model.database.entities.PeerEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest

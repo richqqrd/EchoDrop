@@ -4,7 +4,8 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.echodrop.model.database.EchoDatabase
-import com.example.echodrop.model.entities.PeerEntity
+import com.example.echodrop.model.database.daos.PeerDao
+import com.example.echodrop.model.database.entities.PeerEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After

@@ -1,9 +1,10 @@
 package com.example.echodrop.model.entities
 
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.Paket
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PaketMeta
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.Paket
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.model.database.entities.PaketEntity
+import com.example.echodrop.model.database.entities.toDomain
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

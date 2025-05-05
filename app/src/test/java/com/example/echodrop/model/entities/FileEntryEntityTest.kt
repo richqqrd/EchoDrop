@@ -1,6 +1,8 @@
 package com.example.echodrop.model.entities
 
-import com.example.echodrop.model.domain.FileEntry
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.toDomain
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

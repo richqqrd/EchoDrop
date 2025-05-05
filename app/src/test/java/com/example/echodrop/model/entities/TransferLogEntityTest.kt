@@ -1,6 +1,7 @@
 package com.example.echodrop.model.entities
 
-import com.example.echodrop.model.domain.TransferState
+import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.model.database.entities.TransferLogEntity
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

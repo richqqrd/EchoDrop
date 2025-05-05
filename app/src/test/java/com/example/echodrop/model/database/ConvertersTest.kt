@@ -1,6 +1,7 @@
 package com.example.echodrop.model.database
 
-import com.example.echodrop.model.domain.TransferState
+import com.example.echodrop.domain.model.Converters
+import com.example.echodrop.domain.model.TransferState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName

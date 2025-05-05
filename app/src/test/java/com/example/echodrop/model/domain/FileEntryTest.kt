@@ -1,5 +1,6 @@
 package com.example.echodrop.model.domain
 
+import com.example.echodrop.domain.model.FileEntry
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.DisplayName

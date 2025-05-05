@@ -4,9 +4,12 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.echodrop.model.database.EchoDatabase
-import com.example.echodrop.model.entities.ChunkEntity
-import com.example.echodrop.model.entities.FileEntryEntity
-import com.example.echodrop.model.entities.PaketEntity
+import com.example.echodrop.model.database.daos.ChunkDao
+import com.example.echodrop.model.database.daos.FileEntryDao
+import com.example.echodrop.model.database.daos.PaketDao
+import com.example.echodrop.model.database.entities.ChunkEntity
+import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.PaketEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before

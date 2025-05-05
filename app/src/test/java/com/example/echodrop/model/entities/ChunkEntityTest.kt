@@ -1,5 +1,6 @@
 package com.example.echodrop.model.entities
 
+import com.example.echodrop.model.database.entities.ChunkEntity
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
