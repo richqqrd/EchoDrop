@@ -1,10 +1,10 @@
-package com.example.echodrop.model.daos
+package com.example.echodrop.model.database.daos
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
-import com.example.echodrop.model.entities.FileEntryEntity
+import com.example.echodrop.model.database.entities.FileEntryEntity
 
 /**
  * Data Access Object for File entities.

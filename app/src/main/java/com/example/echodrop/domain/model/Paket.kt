@@ -1,4 +1,4 @@
-package com.example.echodrop.model.domain
+package com.example.echodrop.domain.model
 
 /**
  * Represents a package containing metadata and associated files.

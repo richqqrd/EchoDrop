@@ -1,4 +1,4 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

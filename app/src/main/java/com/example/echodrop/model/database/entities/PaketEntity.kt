@@ -1,10 +1,10 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.database.entities
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.example.echodrop.model.domain.FileEntry
-import com.example.echodrop.model.domain.Paket
-import com.example.echodrop.model.domain.PaketId
-import com.example.echodrop.model.domain.PaketMeta
+import com.example.echodrop.domain.model.FileEntry
+import com.example.echodrop.domain.model.Paket
+import com.example.echodrop.domain.model.PaketId
+import com.example.echodrop.domain.model.PaketMeta
 
 /**
  * Represents a package (Paket) stored in the database.

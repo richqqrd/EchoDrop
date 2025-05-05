@@ -1,4 +1,4 @@
-package com.example.echodrop.model.domain
+package com.example.echodrop.domain.model
 /**
  * Represents the state of a transfer operation.
  */

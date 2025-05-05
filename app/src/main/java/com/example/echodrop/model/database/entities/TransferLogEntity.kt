@@ -1,9 +1,9 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.database.entities
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
-import com.example.echodrop.model.domain.TransferState
+import com.example.echodrop.domain.model.TransferState
 
 /**
  * Represents a peer in the system.

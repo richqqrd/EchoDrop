@@ -1,10 +1,10 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.ForeignKey
 import androidx.room.Index
-import com.example.echodrop.model.domain.FileEntry
+import com.example.echodrop.domain.model.FileEntry
 
 /**
  * Represents a file entry stored in the database.

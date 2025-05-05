@@ -1,8 +1,7 @@
-package com.example.echodrop.model.database
+package com.example.echodrop.domain.model
 
 import androidx.room.TypeConverter
 import com.google.gson.Gson
-import com.example.echodrop.model.domain.TransferState
 import com.google.gson.reflect.TypeToken
 /**
  * Converters for custom data types used in the Room database.

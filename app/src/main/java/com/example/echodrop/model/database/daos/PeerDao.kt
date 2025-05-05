@@ -1,11 +1,11 @@
-package com.example.echodrop.model.daos
+package com.example.echodrop.model.database.daos
 
 import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import kotlinx.coroutines.flow.Flow
-import com.example.echodrop.model.entities.PeerEntity
+import com.example.echodrop.model.database.entities.PeerEntity
 
 /**
  * Data Access Object for Peer entities.
