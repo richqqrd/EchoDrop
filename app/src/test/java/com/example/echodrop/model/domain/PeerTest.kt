@@ -1,7 +1,7 @@
 package com.example.echodrop.model.domain
 
-import com.example.echodrop.domain.model.Peer
-import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.model.domainLayer.model.Peer
+import com.example.echodrop.model.domainLayer.model.PeerId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,12 +20,12 @@ class PeerTest {
   @DisplayName("Creates a Peer with correct properties")
   fun createPeerWithCorrectProperties() {
    // Arrange
-   val peerId = PeerId("test-peer-123")
+   val peerId = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
    val alias = "TestDevice"
    val lastSeenUtc = 1620000000000L
 
    // Act
-   val peer = Peer(
+   val peer = com.example.echodrop.model.domainLayer.model.Peer(
     id = peerId,
     alias = alias,
     lastSeenUtc = lastSeenUtc
@@ -41,8 +41,8 @@ class PeerTest {
   @DisplayName("Creates a Peer with null alias")
   fun createPeerWithNullAlias() {
    // Arrange & Act
-   val peer = Peer(
-    id = PeerId("test-peer-123"),
+   val peer = com.example.echodrop.model.domainLayer.model.Peer(
+    id = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123"),
     alias = null,
     lastSeenUtc = 1620000000000L
    )
@@ -60,12 +60,12 @@ class PeerTest {
   @DisplayName("Two identical Peers are equal")
   fun twoIdenticalPeersAreEqual() {
    // Arrange
-   val id = PeerId("test-peer-123")
+   val id = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
    val alias = "TestDevice"
    val lastSeenUtc = 1620000000000L
 
-   val peer1 = Peer(id, alias, lastSeenUtc)
-   val peer2 = Peer(id, alias, lastSeenUtc)
+   val peer1 = com.example.echodrop.model.domainLayer.model.Peer(id, alias, lastSeenUtc)
+   val peer2 = com.example.echodrop.model.domainLayer.model.Peer(id, alias, lastSeenUtc)
 
    // Assert
    assertEquals(peer1, peer2)
@@ -76,14 +76,14 @@ class PeerTest {
   @DisplayName("Peers with different IDs are not equal")
   fun peersWithDifferentIdsAreNotEqual() {
    // Arrange
-   val peer1 = Peer(
-    id = PeerId("peer-1"),
+   val peer1 = com.example.echodrop.model.domainLayer.model.Peer(
+    id = com.example.echodrop.model.domainLayer.model.PeerId("peer-1"),
     alias = "Device1",
     lastSeenUtc = 1620000000000L
    )
 
-   val peer2 = Peer(
-    id = PeerId("peer-2"),
+   val peer2 = com.example.echodrop.model.domainLayer.model.Peer(
+    id = com.example.echodrop.model.domainLayer.model.PeerId("peer-2"),
     alias = "Device1",
     lastSeenUtc = 1620000000000L
    )
@@ -96,11 +96,11 @@ class PeerTest {
   @DisplayName("Peers with different aliases are not equal")
   fun peersWithDifferentAliasesAreNotEqual() {
    // Arrange
-   val id = PeerId("test-peer-123")
+   val id = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
    val lastSeenUtc = 1620000000000L
 
-   val peer1 = Peer(id, "Device1", lastSeenUtc)
-   val peer2 = Peer(id, "Device2", lastSeenUtc)
+   val peer1 = com.example.echodrop.model.domainLayer.model.Peer(id, "Device1", lastSeenUtc)
+   val peer2 = com.example.echodrop.model.domainLayer.model.Peer(id, "Device2", lastSeenUtc)
 
    // Assert
    assertNotEquals(peer1, peer2)
@@ -110,11 +110,11 @@ class PeerTest {
   @DisplayName("Peers with different lastSeenUtc values are not equal")
   fun peersWithDifferentLastSeenTimesAreNotEqual() {
    // Arrange
-   val id = PeerId("test-peer-123")
+   val id = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
    val alias = "TestDevice"
 
-   val peer1 = Peer(id, alias, 1620000000000L)
-   val peer2 = Peer(id, alias, 1620000001000L)
+   val peer1 = com.example.echodrop.model.domainLayer.model.Peer(id, alias, 1620000000000L)
+   val peer2 = com.example.echodrop.model.domainLayer.model.Peer(id, alias, 1620000001000L)
 
    // Assert
    assertNotEquals(peer1, peer2)

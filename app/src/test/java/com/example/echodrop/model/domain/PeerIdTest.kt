@@ -1,6 +1,6 @@
 package com.example.echodrop.model.domain
 
-import com.example.echodrop.domain.model.PeerId
+import com.example.echodrop.model.domainLayer.model.PeerId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -20,7 +20,7 @@ class PeerIdTest {
   fun createPeerIdWithCorrectValue() {
    // Arrange & Act
    val id = "test-peer-123"
-   val peerId = PeerId(id)
+   val peerId = com.example.echodrop.model.domainLayer.model.PeerId(id)
 
    // Assert
    assertEquals(id, peerId.value)
@@ -35,8 +35,8 @@ class PeerIdTest {
   @DisplayName("Two PeerIds with the same value are equal")
   fun twoIdenticalPeerIdsAreEqual() {
    // Arrange & Act
-   val id1 = PeerId("test-peer-123")
-   val id2 = PeerId("test-peer-123")
+   val id1 = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
+   val id2 = com.example.echodrop.model.domainLayer.model.PeerId("test-peer-123")
 
    // Assert
    assertEquals(id1, id2)
@@ -47,8 +47,8 @@ class PeerIdTest {
   @DisplayName("Two PeerIds with different values are not equal")
   fun twoDifferentPeerIdsAreNotEqual() {
    // Arrange & Act
-   val id1 = PeerId("peer-1")
-   val id2 = PeerId("peer-2")
+   val id1 = com.example.echodrop.model.domainLayer.model.PeerId("peer-1")
+   val id2 = com.example.echodrop.model.domainLayer.model.PeerId("peer-2")
 
    // Assert
    assertNotEquals(id1, id2)
@@ -65,7 +65,7 @@ class PeerIdTest {
   fun toStringReturnsStandardFormat() {
    // Arrange
    val idValue = "test-peer-123"
-   val peerId = PeerId(idValue)
+   val peerId = com.example.echodrop.model.domainLayer.model.PeerId(idValue)
 
    // Act & Assert
    assertEquals("PeerId(value=$idValue)", peerId.toString())

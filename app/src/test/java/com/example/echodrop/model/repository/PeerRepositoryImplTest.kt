@@ -1,9 +1,8 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.database.daos.PeerDao
-import com.example.echodrop.domain.model.Peer
-import com.example.echodrop.domain.model.PeerId
-import com.example.echodrop.model.database.entities.PeerEntity
+import com.example.echodrop.model.dataLayer.database.daos.PeerDao
+import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
+import com.example.echodrop.model.dataLayer.repositoryImpl.PeerRepositoryImpl
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -55,11 +54,11 @@ class PeerRepositoryImplTest {
 
   assertEquals(2, result.size, "Should return two peers")
 
-  assertEquals(PeerId(testPeerId), result[0].id)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId(testPeerId), result[0].id)
   assertEquals("Test Device", result[0].alias)
   assertEquals(1620000000000L, result[0].lastSeenUtc)
 
-  assertEquals(PeerId("peer-456"), result[1].id)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId("peer-456"), result[1].id)
   assertNull(result[1].alias)
   assertEquals(1620000001000L, result[1].lastSeenUtc)
  }
@@ -77,8 +76,8 @@ class PeerRepositoryImplTest {
  @Test
  @DisplayName("upsertPeer creates peer entity with correct data")
  fun upsertPeerCreatesPeerEntityWithCorrectData() = runTest {
-  val testPeer = Peer(
-   id = PeerId(testPeerId),
+  val testPeer = com.example.echodrop.model.domainLayer.model.Peer(
+   id = com.example.echodrop.model.domainLayer.model.PeerId(testPeerId),
    alias = "Test Device",
    lastSeenUtc = 1620000000000L
   )
@@ -98,8 +97,8 @@ class PeerRepositoryImplTest {
  @Test
  @DisplayName("upsertPeer creates peer entity with null alias")
  fun upsertPeerCreatesPeerEntityWithNullAlias() = runTest {
-  val testPeer = Peer(
-   id = PeerId("peer-456"),
+  val testPeer = com.example.echodrop.model.domainLayer.model.Peer(
+   id = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
    alias = null,
    lastSeenUtc = 1620000001000L
   )

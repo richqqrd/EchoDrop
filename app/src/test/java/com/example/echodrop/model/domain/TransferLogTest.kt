@@ -1,9 +1,9 @@
 package com.example.echodrop.model.domain
 
-import com.example.echodrop.domain.model.PaketId
-import com.example.echodrop.domain.model.PeerId
-import com.example.echodrop.domain.model.TransferLog
-import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.model.domainLayer.model.PaketId
+import com.example.echodrop.model.domainLayer.model.PeerId
+import com.example.echodrop.model.domainLayer.model.TransferLog
+import com.example.echodrop.model.domainLayer.model.TransferState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -22,14 +22,14 @@ class TransferLogTest {
   @DisplayName("Creates a TransferLog with correct properties")
   fun createTransferLogWithCorrectProperties() {
    // Arrange
-   val paketId = PaketId("package-123")
-   val peerId = PeerId("peer-456")
-   val state = TransferState.ACTIVE
+   val paketId = com.example.echodrop.model.domainLayer.model.PaketId("package-123")
+   val peerId = com.example.echodrop.model.domainLayer.model.PeerId("peer-456")
+   val state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE
    val progressPct = 75
    val lastUpdateUtc = 1620000000000L
 
    // Act
-   val transferLog = TransferLog(
+   val transferLog = com.example.echodrop.model.domainLayer.model.TransferLog(
     paketId = paketId,
     peerId = peerId,
     state = state,
@@ -54,18 +54,18 @@ class TransferLogTest {
   @DisplayName("Two identical TransferLogs are equal")
   fun twoIdenticalTransferLogsAreEqual() {
    // Arrange
-   val log1 = TransferLog(
-    paketId = PaketId("package-123"),
-    peerId = PeerId("peer-456"),
-    state = TransferState.ACTIVE,
+   val log1 = com.example.echodrop.model.domainLayer.model.TransferLog(
+    paketId = com.example.echodrop.model.domainLayer.model.PaketId("package-123"),
+    peerId = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
+    state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
 
-   val log2 = TransferLog(
-    paketId = PaketId("package-123"),
-    peerId = PeerId("peer-456"),
-    state = TransferState.ACTIVE,
+   val log2 = com.example.echodrop.model.domainLayer.model.TransferLog(
+    paketId = com.example.echodrop.model.domainLayer.model.PaketId("package-123"),
+    peerId = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
+    state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
@@ -79,17 +79,20 @@ class TransferLogTest {
   @DisplayName("TransferLogs with different properties are not equal")
   fun transferLogsWithDifferentPropertiesAreNotEqual() {
    // Arrange
-   val baseLog = TransferLog(
-    paketId = PaketId("package-123"),
-    peerId = PeerId("peer-456"),
-    state = TransferState.ACTIVE,
+   val baseLog = com.example.echodrop.model.domainLayer.model.TransferLog(
+    paketId = com.example.echodrop.model.domainLayer.model.PaketId("package-123"),
+    peerId = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
+    state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
 
-   val differentPaketId = baseLog.copy(paketId = PaketId("different-package"))
-   val differentPeerId = baseLog.copy(peerId = PeerId("different-peer"))
-   val differentState = baseLog.copy(state = TransferState.QUEUED)
+   val differentPaketId = baseLog.copy(paketId = com.example.echodrop.model.domainLayer.model.PaketId(
+    "different-package"
+   )
+   )
+   val differentPeerId = baseLog.copy(peerId = com.example.echodrop.model.domainLayer.model.PeerId("different-peer"))
+   val differentState = baseLog.copy(state = com.example.echodrop.model.domainLayer.model.TransferState.QUEUED)
    val differentProgress = baseLog.copy(progressPct = 50)
    val differentTimestamp = baseLog.copy(lastUpdateUtc = 1630000000000L)
 
@@ -110,10 +113,10 @@ class TransferLogTest {
   @DisplayName("Progress percentage must be between 0 and 100")
   fun progressPercentageMustBeValid() {
    // Arrange & Act
-   val log = TransferLog(
-    paketId = PaketId("package-123"),
-    peerId = PeerId("peer-456"),
-    state = TransferState.ACTIVE,
+   val log = com.example.echodrop.model.domainLayer.model.TransferLog(
+    paketId = com.example.echodrop.model.domainLayer.model.PaketId("package-123"),
+    peerId = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
+    state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )

@@ -1,7 +1,7 @@
 package com.example.echodrop.model.database
 
-import com.example.echodrop.domain.model.Converters
-import com.example.echodrop.domain.model.TransferState
+import com.example.echodrop.model.domainLayer.model.Converters
+import com.example.echodrop.model.domainLayer.model.TransferState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test
  */
 class ConvertersTest {
 
- private lateinit var converters: Converters
+ private lateinit var converters: com.example.echodrop.model.domainLayer.model.Converters
 
  @BeforeEach
  fun setup() {
-  converters = Converters()
+  converters = com.example.echodrop.model.domainLayer.model.Converters()
  }
 
  @Nested
@@ -81,7 +81,7 @@ class ConvertersTest {
   @DisplayName("Convert TransferState to string and back")
   fun convertTransferStateToStringAndBack() {
    // Test all enum values
-   TransferState.entries.forEach { state ->
+   com.example.echodrop.model.domainLayer.model.TransferState.entries.forEach { state ->
     // Act
     val string = converters.fromTransferState(state)
     val convertedState = converters.toTransferState(string)
@@ -96,10 +96,10 @@ class ConvertersTest {
   fun convertSpecificTransferStateValues() {
    // Arrange
    val states = listOf(
-    TransferState.QUEUED,
-    TransferState.ACTIVE,
-    TransferState.DONE,
-    TransferState.FAILED
+    com.example.echodrop.model.domainLayer.model.TransferState.QUEUED,
+    com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
+    com.example.echodrop.model.domainLayer.model.TransferState.DONE,
+    com.example.echodrop.model.domainLayer.model.TransferState.FAILED
    )
 
    // Act & Assert - test each state individually

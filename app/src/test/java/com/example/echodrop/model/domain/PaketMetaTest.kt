@@ -1,6 +1,6 @@
 package com.example.echodrop.model.domain
 
-import com.example.echodrop.domain.model.PaketMeta
+import com.example.echodrop.model.domainLayer.model.PaketMeta
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -25,7 +25,7 @@ class PaketMetaTest {
    val ttlSeconds = 3600
    val priority = 2
 
-   val paketMeta = PaketMeta(
+   val paketMeta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = title,
     description = description,
     tags = tags,
@@ -45,7 +45,7 @@ class PaketMetaTest {
   @DisplayName("Creates a PaketMeta with null description")
   fun createPaketMetaWithNullDescription() {
    // Arrange & Act
-   val paketMeta = PaketMeta(
+   val paketMeta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Sample Package",
     description = null,
     tags = listOf("test"),
@@ -66,7 +66,7 @@ class PaketMetaTest {
   @DisplayName("Two identical PaketMeta objects are equal")
   fun twoIdenticalPaketMetasAreEqual() {
    // Arrange
-   val meta1 = PaketMeta(
+   val meta1 = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Package",
     description = "Description",
     tags = listOf("tag1", "tag2"),
@@ -74,7 +74,7 @@ class PaketMetaTest {
     priority = 3
    )
 
-   val meta2 = PaketMeta(
+   val meta2 = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Package",
     description = "Description",
     tags = listOf("tag1", "tag2"),
@@ -91,7 +91,7 @@ class PaketMetaTest {
   @DisplayName("Two PaketMeta objects with different properties are not equal")
   fun differentPaketMetasAreNotEqual() {
    // Arrange
-   val meta1 = PaketMeta(
+   val meta1 = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Package 1",
     description = "Description 1",
     tags = listOf("tag1", "tag2"),
@@ -99,7 +99,7 @@ class PaketMetaTest {
     priority = 3
    )
 
-   val meta2 = PaketMeta(
+   val meta2 = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Package 2",
     description = "Description 2",
     tags = listOf("tag1", "tag2"),
@@ -120,7 +120,7 @@ class PaketMetaTest {
   @DisplayName("PaketMeta can have empty tags list")
   fun paketMetaCanHaveEmptyTagsList() {
    // Arrange & Act
-   val paketMeta = PaketMeta(
+   val paketMeta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Package with no tags",
     description = "A package with empty tags list",
     tags = emptyList(),

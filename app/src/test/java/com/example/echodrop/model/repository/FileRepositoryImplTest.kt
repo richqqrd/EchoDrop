@@ -1,9 +1,8 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.database.daos.FileEntryDao
-import com.example.echodrop.domain.model.FileEntry
-import com.example.echodrop.domain.model.PaketId
-import com.example.echodrop.model.database.entities.FileEntryEntity
+import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
+import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
+import com.example.echodrop.model.dataLayer.repositoryImpl.FileRepositoryImpl
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -24,7 +23,7 @@ class FileRepositoryImplTest {
 
  private lateinit var repository: FileRepositoryImpl
 
- private val testPaketId = PaketId("paket-123")
+ private val testPaketId = com.example.echodrop.model.domainLayer.model.PaketId("paket-123")
  private val testFileEntries = listOf(
   FileEntryEntity(
    fileId = "file-1",
@@ -45,8 +44,13 @@ class FileRepositoryImplTest {
  )
 
  private val testDomainFiles = listOf(
-  FileEntry("documents/report.pdf", "application/pdf", 1024L, 0),
-  FileEntry("images/photo.jpg", "image/jpeg", 2048L, 1)
+  com.example.echodrop.model.domainLayer.model.FileEntry(
+   "documents/report.pdf",
+   "application/pdf",
+   1024L,
+   0
+  ),
+  com.example.echodrop.model.domainLayer.model.FileEntry("images/photo.jpg", "image/jpeg", 2048L, 1)
  )
 
  @BeforeEach

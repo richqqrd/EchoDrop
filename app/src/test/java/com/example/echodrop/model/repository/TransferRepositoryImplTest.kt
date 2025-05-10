@@ -1,10 +1,10 @@
 package com.example.echodrop.model.repository
 
-import com.example.echodrop.model.database.daos.TransferDao
-import com.example.echodrop.domain.model.PaketId
-import com.example.echodrop.domain.model.PeerId
-import com.example.echodrop.domain.model.TransferState
-import com.example.echodrop.model.database.entities.TransferLogEntity
+import com.example.echodrop.model.dataLayer.database.daos.TransferDao
+import com.example.echodrop.model.domainLayer.model.TransferState
+import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
+import com.example.echodrop.model.dataLayer.repositoryImpl.TransferRepositoryImpl
+import com.example.echodrop.model.domainLayer.transport.TransportManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -25,6 +25,7 @@ class TransferRepositoryImplTest {
 
  private lateinit var mockTransferDao: TransferDao
  private lateinit var repository: TransferRepositoryImpl
+ private lateinit var mockTransportManager: TransportManager
 
  private val testPaketId = "paket-123"
  private val testPeerId = "peer-456"
@@ -48,7 +49,9 @@ class TransferRepositoryImplTest {
  @BeforeEach
  fun setup() {
   mockTransferDao = mock(TransferDao::class.java)
-  repository = TransferRepositoryImpl(mockTransferDao)
+  mockTransportManager = mock(TransportManager::class.java)
+  repository = TransferRepositoryImpl(mockTransferDao, mockTransportManager)
+
  }
 
  @Test
@@ -60,15 +63,15 @@ class TransferRepositoryImplTest {
 
   assertEquals(2, result.size)
 
-  assertEquals(PaketId(testPaketId), result[0].paketId)
-  assertEquals(PeerId(testPeerId), result[0].peerId)
-  assertEquals(TransferState.ACTIVE, result[0].state)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId), result[0].paketId)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId(testPeerId), result[0].peerId)
+  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE, result[0].state)
   assertEquals(50, result[0].progressPct)
   assertEquals(1620000000000L, result[0].lastUpdateUtc)
 
-  assertEquals(PaketId("paket-789"), result[1].paketId)
-  assertEquals(PeerId("peer-012"), result[1].peerId)
-  assertEquals(TransferState.QUEUED, result[1].state)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PaketId("paket-789"), result[1].paketId)
+  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId("peer-012"), result[1].peerId)
+  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, result[1].state)
   assertEquals(0, result[1].progressPct)
   assertEquals(1620000001000L, result[1].lastUpdateUtc)
  }
@@ -88,14 +91,17 @@ class TransferRepositoryImplTest {
 
   val entityCaptor = argumentCaptor<TransferLogEntity>()
 
-  repository.pause(PaketId(testPaketId), PeerId(testPeerId))
+  repository.pause(
+   com.example.echodrop.model.domainLayer.model.PaketId(testPaketId),
+   com.example.echodrop.model.domainLayer.model.PeerId(testPeerId)
+  )
 
   verify(mockTransferDao).upsert(entityCaptor.capture())
 
   val updatedEntity = entityCaptor.firstValue
   assertEquals(testPaketId, updatedEntity.paketId)
   assertEquals(testPeerId, updatedEntity.peerId)
-  assertEquals(TransferState.QUEUED, updatedEntity.state)
+  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, updatedEntity.state)
   assertEquals(50, updatedEntity.progressPct)
   assertTrue(updatedEntity.lastUpdateUtc >= 1620000000000L)
  }
@@ -105,7 +111,10 @@ class TransferRepositoryImplTest {
  fun pauseDoesNothingWhenTransferNotFound() = runTest {
   whenever(mockTransferDao.findById(testPaketId, testPeerId)).thenReturn(null)
 
-  repository.pause(PaketId(testPaketId), PeerId(testPeerId))
+  repository.pause(
+   com.example.echodrop.model.domainLayer.model.PaketId(testPaketId),
+   com.example.echodrop.model.domainLayer.model.PeerId(testPeerId)
+  )
 
   // Verify findById was called, then verify no other methods were called
   verify(mockTransferDao).findById(testPaketId, testPeerId)
@@ -127,14 +136,17 @@ class TransferRepositoryImplTest {
 
   val entityCaptor = argumentCaptor<TransferLogEntity>()
 
-  repository.resume(PaketId(testPaketId), PeerId(testPeerId))
+  repository.resume(
+   com.example.echodrop.model.domainLayer.model.PaketId(testPaketId),
+   com.example.echodrop.model.domainLayer.model.PeerId(testPeerId)
+  )
 
   verify(mockTransferDao).upsert(entityCaptor.capture())
 
   val updatedEntity = entityCaptor.firstValue
   assertEquals(testPaketId, updatedEntity.paketId)
   assertEquals(testPeerId, updatedEntity.peerId)
-  assertEquals(TransferState.ACTIVE, updatedEntity.state)
+  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE, updatedEntity.state)
   assertEquals(50, updatedEntity.progressPct)
   assertTrue(updatedEntity.lastUpdateUtc >= 1620000000000L)
  }
@@ -144,7 +156,10 @@ class TransferRepositoryImplTest {
  fun resumeDoesNothingWhenTransferNotFound() = runTest {
   whenever(mockTransferDao.findById(testPaketId, testPeerId)).thenReturn(null)
 
-  repository.resume(PaketId(testPaketId), PeerId(testPeerId))
+  repository.resume(
+   com.example.echodrop.model.domainLayer.model.PaketId(testPaketId),
+   com.example.echodrop.model.domainLayer.model.PeerId(testPeerId)
+  )
 
   // Verify findById was called, then verify no other methods were called
   verify(mockTransferDao).findById(testPaketId, testPeerId)
@@ -154,7 +169,10 @@ class TransferRepositoryImplTest {
  @Test
  @DisplayName("cancel calls DAO delete with correct IDs")
  fun cancelCallsDaoDeleteWithCorrectIds() = runTest {
-  repository.cancel(PaketId(testPaketId), PeerId(testPeerId))
+  repository.cancel(
+   com.example.echodrop.model.domainLayer.model.PaketId(testPaketId),
+   com.example.echodrop.model.domainLayer.model.PeerId(testPeerId)
+  )
 
   verify(mockTransferDao).delete(testPaketId, testPeerId)
  }

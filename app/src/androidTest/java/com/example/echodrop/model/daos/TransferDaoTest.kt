@@ -3,14 +3,14 @@ package com.example.echodrop.model.daos
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.echodrop.model.database.EchoDatabase
-import com.example.echodrop.domain.model.TransferState
-import com.example.echodrop.model.database.daos.PaketDao
-import com.example.echodrop.model.database.daos.PeerDao
-import com.example.echodrop.model.database.daos.TransferDao
-import com.example.echodrop.model.database.entities.PaketEntity
-import com.example.echodrop.model.database.entities.PeerEntity
-import com.example.echodrop.model.database.entities.TransferLogEntity
+import com.example.echodrop.model.dataLayer.database.EchoDatabase
+import com.example.echodrop.model.domainLayer.model.TransferState
+import com.example.echodrop.model.dataLayer.database.daos.PaketDao
+import com.example.echodrop.model.dataLayer.database.daos.PeerDao
+import com.example.echodrop.model.dataLayer.database.daos.TransferDao
+import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
+import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -92,7 +92,7 @@ class TransferDaoTest {
         assertEquals(1, logs.size)
         assertEquals(testPaketId, logs[0].paketId)
         assertEquals(testPeerId, logs[0].peerId)
-        assertEquals(TransferState.QUEUED, logs[0].state)
+        assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, logs[0].state)
     }
 
     @Test
@@ -134,7 +134,7 @@ class TransferDaoTest {
         transferDao.upsert(initialLog)
 
         val updatedLog = initialLog.copy(
-            state = TransferState.ACTIVE,
+            state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
             progressPct = 25,
             lastUpdateUtc = System.currentTimeMillis() + 1000
         )
@@ -142,7 +142,7 @@ class TransferDaoTest {
 
         val retrievedLog = transferDao.findById(testPaketId, testPeerId)
 
-        assertEquals(TransferState.ACTIVE, retrievedLog?.state)
+        assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE, retrievedLog?.state)
         assertEquals(25, retrievedLog?.progressPct)
     }
 

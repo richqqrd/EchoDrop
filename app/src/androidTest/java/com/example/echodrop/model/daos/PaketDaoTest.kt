@@ -3,9 +3,9 @@ package com.example.echodrop.model.daos
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.echodrop.model.database.EchoDatabase
-import com.example.echodrop.model.database.daos.PaketDao
-import com.example.echodrop.model.database.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.database.EchoDatabase
+import com.example.echodrop.model.dataLayer.database.daos.PaketDao
+import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -13,7 +13,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.*
-import java.util.concurrent.TimeUnit
 
 /**
  * Test class for the `PaketDao` data access object.

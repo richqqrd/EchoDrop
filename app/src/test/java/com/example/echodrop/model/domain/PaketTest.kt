@@ -1,9 +1,9 @@
 package com.example.echodrop.model.domain
 
-import com.example.echodrop.domain.model.FileEntry
-import com.example.echodrop.domain.model.Paket
-import com.example.echodrop.domain.model.PaketId
-import com.example.echodrop.domain.model.PaketMeta
+import com.example.echodrop.model.domainLayer.model.FileEntry
+import com.example.echodrop.model.domainLayer.model.Paket
+import com.example.echodrop.model.domainLayer.model.PaketId
+import com.example.echodrop.model.domainLayer.model.PaketMeta
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -22,8 +22,8 @@ class PaketTest {
   @DisplayName("Creates a Paket with correct properties")
   fun createPaketWithCorrectProperties() {
 
-   val paketId = PaketId("test-id-123")
-   val meta = PaketMeta(
+   val paketId = com.example.echodrop.model.domainLayer.model.PaketId("test-id-123")
+   val meta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Paket",
     description = "Test description",
     tags = listOf("test", "example"),
@@ -31,7 +31,7 @@ class PaketTest {
     priority = 1
    )
    val fileEntries = listOf(
-    FileEntry(
+    com.example.echodrop.model.domainLayer.model.FileEntry(
      path = "test/file1.txt",
      mime = "text/plain",
      sizeBytes = 1024L,
@@ -39,7 +39,7 @@ class PaketTest {
     )
    )
 
-   val paket = Paket(
+   val paket = com.example.echodrop.model.domainLayer.model.Paket(
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
@@ -66,8 +66,8 @@ class PaketTest {
   @Test
   @DisplayName("Two identical Pakets are equal")
   fun twoIdenticalPaketsAreEqual() {
-   val paketId = PaketId("test-id-123")
-   val meta = PaketMeta(
+   val paketId = com.example.echodrop.model.domainLayer.model.PaketId("test-id-123")
+   val meta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Paket",
     description = "Test description",
     tags = listOf("test", "example"),
@@ -75,7 +75,7 @@ class PaketTest {
     priority = 1
    )
    val fileEntries = listOf(
-    FileEntry(
+    com.example.echodrop.model.domainLayer.model.FileEntry(
      path = "test/file1.txt",
      mime = "text/plain",
      sizeBytes = 1024L,
@@ -83,7 +83,7 @@ class PaketTest {
     )
    )
 
-   val paket1 = Paket(
+   val paket1 = com.example.echodrop.model.domainLayer.model.Paket(
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
@@ -93,7 +93,7 @@ class PaketTest {
     files = fileEntries
    )
 
-   val paket2 = Paket(
+   val paket2 = com.example.echodrop.model.domainLayer.model.Paket(
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
@@ -110,7 +110,7 @@ class PaketTest {
   @Test
   @DisplayName("Pakets with different IDs are not equal")
   fun paketsWithDifferentIdsAreNotEqual() {
-   val meta = PaketMeta(
+   val meta = com.example.echodrop.model.domainLayer.model.PaketMeta(
     title = "Test Paket",
     description = "Test description",
     tags = listOf("test", "example"),
@@ -118,7 +118,7 @@ class PaketTest {
     priority = 1
    )
    val fileEntries = listOf(
-    FileEntry(
+    com.example.echodrop.model.domainLayer.model.FileEntry(
      path = "test/file1.txt",
      mime = "text/plain",
      sizeBytes = 1024L,
@@ -126,8 +126,8 @@ class PaketTest {
     )
    )
 
-   val paket1 = Paket(
-    id = PaketId("id1"),
+   val paket1 = com.example.echodrop.model.domainLayer.model.Paket(
+    id = com.example.echodrop.model.domainLayer.model.PaketId("id1"),
     meta = meta,
     sizeBytes = 1024L,
     sha256 = "abc123hash",
@@ -136,8 +136,8 @@ class PaketTest {
     files = fileEntries
    )
 
-   val paket2 = Paket(
-    id = PaketId("id2"),
+   val paket2 = com.example.echodrop.model.domainLayer.model.Paket(
+    id = com.example.echodrop.model.domainLayer.model.PaketId("id2"),
     meta = meta,
     sizeBytes = 1024L,
     sha256 = "abc123hash",
@@ -158,14 +158,35 @@ class PaketTest {
   @DisplayName("FileCount matches the number of files in the Paket")
   fun fileCountMatchesNumberOfFiles() {
    val fileEntries = listOf(
-    FileEntry(path = "file1.txt", mime = "text/plain", sizeBytes = 100L, orderIdx = 0),
-    FileEntry(path = "file2.jpg", mime = "image/jpeg", sizeBytes = 200L, orderIdx = 1),
-    FileEntry(path = "file3.pdf", mime = "application/pdf", sizeBytes = 300L, orderIdx = 2)
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file1.txt",
+     mime = "text/plain",
+     sizeBytes = 100L,
+     orderIdx = 0
+    ),
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file2.jpg",
+     mime = "image/jpeg",
+     sizeBytes = 200L,
+     orderIdx = 1
+    ),
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file3.pdf",
+     mime = "application/pdf",
+     sizeBytes = 300L,
+     orderIdx = 2
+    )
    )
 
-   val paket = Paket(
-    id = PaketId("test-id"),
-    meta = PaketMeta("Test", null, emptyList(), 3600, 1),
+   val paket = com.example.echodrop.model.domainLayer.model.Paket(
+    id = com.example.echodrop.model.domainLayer.model.PaketId("test-id"),
+    meta = com.example.echodrop.model.domainLayer.model.PaketMeta(
+     "Test",
+     null,
+     emptyList(),
+     3600,
+     1
+    ),
     sizeBytes = 600L,
     sha256 = "hash",
     fileCount = 3,
@@ -181,16 +202,37 @@ class PaketTest {
   @DisplayName("SizeBytes matches the sum of file sizes")
   fun sizeBytesMatchesSumOfFileSizes() {
    val fileEntries = listOf(
-    FileEntry(path = "file1.txt", mime = "text/plain", sizeBytes = 100L, orderIdx = 0),
-    FileEntry(path = "file2.jpg", mime = "image/jpeg", sizeBytes = 200L, orderIdx = 1),
-    FileEntry(path = "file3.pdf", mime = "application/pdf", sizeBytes = 300L, orderIdx = 2)
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file1.txt",
+     mime = "text/plain",
+     sizeBytes = 100L,
+     orderIdx = 0
+    ),
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file2.jpg",
+     mime = "image/jpeg",
+     sizeBytes = 200L,
+     orderIdx = 1
+    ),
+    com.example.echodrop.model.domainLayer.model.FileEntry(
+     path = "file3.pdf",
+     mime = "application/pdf",
+     sizeBytes = 300L,
+     orderIdx = 2
+    )
    )
 
    val expectedTotalSize = fileEntries.sumOf { it.sizeBytes }
 
-   val paket = Paket(
-    id = PaketId("test-id"),
-    meta = PaketMeta("Test", null, emptyList(), 3600, 1),
+   val paket = com.example.echodrop.model.domainLayer.model.Paket(
+    id = com.example.echodrop.model.domainLayer.model.PaketId("test-id"),
+    meta = com.example.echodrop.model.domainLayer.model.PaketMeta(
+     "Test",
+     null,
+     emptyList(),
+     3600,
+     1
+    ),
     sizeBytes = expectedTotalSize,
     sha256 = "hash",
     fileCount = 3,
