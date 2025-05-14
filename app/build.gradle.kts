@@ -1,9 +1,10 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlinAndroidKsp)
+    alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.0.21-1.0.28"// KSP für Kotlin 2.0.21
-    id("com.google.dagger.hilt.android") version "2.48" apply true
+
 }
 
 android {
@@ -62,8 +63,7 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    implementation("com.google.dagger:hilt-android:2.48")
-    ksp("com.google.dagger:hilt-compiler:2.48")
+
 
     implementation("com.google.code.gson:gson:2.10.1")
 
@@ -77,7 +77,7 @@ dependencies {
 
     ksp("androidx.room:room-compiler:2.7.1")
 
-    // Room components
+    // Room component
     implementation("androidx.room:room-runtime:2.7.1")
     // Coroutines support
     implementation("androidx.room:room-ktx:2.7.1")
@@ -92,6 +92,11 @@ dependencies {
 
     // Coroutines test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
 }
 
 tasks.withType<Test> {
