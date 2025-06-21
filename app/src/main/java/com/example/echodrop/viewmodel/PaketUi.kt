@@ -6,6 +6,7 @@ data class PaketUi (
     val id: PaketId,
     val title: String,
     val description: String?,
+    val tags: List<String> = emptyList(),
     val fileCount: Int,
     val isSending: Boolean,
     val files: List<FileEntryUi> = emptyList(),

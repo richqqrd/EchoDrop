@@ -2,138 +2,145 @@ package com.example.echodrop.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.echodrop.model.domainLayer.model.FileEntry
-import com.example.echodrop.model.domainLayer.model.Paket
 import com.example.echodrop.model.domainLayer.model.PaketId
+import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.model.domainLayer.usecase.file.GetFilesForPaketUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.DeletePaketUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.UpdatePaketMetaUseCase
+import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+data class PaketDetailState(
+    val paket: PaketUi? = null,
+    val isLoading: Boolean = false,
+    val isDeleting: Boolean = false,
+    val error: String? = null,
+    val isEditing: Boolean = false
+)
+
 @HiltViewModel
 class PaketDetailViewModel @Inject constructor(
-    private val getDetail: GetPaketDetailUseCase,
-    private val getFiles: GetFilesForPaketUseCase,
-    private val updateMeta: UpdatePaketMetaUseCase,
-    private val deletePaket: DeletePaketUseCase
+    private val getPaketDetail: GetPaketDetailUseCase,
+    private val getFilesForPaket: GetFilesForPaketUseCase,
+    private val updatePaketMeta: UpdatePaketMetaUseCase,
+    private val deletePaket: DeletePaketUseCase,
+    private val startTransfer: StartTransferUseCase
 ) : ViewModel() {
 
-    // Ändere den Typ zu PaketDetailUi
-    private val _detail = MutableStateFlow<PaketDetailUi?>(null)
-    val detail: StateFlow<PaketDetailUi?> = _detail
+    private val _state = MutableStateFlow(PaketDetailState(isLoading = true))
+    val state: StateFlow<PaketDetailState> = _state
 
-    fun load(paketId: PaketId) = viewModelScope.launch {
-    println("DEBUG: Loading paket details for ID: ${paketId.value}")
-    
-    // Speichern der aktuellen ID, um Mehrfachaufrufe zu erkennen
-    val currentId = paketId.value
-    
-    try {
-        val paket = getDetail(paketId)
-        println("DEBUG: GetDetail result: $paket")
+    fun loadPaketDetail(paketId: String) {
+        val id = PaketId(paketId)
+        _state.update { it.copy(isLoading = true, error = null) }
         
-        // Prüfe, ob die ID noch aktuell ist
-        if (currentId != paketId.value) {
-            println("DEBUG: ID changed during loading, cancelling")
-            return@launch
-        }
-        
-        if (paket == null) {
-            println("DEBUG: Paket with ID ${paketId.value} not found!")
-            
-            // TEMPORÄR: Mock-Daten laden, damit man die UI sieht
-            _detail.value = PaketDetailUi(
-                id = paketId,
-                title = "Test-Paket (Mock)",
-                description = "Ein temporäres Test-Paket für Entwicklungszwecke",
-                ttlSeconds = 3600,
-                priority = 3,
-                tags = listOf("test", "entwicklung"),
-                files = emptyList()
-            )
-            return@launch
-        }
-        
-        println("DEBUG: Paket found: $paket")
-        
-        try {
-            val files = getFiles(paketId)
-            println("DEBUG: Found ${files.size} files for this paket")
-            
-            // Nochmal prüfen, ob die ID noch aktuell ist
-            if (currentId != paketId.value) {
-                println("DEBUG: ID changed during loading, cancelling")
-                return@launch
+        viewModelScope.launch {
+            try {
+                val paket = getPaketDetail(id)
+                if (paket != null) {
+                    // Lade die Dateien für das Paket
+                    val files = getFilesForPaket(id)
+                    
+                    // Wandle das Paket in ein UI-Modell um und aktualisiere den State
+                    _state.update { 
+                        it.copy(
+                            paket = paket.toDetailUi(files.map { file -> file.toUi() }),
+                            isLoading = false
+                        ) 
+                    }
+                } else {
+                    _state.update { 
+                        it.copy(
+                            error = "Paket nicht gefunden",
+                            isLoading = false
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        error = "Fehler beim Laden des Pakets: ${e.message}",
+                        isLoading = false
+                    ) 
+                }
             }
-            
-            _detail.value = PaketDetailUi(
-                id = paket.id,
-                title = paket.meta.title,
-                description = paket.meta.description,
-                ttlSeconds = paket.meta.ttlSeconds,
-                priority = paket.meta.priority,
-                tags = paket.meta.tags,
-                files = files.map { it.toFileEntryUi() }
-            )
-            
-            println("DEBUG: Detail loaded successfully: ${_detail.value}")
-        } catch (e: Exception) {
-            println("DEBUG: Error loading files: ${e.message}")
-            e.printStackTrace()
         }
-    } catch (e: Exception) {
-        if (e is kotlinx.coroutines.CancellationException) {
-            println("DEBUG: Load job was cancelled, ignoring")
-        } else {
-            println("DEBUG: Error in load method: ${e.message}")
-            e.printStackTrace()
+    }
+
+    fun updatePaketSettings(ttlSeconds: Int, priority: Int) {
+        val currentPaket = state.value.paket ?: return
+        _state.update { it.copy(isLoading = true) }
+        
+        viewModelScope.launch {
+            try {
+                // Rufe den UseCase auf, um die Paket-Metadaten zu aktualisieren
+                updatePaketMeta(currentPaket.id, ttlSeconds, priority)
+                
+                // Lade das Paket neu, um die aktualisierten Werte zu zeigen
+                loadPaketDetail(currentPaket.id.value)
+                
+                // Deaktiviere den Bearbeitungsmodus
+                _state.update { it.copy(isEditing = false) }
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        error = "Fehler beim Aktualisieren des Pakets: ${e.message}",
+                        isLoading = false
+                    ) 
+                }
+            }
         }
+    }
+
+    fun onDeletePaket() {
+        val currentPaket = state.value.paket ?: return
+        _state.update { it.copy(isDeleting = true) }
+        
+        viewModelScope.launch {
+            try {
+                // Rufe den UseCase auf, um das Paket zu löschen
+                deletePaket(currentPaket.id)
+                _state.update { it.copy(isDeleting = false) }
+                // Nach dem Löschen wird in der UI zur vorherigen Ansicht zurücknavigiert
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        error = "Fehler beim Löschen des Pakets: ${e.message}",
+                        isDeleting = false
+                    ) 
+                }
+            }
+        }
+    }
+
+    fun onSharePaket(peerId: PeerId) {
+        val currentPaket = state.value.paket ?: return
+        
+        viewModelScope.launch {
+            try {
+                // Rufe den UseCase auf, um die Übertragung zu starten
+                startTransfer(currentPaket.id, peerId)
+            } catch (e: Exception) {
+                _state.update { 
+                    it.copy(
+                        error = "Fehler beim Teilen des Pakets: ${e.message}"
+                    ) 
+                }
+            }
+        }
+    }
+
+    fun toggleEditMode() {
+        _state.update { it.copy(isEditing = !it.isEditing) }
+    }
+
+    fun clearError() {
+        _state.update { it.copy(error = null) }
     }
 }
-
-    fun onUpdateMeta(ttl: Int, priority: Int) = viewModelScope.launch {
-        val currentId = detail.value?.id
-        if (currentId != null) {
-            updateMeta(currentId, ttl, priority)
-            load(currentId)
-        }
-    }
-
-    fun onDelete() = viewModelScope.launch {
-        val currentId = detail.value?.id
-        if (currentId != null) {
-            deletePaket(currentId)
-            _detail.value = null
-        }
-    }
-    
-    private fun FileEntry.toFileEntryUi() = FileEntryUi(
-        path = this.path,
-        mime = this.mime,
-        sizeBytes = this.sizeBytes,
-        orderIdx = this.orderIdx
-    )
-}
-
-// Diese Klassen direkt hier definieren, damit PaketDetailScreen sie verwenden kann
-data class PaketDetailUi(
-    val id: PaketId,
-    val title: String,
-    val description: String?,
-    val ttlSeconds: Int,
-    val priority: Int,
-    val tags: List<String>,
-    val files: List<FileEntryUi>
-)
-
-data class FileEntryUi(
-    val path: String,
-    val mime: String,
-    val sizeBytes: Long,
-    val orderIdx: Int
-)

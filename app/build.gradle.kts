@@ -93,6 +93,9 @@ dependencies {
     // Coroutines test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)

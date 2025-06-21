@@ -1,9 +1,11 @@
 package com.example.echodrop.view
 
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.echodrop.view.PaketDetailScreen
 
 @Composable
 fun EchoDropApp() {
@@ -16,11 +18,17 @@ fun EchoDropApp() {
         composable("inbox") {
             InboxScreen(
                 onCreatePaket = {
-                    navController.navigate("createPaket")
+                    navController.navigate("createPaket") {
+                        // Configure navigation options
+                        launchSingleTop = true
+                    }
                 },
                 onSharePaket = { paketId ->
                     println("Navigating to paketDetail with ID: $paketId")
-                    navController.navigate("paketDetail/${paketId.value}")
+                    navController.navigate("paketDetail/${paketId.value}") {
+                        // Configure navigation options
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -41,6 +49,7 @@ fun EchoDropApp() {
                 return@composable
             }
 
+            // Using PaketDetailScreen with PaketDetailViewModel
             PaketDetailScreen(
                 paketId = paketId,
                 onBackClick = { navController.popBackStack() }

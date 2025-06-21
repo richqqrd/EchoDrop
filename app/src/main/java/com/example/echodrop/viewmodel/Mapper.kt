@@ -8,6 +8,7 @@ fun Paket.toUi(isSending: Boolean = false): PaketUi = PaketUi(
     id = this.id,
     title = this.meta.title,
     description = this.meta.description,
+    tags = this.meta.tags,
     fileCount = this.fileCount,
     isSending = isSending
 )
@@ -30,6 +31,7 @@ fun Paket.toDetailUi(files: List<FileEntryUi>): PaketUi = PaketUi(
     title = this.meta.title,
     description = this.meta.description,
     fileCount = this.fileCount,
+    tags = this.meta.tags,
     files = files,
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
