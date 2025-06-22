@@ -2,7 +2,9 @@ package com.example.echodrop.model.domainLayer.usecase.transfer
 
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
+import com.example.echodrop.model.domainLayer.model.TransferState
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
+import com.example.echodrop.model.domainLayer.transport.TransportManager
 import javax.inject.Inject
 
 /**
@@ -11,14 +13,20 @@ import javax.inject.Inject
  * @property repo The repository used to manage transfer operations.
  */
 class StartTransferUseCase @Inject constructor(
-    private val repo: TransferRepository
+    private val repo: TransferRepository,
+    private val transportManager: TransportManager
 ) {
-    /**
-     * Invokes the use case to start a transfer.
-     *
-     * @param paketId The unique identifier of the package being transferred.
-     * @param peerId The unique identifier of the peer involved in the transfer.
-     */
-    suspend operator fun invoke(paketId: PaketId, peerId : PeerId)  = repo.startTransfer(paketId, peerId)
-
+    suspend operator fun invoke(paketId: PaketId, peerId: PeerId) {
+        // DB-Eintrag erstellen
+        repo.startTransfer(paketId, peerId)
+        
+        try {
+            // Datenübertragung starten
+            transportManager.sendPaket(paketId, peerId)
+        } catch (e: Exception) {
+            // Bei Fehler den Transferstatus aktualisieren
+            repo.updateState(paketId, peerId, TransferState.FAILED)
+            throw e
+        }
+    }
 }

@@ -50,7 +50,7 @@ class TransferRepositoryImplTest {
  fun setup() {
   mockTransferDao = mock(TransferDao::class.java)
   mockTransportManager = mock(TransportManager::class.java)
-  repository = TransferRepositoryImpl(mockTransferDao, mockTransportManager)
+  repository = TransferRepositoryImpl(mockTransferDao)
 
  }
 
@@ -101,7 +101,7 @@ class TransferRepositoryImplTest {
   val updatedEntity = entityCaptor.firstValue
   assertEquals(testPaketId, updatedEntity.paketId)
   assertEquals(testPeerId, updatedEntity.peerId)
-  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, updatedEntity.state)
+  assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.PAUSED, updatedEntity.state)
   assertEquals(50, updatedEntity.progressPct)
   assertTrue(updatedEntity.lastUpdateUtc >= 1620000000000L)
  }

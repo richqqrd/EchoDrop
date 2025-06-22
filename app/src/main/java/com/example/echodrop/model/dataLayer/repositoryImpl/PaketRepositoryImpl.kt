@@ -93,6 +93,41 @@ class PaketRepositoryImpl @Inject constructor(
         return paketDao.purgeExpired(nowUtc)
         }
 
+        override suspend fun upsert(paket: Paket) {
+    // Speichere das Paket-Entity
+    val paketEntity = PaketEntity(
+        paketId = paket.id.value,
+        version = 1,
+        title = paket.meta.title, 
+        description = paket.meta.description, 
+        tags = paket.meta.tags,
+        sizeBytes = paket.files.sumOf { it.sizeBytes }, 
+        sha256 = paket.sha256 ?: "",
+        fileCount = paket.files.size,
+        ttlSeconds = paket.meta.ttlSeconds, 
+        priority = paket.meta.priority, 
+        hopLimit = null,
+        manifestHash = "", 
+        createdUtc = paket.createdUtc
+    )
+    paketDao.upsert(paketEntity)
+    
+    // Lösche vorhandene Dateien für dieses Paket
+    fileEntryDao.deleteByPaket(paket.id.value)
+    
+    // Speichere die Dateien
+    val fileEntities = paket.files.map { file -> 
+        FileEntryEntity(
+            fileId = UUID.randomUUID().toString(),
+            paketOwnerId = paket.id.value,
+            path = file.path, 
+            mime = file.mime, 
+            sizeBytes = file.sizeBytes,
+            orderIdx = file.orderIdx
+        )
+    }
+    fileEntryDao.insertAll(fileEntities)
+}
 
 }
 

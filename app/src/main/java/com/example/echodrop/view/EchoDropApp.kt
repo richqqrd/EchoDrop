@@ -29,6 +29,11 @@ fun EchoDropApp() {
                         // Configure navigation options
                         launchSingleTop = true
                     }
+                },
+                onOpenTransferManager = {
+                    navController.navigate("transferManager") {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -52,6 +57,13 @@ fun EchoDropApp() {
             // Using PaketDetailScreen with PaketDetailViewModel
             PaketDetailScreen(
                 paketId = paketId,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        // Neue Route für den TransferManagerScreen
+        composable("transferManager") {
+            TransferManagerScreen(
                 onBackClick = { navController.popBackStack() }
             )
         }

@@ -6,6 +6,7 @@ import com.example.echodrop.model.dataLayer.repositoryImpl.PaketRepositoryImpl
 import com.example.echodrop.model.dataLayer.repositoryImpl.TransferRepositoryImpl
 import com.example.echodrop.model.domainLayer.repository.FileRepository
 import com.example.echodrop.model.domainLayer.repository.PaketRepository
+import com.example.echodrop.model.domainLayer.repository.PeerRepository
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
 import dagger.Binds
 import dagger.Module
@@ -29,7 +30,11 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindTransferRepository(transferRepositoryImpl: TransferRepositoryImpl): TransferRepository
 
-
+    @Binds
+    @Singleton
+    abstract fun bindPeerRepository(
+        peerRepositoryImpl: PeerRepositoryImpl
+    ): PeerRepository
 
 
 }

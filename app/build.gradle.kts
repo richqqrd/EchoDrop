@@ -11,6 +11,16 @@ android {
     namespace = "com.example.echodrop"
     compileSdk = 35
 
+    packaging {
+        resources {
+            excludes += listOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md",
+                "META-INF/LICENSE.txt",
+                "META-INF/NOTICE.txt"
+            )
+        }
+    }
     defaultConfig {
         applicationId = "com.example.echodrop"
         minSdk = 24
@@ -89,6 +99,8 @@ dependencies {
 
     // Mockito-Kotlin
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("io.mockk:mockk:1.13.8")
+    androidTestImplementation("io.mockk:mockk-android:1.13.8")
 
     // Coroutines test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")

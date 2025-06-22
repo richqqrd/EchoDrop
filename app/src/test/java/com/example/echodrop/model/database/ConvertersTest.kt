@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test
  */
 class ConvertersTest {
 
- private lateinit var converters: com.example.echodrop.model.domainLayer.model.Converters
+ private lateinit var converters: Converters
 
  @BeforeEach
  fun setup() {
-  converters = com.example.echodrop.model.domainLayer.model.Converters()
+  converters = Converters()
  }
 
  @Nested
@@ -78,53 +78,45 @@ class ConvertersTest {
  inner class TransferStateConversionTests {
 
   @Test
-  @DisplayName("Convert TransferState to string and back")
-  fun convertTransferStateToStringAndBack() {
-   // Test all enum values
-   com.example.echodrop.model.domainLayer.model.TransferState.entries.forEach { state ->
-    // Act
-    val string = converters.fromTransferState(state)
-    val convertedState = converters.toTransferState(string)
+  @DisplayName("Converts TransferState to string")
+  fun convertTransferStateToString() {
+   // Arrange
+   val converters = Converters()
 
-    // Assert
-    assertEquals(state, convertedState)
-   }
+   // Act & Assert
+   assertEquals("QUEUED", converters.fromTransferState(TransferState.QUEUED))
+   assertEquals("ACTIVE", converters.fromTransferState(TransferState.ACTIVE))
+   assertEquals("DONE", converters.fromTransferState(TransferState.DONE))
+   assertEquals("FAILED", converters.fromTransferState(TransferState.FAILED))
+   assertEquals("PAUSED", converters.fromTransferState(TransferState.PAUSED))
   }
 
   @Test
-  @DisplayName("Convert specific TransferState values")
-  fun convertSpecificTransferStateValues() {
+  @DisplayName("Converts string to TransferState")
+  fun convertStringToTransferState() {
    // Arrange
-   val states = listOf(
-    com.example.echodrop.model.domainLayer.model.TransferState.QUEUED,
-    com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
-    com.example.echodrop.model.domainLayer.model.TransferState.DONE,
-    com.example.echodrop.model.domainLayer.model.TransferState.FAILED
-   )
+   val converters = Converters()
 
-   // Act & Assert - test each state individually
-   states.forEach { state ->
-    val string = converters.fromTransferState(state)
-    assertEquals(state.name, string)
-
-    val convertedState = converters.toTransferState(string)
-    assertEquals(state, convertedState)
-   }
+   // Act & Assert
+   assertEquals(TransferState.QUEUED, converters.toTransferState("QUEUED"))
+   assertEquals(TransferState.ACTIVE, converters.toTransferState("ACTIVE"))
+   assertEquals(TransferState.DONE, converters.toTransferState("DONE"))
+   assertEquals(TransferState.FAILED, converters.toTransferState("FAILED"))
+   assertEquals(TransferState.PAUSED, converters.toTransferState("PAUSED"))
   }
 
   @Test
-  @DisplayName("Converting invalid string to TransferState throws exception")
-  fun convertInvalidStringThrowsException() {
+  @DisplayName("throws IllegalArgumentException for invalid TransferState string")
+  fun throwsExceptionForInvalidTransferState() {
    // Arrange
-   val invalidStateName = "INVALID_STATE"
+   val converters = Converters()
 
    // Act & Assert
    val exception = assertThrows(IllegalArgumentException::class.java) {
-    converters.toTransferState(invalidStateName)
+    converters.toTransferState("INVALID_STATE")
    }
 
-   // Verify exception contains useful information
-   assertTrue(exception.message?.contains(invalidStateName) ?: false)
+   assertTrue(exception.message?.contains("INVALID_STATE") ?: false)
   }
  }
 }

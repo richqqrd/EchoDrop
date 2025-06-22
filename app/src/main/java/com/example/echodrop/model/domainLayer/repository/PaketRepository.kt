@@ -60,5 +60,12 @@ interface PaketRepository {
      */
     suspend fun purgeExpire(nowUtc: Long): Int
 
+        /**
+     * Speichert oder aktualisiert ein vollständiges Paket.
+     *
+     * @param paket Das zu speichernde Paket.
+     */
+    suspend fun upsert(paket: Paket)
+
 
 }

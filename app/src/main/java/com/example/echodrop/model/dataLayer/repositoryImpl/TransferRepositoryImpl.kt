@@ -5,9 +5,9 @@ import com.example.echodrop.model.domainLayer.model.TransferState
 import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
+import com.example.echodrop.model.domainLayer.model.TransferDirection
 import com.example.echodrop.model.domainLayer.model.TransferLog
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
-import com.example.echodrop.model.domainLayer.transport.TransportManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
@@ -19,8 +19,7 @@ import javax.inject.Inject
  */
 class TransferRepositoryImpl @Inject constructor(
     private val transferDao: TransferDao,
-    private val transport: TransportManager
-
+    
 ) : TransferRepository {
     override fun observeTransfers(): Flow<List<TransferLog>> {
         return transferDao.observeAll().map{entityList ->
@@ -30,7 +29,9 @@ class TransferRepositoryImpl @Inject constructor(
                     peerId = PeerId(entity.peerId),
                     state = entity.state,
                     progressPct = entity.progressPct,
-                    lastUpdateUtc = entity.lastUpdateUtc
+                    lastUpdateUtc = entity.lastUpdateUtc,
+                    direction = determineDirection(entity.peerId)
+
                 )
             }}
     }
@@ -55,7 +56,7 @@ class TransferRepositoryImpl @Inject constructor(
     override suspend fun pause(paketId: PaketId, peerId: PeerId) {
         val currentLog = transferDao.findById(paketId.value, peerId.value) ?: return
         val updatedLog = currentLog.copy(
-            state = TransferState.QUEUED,
+            state = TransferState.PAUSED,
             lastUpdateUtc = System.currentTimeMillis()
         )
         transferDao.upsert(updatedLog)
@@ -72,6 +73,39 @@ class TransferRepositoryImpl @Inject constructor(
 
     override suspend fun cancel(paketId: PaketId, peerId: PeerId) {
         transferDao.delete(paketId.value, peerId.value)
+    }
+
+    override suspend fun updateProgress(paketId: PaketId, peerId: PeerId, progressPct: Int) {
+        val currentLog = transferDao.findById(paketId.value, peerId.value) ?: return
+        val updatedLog = currentLog.copy(
+            progressPct = progressPct,
+            lastUpdateUtc = System.currentTimeMillis()
+        )
+        transferDao.upsert(updatedLog)
+    }
+
+    override suspend fun updateState(
+        paketId: PaketId,
+        peerId: PeerId,
+        state: com.example.echodrop.model.domainLayer.model.TransferState
+    ) {
+        val currentLog = transferDao.findById(paketId.value, peerId.value) ?: return
+        val updatedLog = currentLog.copy(
+            state = state,
+            lastUpdateUtc = System.currentTimeMillis()
+        )
+        transferDao.upsert(updatedLog)
+    }
+
+
+    private fun determineDirection(peerId: String): TransferDirection {
+        // Hier deine Logik zur Bestimmung der Richtung
+        // Beispiel: Alle PeerIDs, die mit "out-" beginnen, sind ausgehend
+        return if (peerId.startsWith("out-")) {
+            TransferDirection.OUTGOING
+        } else {
+            TransferDirection.INCOMING
+        }
     }
 
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
@@ -48,14 +49,26 @@ import javax.inject.Inject
 fun InboxScreen(
     viewModel: InboxViewModel = hiltViewModel(),
     onCreatePaket: () -> Unit,
-    onSharePaket: (PaketId) -> Unit
+    onSharePaket: (PaketId) -> Unit,
+    onOpenTransferManager: () -> Unit  // Neuer Parameter
 ) {
     val paketList by viewModel.paketList.collectAsState()
     val transferLogs by viewModel.transferLogs.collectAsState()
 
-    Scaffold (
+    Scaffold(
         topBar = {
-            TopAppBar(title = { Text("EchoDrop")})
+            TopAppBar(
+                title = { Text("EchoDrop") },
+                actions = {
+                    // Button zum TransferManager hinzufügen
+                    IconButton(onClick = onOpenTransferManager) {
+                        Icon(
+                            Icons.Default.SwapHoriz,  // oder ein anderes passendes Icon
+                            contentDescription = "Transfer Manager"
+                        )
+                    }
+                }
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreatePaket) {
