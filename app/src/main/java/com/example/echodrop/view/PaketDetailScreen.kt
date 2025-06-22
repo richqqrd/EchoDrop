@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Search
-
+import androidx.compose.ui.text.style.TextAlign
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -326,153 +326,101 @@ fun PaketDetailScreen(
 
         // Share-Dialog
 // Share-Dialog
-        if (showShareDialog) {
-            var selectedTab by remember { mutableStateOf(0) }
-
-            AlertDialog(
-                onDismissRequest = { showShareDialog = false },
-                title = { Text("Paket teilen") },
-                text = {
-                    Column {
-                        // Tabs für verschiedene Teilen-Methoden
-                        TabRow(selectedTabIndex = selectedTab) {
-                            Tab(
-                                selected = selectedTab == 0,
-                                onClick = { selectedTab = 0 },
-                                text = { Text("WiFi Direct") }
-                            )
-                            Tab(
-                                selected = selectedTab == 1,
-                                onClick = { selectedTab = 1 },
-                                text = { Text("Peer-ID") }
+// Share-Dialog
+if (showShareDialog) {
+    AlertDialog(
+        onDismissRequest = { showShareDialog = false },
+        title = { Text("Paket teilen") },
+        text = {
+            Column {
+                // Zeige nur den WiFi Direct-Inhalt an (ohne Tabs)
+                Text("Wähle ein Gerät zum Teilen des Pakets:")
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // WiFi Direct Gerätesuche aktivieren
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (viewModel.isDiscoveryActive.collectAsState().value)
+                            "Gerätesuche aktiv..." else "Gerätesuche starten",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Switch(
+                        checked = viewModel.isDiscoveryActive.collectAsState().value,
+                        onCheckedChange = { viewModel.toggleDiscovery() }
+                    )
+                }
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Gerätelist anzeigen
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                ) {
+                    val devices by viewModel.nearbyDevices.collectAsState()
+                    
+                    if (devices.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Keine Geräte gefunden",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center
                             )
                         }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        when (selectedTab) {
-                            // WiFi Direct Tab
-                            0 -> {
-                                val nearbyDevices by viewModel.nearbyDevices.collectAsState()
-                                val isDiscoveryActive by viewModel.isDiscoveryActive.collectAsState()
-
-                                Column {
-                                    // Status und Suchknopf
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            items(devices) { device ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.shareWithDevice(device.deviceAddress)
+                                            showShareDialog = false
+                                        }
+                                        .padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
                                         Text(
-                                            text = if (isDiscoveryActive) "Suche nach Geräten..." else "Gerätesuche starten",
+                                            text = device.deviceName
+                                                ?: "Unbekanntes Gerät",
                                             style = MaterialTheme.typography.bodyMedium
                                         )
-
-                                        IconButton(onClick = { viewModel.toggleDiscovery() }) {
-                                            Icon(
-                                                imageVector = if (isDiscoveryActive) Icons.Default.Stop else Icons.Default.Search,
-                                                contentDescription = if (isDiscoveryActive) "Suche stoppen" else "Suche starten"
-                                            )
-                                        }
-                                    }
-
-                                    Divider(modifier = Modifier.padding(vertical = 8.dp))
-
-                                    // Geräteliste
-                                    if (nearbyDevices.isEmpty()) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(200.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (isDiscoveryActive) {
-                                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    CircularProgressIndicator(
-                                                        modifier = Modifier.size(
-                                                            32.dp
-                                                        )
-                                                    )
-                                                    Spacer(modifier = Modifier.height(8.dp))
-                                                    Text("Suche nach Geräten...")
-                                                }
-                                            } else {
-                                                Text("Keine Geräte gefunden. Starte die Suche.")
-                                            }
-                                        }
-                                    } else {
-                                        LazyColumn(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .height(200.dp)
-                                        ) {
-                                            items(nearbyDevices) { device ->
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .clickable {
-                                                            viewModel.shareWithDevice(device.deviceAddress)
-                                                            showShareDialog = false
-                                                        }
-                                                        .padding(vertical = 12.dp),
-                                                    verticalAlignment = Alignment.CenterVertically
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.Smartphone,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.padding(end = 16.dp)
-                                                    )
-                                                    Column {
-                                                        Text(
-                                                            text = device.deviceName
-                                                                ?: "Unbekanntes Gerät",
-                                                            style = MaterialTheme.typography.bodyMedium
-                                                        )
-                                                        Text(
-                                                            text = device.deviceAddress,
-                                                            style = MaterialTheme.typography.bodySmall,
-                                                            color = Color.Gray
-                                                        )
-                                                    }
-                                                }
-                                                Divider()
-                                            }
-                                        }
+                                        Text(
+                                            text = device.deviceAddress,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Gray
+                                        )
                                     }
                                 }
-                            }
-
-                            // Manuelle Peer-ID Tab (bestehende Funktionalität)
-                            1 -> {
-                                Column {
-                                    Text("Gib die Peer-ID ein, mit der du dieses Paket teilen möchtest:")
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    OutlinedTextField(
-                                        value = peerIdInput,
-                                        onValueChange = { peerIdInput = it },
-                                        label = { Text("Peer-ID") },
-                                        singleLine = true,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                }
+                                Divider()
                             }
                         }
-                    }
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            if (selectedTab == 1 && peerIdInput.isNotBlank()) {
-                                viewModel.onSharePaket(PeerId(peerIdInput))
-                            }
-                            showShareDialog = false
-                        }
-                    ) {
-                        Text("Schließen")
                     }
                 }
-            )
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { showShareDialog = false }
+            ) {
+                Text("Schließen")
+            }
         }
+    )
+}
     }
 }
 
