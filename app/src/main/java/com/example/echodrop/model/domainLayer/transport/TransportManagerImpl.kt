@@ -258,6 +258,15 @@ private suspend fun buildManifestForPaket(paketId: String): String {
             put("paketId", paketId)
             put("title", paket.meta.title)
             put("description", paket.meta.description)
+
+                    val tagsArray = JSONArray()
+        paket.meta.tags.forEach { tag ->
+            tagsArray.put(tag)
+        }
+        put("tags", tagsArray)
+
+        put("ttlSeconds", paket.meta.ttlSeconds)
+put("priority", paket.meta.priority)
             
             // Füge Datei-Metadaten hinzu
             val filesArray = JSONArray()
@@ -435,14 +444,24 @@ if (isLastChunk) {
         // Extrahiere Metadaten
         val title = jsonObject.optString("title", "Unbekanntes Paket")
         val description = jsonObject.optString("description", "")
+
+                val tagsArray = jsonObject.optJSONArray("tags")
+        val tags = mutableListOf<String>()
+        if (tagsArray != null) {
+            for (i in 0 until tagsArray.length()) {
+                tags.add(tagsArray.getString(i))
+            }
+        }
+        val ttlSeconds = jsonObject.optInt("ttlSeconds", 3600)
+val priority = jsonObject.optInt("priority", 1)
         
         // Erstelle Paket-Metadaten
 val meta = PaketMeta(
     title = title,
     description = description,
-    tags = emptyList(),  // Füge leere Tags-Liste hinzu
-    ttlSeconds = 3600,   // Standard: 1 Stunde
-    priority = 1
+    tags = tags,
+    ttlSeconds = ttlSeconds,
+    priority = priority
 )
         
         // Verarbeite Dateien
