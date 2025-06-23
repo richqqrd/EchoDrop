@@ -18,7 +18,7 @@ interface PaketDao {
      *
      * @return A `Flow` emitting a list of `PaketEntity` objects.
      */
-    @Query("SELECT * FROM paket ORDER BY createdUtc DESC")
+@Query("SELECT * FROM paket ORDER BY priority DESC, createdUtc DESC")
     fun observeAll(): Flow<List<PaketEntity>>
 
     /**

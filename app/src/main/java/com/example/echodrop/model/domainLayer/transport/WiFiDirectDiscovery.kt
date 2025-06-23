@@ -480,4 +480,35 @@ private fun connectToDeviceLegacy(device: WifiP2pDevice) {
             }
         }
     }
+
+    /**
+ * Trennt die aktuelle Gruppenverbindung und bereinigt den Verbindungsstatus
+ */
+fun disconnectFromCurrentGroup() {
+    Log.d(TAG, "Disconnecting from current group")
+    
+    // Prüfe, ob eine aktive Verbindung vorhanden ist
+    if (_connectionInfo.value == null) {
+        Log.d(TAG, "No active connection to disconnect from")
+        return
+    }
+    
+    // Gruppe entfernen
+    manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
+        override fun onSuccess() {
+            Log.d(TAG, "Successfully disconnected from group")
+            _connectionInfo.value = null
+        }
+        
+        override fun onFailure(reason: Int) {
+            val reasonStr = when(reason) {
+                WifiP2pManager.ERROR -> "ERROR"
+                WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
+                WifiP2pManager.BUSY -> "BUSY"
+                else -> "UNKNOWN"
+            }
+            Log.e(TAG, "Failed to disconnect from group: $reasonStr")
+        }
+    })
+}
 }

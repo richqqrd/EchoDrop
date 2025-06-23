@@ -36,6 +36,7 @@ data class PaketEntity(
     val ttlSeconds: Int,
     val priority: Int,
     val hopLimit: Int?,
+    val currentHopCount: Int = 0,
     val manifestHash: String,
     val createdUtc: Long
     )
@@ -54,11 +55,14 @@ fun PaketEntity.toDomain(files: List<FileEntry>): Paket =
             description,
             tags,
             ttlSeconds,
-            priority
+            priority,
+            maxHops = hopLimit
         ),
         sizeBytes = sizeBytes,
         sha256 = sha256,
         fileCount = fileCount,
         createdUtc = createdUtc,
-        files = files
+        files = files,
+                currentHopCount = currentHopCount, // Hier den aktuellen Hop-Count übergeben
+        maxHopCount = hopLimit 
     )

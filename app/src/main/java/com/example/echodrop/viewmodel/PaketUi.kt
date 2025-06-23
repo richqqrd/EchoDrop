@@ -11,5 +11,6 @@ data class PaketUi (
     val isSending: Boolean,
     val files: List<FileEntryUi> = emptyList(),
     val ttlSeconds: Int = 3600,
-    val priority: Int = 1
+    val priority: Int = 1,
+       val maxHops: Int?,
     )

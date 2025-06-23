@@ -18,5 +18,16 @@ data class Paket (
     val sha256: String,
     val fileCount: Int,
     val createdUtc: Long,
-    val files: List<FileEntry>
-)
+    val files: List<FileEntry>,
+        val currentHopCount: Int = 0,
+    val maxHopCount: Int? = null
+) {
+        fun canBeForwarded(): Boolean {
+        if (maxHopCount == null) return true // Unbegrenzte Weitergabe
+        return currentHopCount < maxHopCount
+    }
+
+    fun incrementHopCount(): Paket {
+        return copy(currentHopCount = currentHopCount + 1)
+    }
+}

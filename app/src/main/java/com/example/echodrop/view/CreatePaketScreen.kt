@@ -6,6 +6,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -15,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.echodrop.viewmodel.CreatePaketViewModel
@@ -135,6 +137,34 @@ fun CreatePaketScreen(
                     )
                 }
             }
+
+item {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Maximale Weiterleitungen:",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f)
+        )
+        
+        OutlinedTextField(
+            value = state.maxHops?.toString() ?: "",
+            onValueChange = { input ->
+                // Versuche, den Input in eine Zahl umzuwandeln
+                val maxHops = input.toIntOrNull()
+                viewModel.setMaxHops(maxHops)
+            },
+            label = { Text("Hops") },
+            modifier = Modifier.width(120.dp),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+    }
+}
 
             item {
                 Button(

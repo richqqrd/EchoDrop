@@ -54,7 +54,7 @@ class PaketRepositoryImpl @Inject constructor(
             fileCount = files.size,
             ttlSeconds = meta.ttlSeconds, 
             priority = meta.priority, 
-            hopLimit = null,
+            hopLimit = meta.maxHops,
             manifestHash = "", 
             createdUtc = System.currentTimeMillis()
         )
@@ -106,7 +106,7 @@ class PaketRepositoryImpl @Inject constructor(
         fileCount = paket.files.size,
         ttlSeconds = paket.meta.ttlSeconds, 
         priority = paket.meta.priority, 
-        hopLimit = null,
+        hopLimit = paket.meta.maxHops,
         manifestHash = "", 
         createdUtc = paket.createdUtc
     )

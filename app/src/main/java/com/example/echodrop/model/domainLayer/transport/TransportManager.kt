@@ -27,4 +27,10 @@ interface TransportManager {
 
     suspend fun sendPaket(paketId: PaketId, peerId: PeerId)
 
+        suspend fun disconnectDevice()
+
+            suspend fun forwardPaket(paketId: PaketId)
+
+
+
 }

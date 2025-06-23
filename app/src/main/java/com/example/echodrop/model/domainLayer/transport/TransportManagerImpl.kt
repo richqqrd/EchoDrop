@@ -33,6 +33,7 @@ import com.example.echodrop.model.domainLayer.model.Paket
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
 import com.example.echodrop.model.domainLayer.usecase.paket.SavePaketUseCase
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.delay
 
 
 @Singleton
@@ -243,7 +244,8 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
     }
 }
 
-private suspend fun buildManifestForPaket(paketId: String): String {
+
+    private suspend fun buildManifestForPaket(paketId: String): String {
     Log.d(TAG, "Building manifest for paket $paketId")
     
     try {
@@ -267,6 +269,8 @@ private suspend fun buildManifestForPaket(paketId: String): String {
 
         put("ttlSeconds", paket.meta.ttlSeconds)
 put("priority", paket.meta.priority)
+            put("maxHops", paket.meta.maxHops ?: -1) // -1 bedeutet unbegrenzt
+            put("currentHopCount", paket.currentHopCount) // Aktueller Hop-Count
             
             // Füge Datei-Metadaten hinzu
             val filesArray = JSONArray()
@@ -368,6 +372,16 @@ put("priority", paket.meta.priority)
                 // Speichere das Paket in der Datenbank
                 savePaketUseCase(paket)
 
+                            if (paket.canBeForwarded()) {
+                Log.d(TAG, "Paket ${paket.id.value} kann weitergeleitet werden (Hop ${paket.currentHopCount}/${paket.maxHopCount})")
+                coroutineScope.launch {
+                    delay(10000) // Warte 10 Sekunden vor der Weiterleitung
+                    autoForwardPaket(paket)
+                }
+            } else {
+                Log.d(TAG, "Paket ${paket.id.value} hat maximale Hop-Anzahl erreicht (${paket.currentHopCount}/${paket.maxHopCount})")
+            }
+
                 // Erstelle ein IncomingFrame für das Manifest und emittiere es
                 val frame = IncomingFrame.Manifest(sourceAddress, paketId, manifestJson)
                 incomingFrames.emit(frame)
@@ -454,6 +468,8 @@ if (isLastChunk) {
         }
         val ttlSeconds = jsonObject.optInt("ttlSeconds", 3600)
 val priority = jsonObject.optInt("priority", 1)
+        val maxHops = jsonObject.optInt("maxHops", -1).let { if (it == -1) null else it }
+        val currentHopCount = jsonObject.optInt("currentHopCount", 0)
         
         // Erstelle Paket-Metadaten
 val meta = PaketMeta(
@@ -461,7 +477,8 @@ val meta = PaketMeta(
     description = description,
     tags = tags,
     ttlSeconds = ttlSeconds,
-    priority = priority
+    priority = priority,
+    maxHops = maxHops 
 )
         
         // Verarbeite Dateien
@@ -503,7 +520,9 @@ return Paket(
     sha256 = "",  // Leerer SHA256-Wert für jetzt
     fileCount = files.size,  // Hier die Anzahl der Dateien angeben
     createdUtc = System.currentTimeMillis(),
-    files = files
+    files = files,
+                currentHopCount = currentHopCount,
+            maxHopCount = maxHops
         )
     } catch (e: Exception) {
         Log.e(TAG, "Error parsing manifest JSON", e)
@@ -583,6 +602,86 @@ private suspend fun updateFilePathInPaket(paketId: PaketId, fileId: String, abso
         Log.d(TAG, "Updated file path in paket $paketId for file $fileId")
     } catch (e: Exception) {
         Log.e(TAG, "Error updating file path in paket", e)
+    }
+}
+
+private suspend fun autoForwardPaket(paket: Paket) {
+    try {
+        // 1. Starte Discovery, um Geräte zu finden
+        startDiscovery()
+
+        delay(5000) // Warte 5 Sekunden, um Geräte zu entdecken
+
+        // 2. Hole die Liste der aktuell entdeckten Geräte
+        val devices = wifiDirectDiscovery.discoveredDevices.value
+
+        if (devices.isEmpty()) {
+            Log.d(TAG, "Keine Geräte zum Weiterleiten von Paket ${paket.id.value} gefunden")
+            return
+        }
+
+        Log.d(TAG, "Versuche, Paket ${paket.id.value} an ${devices.size} Geräte weiterzuleiten")
+
+        // 3. Inkrementiere den Hop-Counter
+        val forwardedPaket = paket.incrementHopCount()
+        savePaketUseCase(forwardedPaket)
+
+        // 4. Sende das Paket an jedes Gerät
+        devices.forEach { device ->
+            try {
+                // Verbinde mit dem Gerät
+                connectToPeer(device.deviceAddress)
+
+                // Warte auf Verbindungsaufbau
+                delay(7000)
+
+                // Prüfe Verbindungsstatus
+                val connectionState = wifiDirectDiscovery.connectionInfo.value
+                if (connectionState != null && connectionState.groupFormed) {
+                    // Erstelle einen Peer-Eintrag
+                    val peerId = PeerId("direct-${device.deviceAddress}")
+
+                    // Sende das Paket
+                    sendPaket(forwardedPaket.id, peerId)
+
+                    Log.d(TAG, "Paket ${forwardedPaket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
+
+                    // Warte nach dem Senden und trenne die Verbindung
+                    delay(5000)
+                    disconnectDevice()
+                } else {
+                    Log.d(TAG, "Keine Verbindung zu ${device.deviceName} möglich für Weiterleitung")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
+            }
+        }
+    } catch (e: Exception) {
+        Log.e(TAG, "Fehler bei automatischer Weiterleitung: ${e.message}")
+    } finally {
+        // Beende Discovery nach der Weiterleitung
+        stopDiscovery()
+    }
+}
+
+
+override suspend fun disconnectDevice() {
+    try {
+        Log.d(TAG, "Disconnecting from current WiFi Direct group")
+        wifiDirectDiscovery.disconnectFromCurrentGroup()
+    } catch (e: Exception) {
+        Log.e(TAG, "Error disconnecting device", e)
+    }
+}
+
+override suspend fun forwardPaket(paketId: PaketId) {
+    try {
+        val paket = getPaketDetailUseCase(paketId) ?: throw IllegalArgumentException("Paket not found")
+        Log.d(TAG, "Manually forwarding paket ${paketId.value}")
+        autoForwardPaket(paket)
+    } catch (e: Exception) {
+        Log.e(TAG, "Error forwarding paket", e)
+        throw e
     }
 }
 }

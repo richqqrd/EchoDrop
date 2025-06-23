@@ -53,12 +53,15 @@ fun PaketDetailScreen(
     // Temporäre Werte für Bearbeitung
     var editTtl by remember { mutableStateOf(3600) }
     var editPriority by remember { mutableStateOf(1) }
+    var editMaxHops by remember { mutableStateOf<Int?>(3) }
 
     // Initialisiere die Bearbeitungswerte, wenn das Paket geladen wurde
     LaunchedEffect(state.paket) {
         state.paket?.let {
             editTtl = it.ttlSeconds
             editPriority = it.priority
+                    editMaxHops = it.maxHops
+
         }
     }
 
@@ -250,6 +253,12 @@ fun PaketDetailScreen(
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+    text = "Maximale Weiterleitungen: ${state.paket!!.maxHops ?: "Unbegrenzt"}",
+    style = MaterialTheme.typography.bodyMedium
+)
+Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
                                     text = "Anzahl Dateien: ${state.paket!!.fileCount}",

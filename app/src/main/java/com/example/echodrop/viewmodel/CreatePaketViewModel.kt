@@ -103,7 +103,8 @@ class CreatePaketViewModel @Inject constructor(
                 description = state.value.description,
                 tags = state.value.tags,
                 ttlSeconds = state.value.ttl,
-                priority = state.value.priority
+                priority = state.value.priority,
+                maxHops = state.value.maxHops
             ),
             files  // Verwende die FileEntry-Objekte mit lokalen Pfaden
         )
@@ -143,14 +144,20 @@ class CreatePaketViewModel @Inject constructor(
         return uri.lastPathSegment
     }
 
-    data class CreatePaketState(
-        val title: String = "",
-        val description: String? = null,
-        val tags: List<String> = emptyList(),
-        val ttl: Int = 3600,
-        val priority: Int = 1,
-        val uris: List<Uri> = emptyList(),
-        val saved: Boolean = false,
-        val error: String? = null
-    )
+    fun setMaxHops(value: Int?) {
+    _state.update { it.copy(maxHops = value) }
+}
+
+data class CreatePaketState(
+    val title: String = "",
+    val description: String? = null,
+    val tags: List<String> = emptyList(),
+    val ttl: Int = 3600, // Lebensdauer in Sekunden (bereits vorhanden)
+    val priority: Int = 1,
+    val maxHops: Int? = 3, // Default-Wert für max. Weiterleitungen
+    val uris: List<Uri> = emptyList(),
+    val saved: Boolean = false,
+    val error: String? = null
+)
+
 }

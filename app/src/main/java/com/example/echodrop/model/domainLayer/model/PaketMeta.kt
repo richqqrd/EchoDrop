@@ -15,4 +15,5 @@ data class PaketMeta(
     val tags: List<String>,
     val ttlSeconds: Int,
     val priority: Int,
+    val maxHops: Int? = null // Neue Eigenschaft
 )
