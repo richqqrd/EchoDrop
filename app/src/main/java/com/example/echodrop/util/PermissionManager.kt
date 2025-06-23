@@ -8,30 +8,36 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 
-class PermissionManager @Inject constructor() {
 
+class PermissionManager @Inject constructor(
+    @ApplicationContext private val context: Context
+) {
+    // Nur die für API 30+ notwendigen Berechtigungen
     fun getRequiredPermissions(): Array<String> {
-        // Ab Android 13 wird NEARBY_WIFI_DEVICES statt ACCESS_FINE_LOCATION verwendet
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(
-                Manifest.permission.NEARBY_WIFI_DEVICES,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.CHANGE_WIFI_STATE
-            )
-        } else {
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_WIFI_STATE,
-                Manifest.permission.CHANGE_WIFI_STATE
-            )
-        }
+        return arrayOf(
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.CHANGE_WIFI_STATE,
+            Manifest.permission.ACCESS_NETWORK_STATE,
+            Manifest.permission.CHANGE_NETWORK_STATE,
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        )
     }
 
     fun arePermissionsGranted(context: Context): Boolean {
-        return getRequiredPermissions().all {
-            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        return getRequiredPermissions().all { permission ->
+            ContextCompat.checkSelfPermission(context, permission) == 
+                PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    fun getMissingPermissions(context: Context): List<String> {
+        return getRequiredPermissions().filter { permission ->
+            ContextCompat.checkSelfPermission(context, permission) != 
+                PackageManager.PERMISSION_GRANTED
         }
     }
 }

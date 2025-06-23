@@ -1,5 +1,6 @@
 package com.example.echodrop.view
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -25,7 +26,11 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import com.example.echodrop.model.domainLayer.model.FileEntry
+import com.example.echodrop.util.FileUtils
+import java.io.File
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -423,51 +428,83 @@ if (showShareDialog) {
 }
     }
 }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun FileItem(file: FileEntryUi) {
-        Card(
+@Composable
+fun FileItem(file: FileEntryUi) {
+    val context = LocalContext.current
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp)
+                .padding(16.dp)
         ) {
+            // Dateinamen extrahieren
+            val fileName = remember(file.path) {
+                File(file.path).name
+            }
+            
+            // Dateigröße formatieren
+            val formattedSize = remember(file.sizeBytes) {
+                when {
+                    file.sizeBytes < 1024 -> "${file.sizeBytes} B"
+                    file.sizeBytes < 1024 * 1024 -> "${file.sizeBytes / 1024} KB"
+                    else -> "${file.sizeBytes / (1024 * 1024)} MB"
+                }
+            }
+            
+            Text(
+                text = fileName,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = "$formattedSize • ${file.mime}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Nur Download-Button
             Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                // Icon je nach Dateityp
-                Icon(
-                    imageVector = when {
-                        file.mime.startsWith("image/") -> Icons.Default.Image
-                        file.mime.startsWith("video/") -> Icons.Default.Movie
-                        file.mime.startsWith("audio/") -> Icons.Default.MusicNote
-                        file.mime.startsWith("text/") -> Icons.Default.Description
-                        file.mime.contains("pdf") -> Icons.Default.Description
-                        else -> Icons.Default.InsertDriveFile
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Column {
-                    Text(
-                        text = file.path.substringAfterLast('/'),
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = formatFileSize(file.sizeBytes),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                // Download-Button
+                IconButton(
+                    onClick = { 
+                        val uri = FileUtils.exportToDownloads(context, file)
+                        if (uri != null) {
+                            Toast.makeText(
+                                context, 
+                                "Datei in Downloads gespeichert", 
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Toast.makeText(
+                                context, 
+                                "Fehler beim Speichern der Datei", 
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Herunterladen"
                     )
                 }
             }
         }
     }
+}
 
 
 private fun formatFileSize(sizeBytes: Long): String {
