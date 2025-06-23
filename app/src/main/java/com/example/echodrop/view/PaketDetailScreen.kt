@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.util.FileUtils
+import kotlinx.coroutines.delay
 import java.io.File
 
 
@@ -44,6 +45,8 @@ fun PaketDetailScreen(
     LaunchedEffect(paketId) {
         viewModel.loadPaketDetail(paketId)
     }
+
+
 
     val state by viewModel.state.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
@@ -62,6 +65,14 @@ fun PaketDetailScreen(
             editPriority = it.priority
                     editMaxHops = it.maxHops
 
+        }
+    }
+
+    var now by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(state.paket?.createdUtc) {
+        while (true) {
+            now = System.currentTimeMillis()
+            delay(1000)
         }
     }
 
@@ -242,9 +253,10 @@ fun PaketDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
-val maxTtl = 86400 // z.B. 24h als Maximum, passe ggf. an
-val ttlLeft = state.paket!!.ttlSeconds
-val ttlProgress = ttlLeft.toFloat() / maxTtl
+val paket = state.paket!!
+val expiresAt = paket.createdUtc + paket.ttlSeconds * 1000
+val ttlLeft = ((expiresAt - now) / 1000).coerceAtLeast(0)
+val ttlProgress = ttlLeft.toFloat() / paket.ttlSeconds.toFloat()
 
 Text(
     text = "TTL verbleibend:",
@@ -259,7 +271,7 @@ LinearProgressIndicator(
 )
 Spacer(modifier = Modifier.height(4.dp))
 Text(
-    text = formatTtl(ttlLeft),
+    text = formatTtl(ttlLeft.toInt()),
     style = MaterialTheme.typography.labelSmall,
     color = Color.Gray
 )

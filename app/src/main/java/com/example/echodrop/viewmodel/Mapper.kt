@@ -14,7 +14,8 @@ fun Paket.toUi(isSending: Boolean = false): PaketUi = PaketUi(
     files = emptyList(), // Leere Liste, da im einfachen UI nicht benötigt
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
-    maxHops = this.meta.maxHops
+    maxHops = this.meta.maxHops,
+    createdUtc = this.createdUtc
 )
 
 fun TransferLog.toUi(): TransferLogUi = TransferLogUi(
@@ -40,5 +41,6 @@ fun Paket.toDetailUi(files: List<FileEntryUi>): PaketUi = PaketUi(
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
     maxHops = this.meta.maxHops,
-    isSending = false
+    isSending = false,
+    createdUtc = this.createdUtc 
 )
