@@ -242,11 +242,28 @@ fun PaketDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = "TTL: ${state.paket!!.ttlSeconds} Sekunden",
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
+val maxTtl = 86400 // z.B. 24h als Maximum, passe ggf. an
+val ttlLeft = state.paket!!.ttlSeconds
+val ttlProgress = ttlLeft.toFloat() / maxTtl
+
+Text(
+    text = "TTL verbleibend:",
+    style = MaterialTheme.typography.bodyMedium
+)
+Spacer(modifier = Modifier.height(4.dp))
+LinearProgressIndicator(
+    progress = ttlProgress.coerceIn(0f, 1f),
+    modifier = Modifier
+        .fillMaxWidth()
+        .height(8.dp)
+)
+Spacer(modifier = Modifier.height(4.dp))
+Text(
+    text = formatTtl(ttlLeft),
+    style = MaterialTheme.typography.labelSmall,
+    color = Color.Gray
+)
+Spacer(modifier = Modifier.height(8.dp))
 
                                 Text(
                                     text = "Priorität: ${state.paket!!.priority}",
@@ -523,6 +540,13 @@ private fun formatFileSize(sizeBytes: Long): String {
         sizeBytes < 1024 * 1024 * 1024 -> "${sizeBytes / (1024 * 1024)} MB"
         else -> "${sizeBytes / (1024 * 1024 * 1024)} GB"
     }
+}
+
+private fun formatTtl(seconds: Int): String {
+    val hours = seconds / 3600
+    val minutes = (seconds % 3600) / 60
+    val secs = seconds % 60
+    return "%02dh %02dm %02ds".format(hours, minutes, secs)
 }
 
 

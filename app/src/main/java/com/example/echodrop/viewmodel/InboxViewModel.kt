@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.model.domainLayer.usecase.paket.ObserveInboxUseCase
+import com.example.echodrop.model.domainLayer.usecase.paket.PurgeExpiredUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.ObserveTransfersUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,8 +20,17 @@ import javax.inject.Inject
 class InboxViewModel @Inject constructor(
     private val observeInbox: ObserveInboxUseCase,
     private val observeTransfers: ObserveTransfersUseCase,
-    private val startTransfer: StartTransferUseCase
+    private val startTransfer: StartTransferUseCase,
+    private val purgeExpiredUseCase: PurgeExpiredUseCase // Füge das UseCase als Dependency hinzu
+
 ) : ViewModel() {
+
+    init {
+        // Starte das Purge beim Initialisieren des ViewModels
+        viewModelScope.launch {
+            purgeExpiredUseCase(System.currentTimeMillis())
+        }
+    }
 
     val paketList: StateFlow<List<PaketUi>> = observeInbox()
     .map{list->list.map{it.toUi()}}
