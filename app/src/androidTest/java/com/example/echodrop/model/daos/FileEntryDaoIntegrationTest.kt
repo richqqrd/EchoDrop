@@ -19,7 +19,7 @@ import org.junit.Assert.*
  * Test class for the `FileEntryDao` data access object.
  */
 @RunWith(AndroidJUnit4::class)
-class FileEntryDaoTest {
+class FileEntryDaoIntegrationTest {
 
     private lateinit var database: EchoDatabase
     private lateinit var fileEntryDao: FileEntryDao

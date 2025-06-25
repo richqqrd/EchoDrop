@@ -21,7 +21,7 @@ import org.junit.Assert.*
  * Test class for the `ChunkDao` data access object.
  */
 @RunWith(AndroidJUnit4::class)
-class ChunkDaoTest {
+class ChunkDaoIntegrationTest {
 
     private lateinit var database: EchoDatabase
     private lateinit var chunkDao: ChunkDao

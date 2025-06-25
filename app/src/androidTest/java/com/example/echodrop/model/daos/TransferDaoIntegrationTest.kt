@@ -23,7 +23,7 @@ import org.junit.Assert.*
  * Test class for the `TransferDao` data access object.
  */
 @RunWith(AndroidJUnit4::class)
-class TransferDaoTest {
+class TransferDaoIntegrationTest {
 
     private lateinit var database: EchoDatabase
     private lateinit var transferDao: TransferDao

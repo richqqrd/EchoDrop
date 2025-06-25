@@ -18,7 +18,7 @@ import org.junit.Assert.*
  * Test class for the `PeerDao` data access object.
  */
 @RunWith(AndroidJUnit4::class)
-class PeerDaoTest {
+class PeerDaoIntegrationTest {
 
     private lateinit var database: EchoDatabase
     private lateinit var peerDao: PeerDao

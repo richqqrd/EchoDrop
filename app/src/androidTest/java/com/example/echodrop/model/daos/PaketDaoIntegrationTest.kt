@@ -18,7 +18,7 @@ import org.junit.Assert.*
  * Test class for the `PaketDao` data access object.
  */
 @RunWith(AndroidJUnit4::class)
-class PaketDaoTest {
+class PaketDaoIntegrationTest {
 
     private lateinit var database: EchoDatabase
     private lateinit var paketDao: PaketDao
@@ -122,15 +122,55 @@ class PaketDaoTest {
     }
 
     @Test
-    fun observeAllReturnsAllPaketsOrderedByCreatedUtc() = runBlocking {
-        paketDao.upsert(testPaketEntity1)
-        paketDao.upsert(testPaketEntity2)
-
+    fun observeAllReturnsAllPaketsOrderedByPriorityAndCreatedUtc() = runBlocking {
+        // Erstelle zwei Pakete mit unterschiedlichen Prioritäten
+        val highPriorityPaket = testPaketEntity1.copy(
+            paketId = "paket-123",
+            priority = 2,
+            createdUtc = System.currentTimeMillis()
+        )
+        
+        val lowPriorityPaket = testPaketEntity2.copy(
+            paketId = "paket-456",
+            priority = 1,
+            createdUtc = System.currentTimeMillis() + 1000 // Neueres Datum
+        )
+    
+        paketDao.upsert(lowPriorityPaket)
+        paketDao.upsert(highPriorityPaket)
+    
         val pakets = paketDao.observeAll().first()
-
+    
         assertEquals(2, pakets.size)
-        assertEquals(testPaketEntity1.paketId, pakets[0].paketId)
-        assertEquals(testPaketEntity2.paketId, pakets[1].paketId)
+        // Das Paket mit höherer Priorität sollte zuerst kommen
+        assertEquals(highPriorityPaket.paketId, pakets[0].paketId)
+        assertEquals(lowPriorityPaket.paketId, pakets[1].paketId)
+    }
+    
+    @Test
+    fun observeAllReturnsAllPaketsSamePriorityOrderedByCreatedUtc() = runBlocking {
+        // Erstelle zwei Pakete mit gleicher Priorität aber unterschiedlichen Zeitstempeln
+        val olderPaket = testPaketEntity1.copy(
+            paketId = "paket-123",
+            priority = 1,
+            createdUtc = System.currentTimeMillis()
+        )
+        
+        val newerPaket = testPaketEntity2.copy(
+            paketId = "paket-456",
+            priority = 1,
+            createdUtc = System.currentTimeMillis() + 1000 // 1 Sekunde später
+        )
+    
+        paketDao.upsert(olderPaket)
+        paketDao.upsert(newerPaket)
+    
+        val pakets = paketDao.observeAll().first()
+    
+        assertEquals(2, pakets.size)
+        // Bei gleicher Priorität sollte das neuere Paket zuerst kommen (DESC Sortierung)
+        assertEquals(newerPaket.paketId, pakets[0].paketId)
+        assertEquals(olderPaket.paketId, pakets[1].paketId)
     }
 
     @Test
