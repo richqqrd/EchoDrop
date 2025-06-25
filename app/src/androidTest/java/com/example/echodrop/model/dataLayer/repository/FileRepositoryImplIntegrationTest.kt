@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.echodrop.model.dataLayer.database.EchoDatabase
+import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 import com.example.echodrop.model.dataLayer.repositoryImpl.FileRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.model.domainLayer.model.PaketId
@@ -53,6 +54,26 @@ class FileRepositoryIntegrationTest {
             EchoDatabase::class.java
         ).build()
         repository = FileRepositoryImpl(db.fileEntryDao())
+
+        runTest {
+            db.paketDao().upsert(
+                PaketEntity(
+                    paketId = testPaketId.value,
+                    version = 1,
+                    title = "Test Paket",
+                    description = "Test Description",
+                    tags = listOf("test"),
+                    sizeBytes = 0L,
+                    sha256 = "test-hash",
+                    fileCount = 0,
+                    ttlSeconds = 3600,
+                    priority = 1,
+                    hopLimit = null,
+                    manifestHash = "test-manifest",
+                    createdUtc = System.currentTimeMillis()
+                )
+            )
+        }
     }
 
     @After
@@ -90,6 +111,24 @@ class FileRepositoryIntegrationTest {
     @Test
     fun insertFilesForMultiplePakets() = runTest {
         val secondPaketId = PaketId("test-paket-456")
+
+        db.paketDao().upsert(
+            PaketEntity(
+                paketId = secondPaketId.value,
+                version = 1,
+                title = "Second Test Paket",
+                description = "Test Description",
+                tags = listOf("test"),
+                sizeBytes = 0L,
+                sha256 = "test-hash",
+                fileCount = 0,
+                ttlSeconds = 3600,
+                priority = 1,
+                hopLimit = null,
+                manifestHash = "test-manifest",
+                createdUtc = System.currentTimeMillis()
+            )
+        )
 
         repository.insertAll(testPaketId, testFiles)
         repository.insertAll(secondPaketId, testFiles)
