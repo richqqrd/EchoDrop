@@ -8,7 +8,7 @@ import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.model.domainLayer.model.TransferState
-import com.example.echodrop.model.domainLayer.transport.WiFiDirectService
+import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

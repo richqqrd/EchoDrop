@@ -1,8 +1,10 @@
-package com.example.echodrop.model.repository
+package com.example.echodrop.model.dataLayer.repository
 
 import com.example.echodrop.model.dataLayer.database.daos.PeerDao
 import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
 import com.example.echodrop.model.dataLayer.repositoryImpl.PeerRepositoryImpl
+import com.example.echodrop.model.domainLayer.model.Peer
+import com.example.echodrop.model.domainLayer.model.PeerId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
@@ -54,11 +56,11 @@ class PeerRepositoryImplTest {
 
   assertEquals(2, result.size, "Should return two peers")
 
-  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId(testPeerId), result[0].id)
+  assertEquals(PeerId(testPeerId), result[0].id)
   assertEquals("Test Device", result[0].alias)
   assertEquals(1620000000000L, result[0].lastSeenUtc)
 
-  assertEquals(com.example.echodrop.model.domainLayer.model.PeerId("peer-456"), result[1].id)
+  assertEquals(PeerId("peer-456"), result[1].id)
   assertNull(result[1].alias)
   assertEquals(1620000001000L, result[1].lastSeenUtc)
  }
@@ -76,8 +78,8 @@ class PeerRepositoryImplTest {
  @Test
  @DisplayName("upsertPeer creates peer entity with correct data")
  fun upsertPeerCreatesPeerEntityWithCorrectData() = runTest {
-  val testPeer = com.example.echodrop.model.domainLayer.model.Peer(
-   id = com.example.echodrop.model.domainLayer.model.PeerId(testPeerId),
+  val testPeer = Peer(
+   id = PeerId(testPeerId),
    alias = "Test Device",
    lastSeenUtc = 1620000000000L
   )
@@ -97,8 +99,8 @@ class PeerRepositoryImplTest {
  @Test
  @DisplayName("upsertPeer creates peer entity with null alias")
  fun upsertPeerCreatesPeerEntityWithNullAlias() = runTest {
-  val testPeer = com.example.echodrop.model.domainLayer.model.Peer(
-   id = com.example.echodrop.model.domainLayer.model.PeerId("peer-456"),
+  val testPeer = Peer(
+   id = PeerId("peer-456"),
    alias = null,
    lastSeenUtc = 1620000001000L
   )

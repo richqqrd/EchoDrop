@@ -1,4 +1,4 @@
-package com.example.echodrop.model.domainLayer.transport
+package com.example.echodrop.model.dataLayer.transport
 
 import android.Manifest
 import android.content.BroadcastReceiver
@@ -225,7 +225,7 @@ class WiFiDirectDiscovery @Inject constructor(
      */
     fun connectToDevice(deviceAddress: String) {
             Log.d(TAG, "Attempting to connect to device: $deviceAddress")
-    
+
     // Prüfe aktiven Verbindungszustand
     if (_connectionInfo.value != null) {
         Log.d(TAG, "Already connected to a device. Current connection info: ${_connectionInfo.value}")
@@ -317,7 +317,7 @@ private fun connectToDeviceLegacy(device: WifiP2pDevice) {
     } catch (e: Exception) {
         // Fange die Exception ab und protokolliere sie
         Log.e(TAG, "Exception during connect attempt: ${e.message}", e)
-        
+
         // Versuche den vorherigen Gruppenstatus zurückzusetzen
         try {
             manager.cancelConnect(channel, null)
@@ -486,20 +486,20 @@ private fun connectToDeviceLegacy(device: WifiP2pDevice) {
  */
 fun disconnectFromCurrentGroup() {
     Log.d(TAG, "Disconnecting from current group")
-    
+
     // Prüfe, ob eine aktive Verbindung vorhanden ist
     if (_connectionInfo.value == null) {
         Log.d(TAG, "No active connection to disconnect from")
         return
     }
-    
+
     // Gruppe entfernen
     manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
         override fun onSuccess() {
             Log.d(TAG, "Successfully disconnected from group")
             _connectionInfo.value = null
         }
-        
+
         override fun onFailure(reason: Int) {
             val reasonStr = when(reason) {
                 WifiP2pManager.ERROR -> "ERROR"

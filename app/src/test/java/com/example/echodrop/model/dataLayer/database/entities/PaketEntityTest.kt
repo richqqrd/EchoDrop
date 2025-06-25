@@ -1,7 +1,10 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.dataLayer.database.entities
 
 import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 import com.example.echodrop.model.dataLayer.database.entities.toDomain
+import com.example.echodrop.model.domainLayer.model.FileEntry
+import com.example.echodrop.model.domainLayer.model.Paket
+import com.example.echodrop.model.domainLayer.model.PaketId
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -224,16 +227,16 @@ class PaketEntityTest {
    )
 
    val fileEntries = listOf(
-    com.example.echodrop.model.domainLayer.model.FileEntry("file1.txt", "text/plain", 512L, 0),
-    com.example.echodrop.model.domainLayer.model.FileEntry("file2.jpg", "image/jpeg", 512L, 1)
+       FileEntry("file1.txt", "text/plain", 512L, 0),
+       FileEntry("file2.jpg", "image/jpeg", 512L, 1)
    )
 
    // Act
    val domainModel = paketEntity.toDomain(fileEntries)
 
    // Assert
-   assertTrue(domainModel is com.example.echodrop.model.domainLayer.model.Paket)
-   assertEquals(com.example.echodrop.model.domainLayer.model.PaketId(paketId), domainModel.id)
+   assertTrue(domainModel is Paket)
+   assertEquals(PaketId(paketId), domainModel.id)
    assertEquals(title, domainModel.meta.title)
    assertEquals(description, domainModel.meta.description)
    assertEquals(tags, domainModel.meta.tags)

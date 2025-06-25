@@ -1,10 +1,13 @@
-package com.example.echodrop.model.repository
+package com.example.echodrop.model.dataLayer.repository
 
 import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
 import com.example.echodrop.model.dataLayer.database.daos.PaketDao
 import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
 import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 import com.example.echodrop.model.dataLayer.repositoryImpl.PaketRepositoryImpl
+import com.example.echodrop.model.domainLayer.model.FileEntry
+import com.example.echodrop.model.domainLayer.model.PaketId
+import com.example.echodrop.model.domainLayer.model.PaketMeta
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.*
@@ -67,8 +70,8 @@ class PaketRepositoryImplTest {
  )
 
  private val testDomainFiles = listOf(
-  com.example.echodrop.model.domainLayer.model.FileEntry("test/file1.txt", "text/plain", 512L, 0),
-  com.example.echodrop.model.domainLayer.model.FileEntry("test/file2.jpg", "image/jpeg", 512L, 1)
+     FileEntry("test/file1.txt", "text/plain", 512L, 0),
+     FileEntry("test/file2.jpg", "image/jpeg", 512L, 1)
  )
 
  @BeforeEach
@@ -86,7 +89,7 @@ class PaketRepositoryImplTest {
   val result = repository.observeInbox().first()
 
   assertEquals(1, result.size)
-  assertEquals(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId), result[0].id)
+  assertEquals(PaketId(testPaketId), result[0].id)
   assertEquals(testPaketEntity.title, result[0].meta.title)
   assertEquals(testPaketEntity.description, result[0].meta.description)
   assertTrue(result[0].files.isEmpty(), "observeInbox should use empty file list")
@@ -97,7 +100,7 @@ class PaketRepositoryImplTest {
  fun getPaketReturnsNullWhenEntityNotFound() = runTest {
   whenever(mockPaketDao.findById(any())).thenReturn(null)
 
-  val result = repository.getPaket(com.example.echodrop.model.domainLayer.model.PaketId("non-existent"))
+  val result = repository.getPaket(PaketId("non-existent"))
 
   assertNull(result, "Result should be null when entity not found")
  }
@@ -108,10 +111,10 @@ class PaketRepositoryImplTest {
   whenever(mockPaketDao.findById(testPaketId)).thenReturn(testPaketEntity)
   whenever(mockFileEntryDao.findByPaket(testPaketId)).thenReturn(testFileEntries)
 
-  val result = repository.getPaket(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId))
+  val result = repository.getPaket(PaketId(testPaketId))
 
   assertNotNull(result, "Result should not be null")
-  assertEquals(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId), result?.id)
+  assertEquals(PaketId(testPaketId), result?.id)
   assertEquals(testPaketEntity.title, result?.meta?.title)
   assertEquals(2, result?.files?.size, "Should have 2 files")
   assertEquals("test/file1.txt", result?.files?.get(0)?.path)
@@ -121,7 +124,7 @@ class PaketRepositoryImplTest {
  @Test
  @DisplayName("insert creates paket and file entries with correct data")
  fun insertCreatesPaketAndFileEntriesWithCorrectData() = runTest {
-  val testMeta = com.example.echodrop.model.domainLayer.model.PaketMeta(
+  val testMeta = PaketMeta(
    title = "New Package",
    description = "New description",
    tags = listOf("new", "test"),
@@ -161,7 +164,7 @@ class PaketRepositoryImplTest {
  fun updateMetaDoesNothingWhenPaketNotFound() = runTest {
   whenever(mockPaketDao.findById(any())).thenReturn(null)
 
-  repository.updateMeta(com.example.echodrop.model.domainLayer.model.PaketId("non-existent"), 7200, 3)
+  repository.updateMeta(PaketId("non-existent"), 7200, 3)
 
   verify(mockPaketDao, never()).upsert(any())
  }
@@ -172,7 +175,7 @@ class PaketRepositoryImplTest {
   whenever(mockPaketDao.findById(testPaketId)).thenReturn(testPaketEntity)
   val paketCaptor = argumentCaptor<PaketEntity>()
 
-  repository.updateMeta(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId), 7200, 3)
+  repository.updateMeta(PaketId(testPaketId), 7200, 3)
 
   verify(mockPaketDao).upsert(paketCaptor.capture())
   val capturedPaket = paketCaptor.firstValue
@@ -186,7 +189,7 @@ class PaketRepositoryImplTest {
  @Test
  @DisplayName("delete calls DAO with correct ID")
  fun deleteCallsDaoWithCorrectId() = runTest {
-  repository.delete(com.example.echodrop.model.domainLayer.model.PaketId(testPaketId))
+  repository.delete(PaketId(testPaketId))
 
   verify(mockPaketDao).deleteById(testPaketId)
  }

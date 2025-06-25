@@ -1,4 +1,4 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.dataLayer.database.entities
 
 import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
 import org.junit.jupiter.api.Assertions.*

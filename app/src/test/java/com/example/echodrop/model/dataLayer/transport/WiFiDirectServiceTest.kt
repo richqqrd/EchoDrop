@@ -1,8 +1,8 @@
-package com.example.echodrop.model.transport
+package com.example.echodrop.model.dataLayer.transport
 
 import android.content.Context
 import com.example.echodrop.model.domainLayer.model.PaketId
-import com.example.echodrop.model.domainLayer.transport.WiFiDirectService
+import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK

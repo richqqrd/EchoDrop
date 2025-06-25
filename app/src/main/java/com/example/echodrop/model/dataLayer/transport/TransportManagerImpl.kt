@@ -1,40 +1,41 @@
-package com.example.echodrop.model.domainLayer.transport
+package com.example.echodrop.model.dataLayer.transport
 
+import android.content.Context
 import android.util.Log
 import com.example.echodrop.model.domainLayer.model.ConnectionState
 import com.example.echodrop.model.domainLayer.model.DeviceInfo
+import com.example.echodrop.model.domainLayer.model.FileEntry
+import com.example.echodrop.model.domainLayer.model.Paket
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PaketMeta
 import com.example.echodrop.model.domainLayer.model.Peer
 import com.example.echodrop.model.domainLayer.model.PeerId
+import com.example.echodrop.model.domainLayer.model.TransferState
+import com.example.echodrop.model.domainLayer.repository.TransferRepository
+import com.example.echodrop.model.domainLayer.transport.IncomingFrame
+import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
+import com.example.echodrop.model.domainLayer.transport.TransportManager
+import com.example.echodrop.model.dataLayer.transport.WiFiDirectDiscovery
+import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
+import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
+import com.example.echodrop.model.domainLayer.usecase.paket.SavePaketUseCase
 import com.example.echodrop.model.domainLayer.usecase.peer.SavePeerUseCase
 import com.google.gson.Gson
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import javax.inject.Singleton
-import com.example.echodrop.model.domainLayer.model.FileEntry
-import com.example.echodrop.model.domainLayer.usecase.paket.CreatePaketUseCase
-import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
-import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
-import com.example.echodrop.model.domainLayer.usecase.transfer.UpdateTransferProgressUseCase
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
-import android.content.Context
-import com.example.echodrop.model.domainLayer.model.TransferState
-import com.example.echodrop.model.domainLayer.model.Paket
-import com.example.echodrop.model.domainLayer.repository.TransferRepository
-import com.example.echodrop.model.domainLayer.usecase.paket.SavePaketUseCase
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.delay
-
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -56,10 +57,11 @@ class TransportManagerImpl @Inject constructor(
         private const val MANIFEST_PREFIX = "MAN|"
         private const val CHUNK_PREFIX = "CHK|"
     }
-    
+
     private val gson = Gson()
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val incomingFrames = MutableSharedFlow<IncomingFrame>(replay = 0, extraBufferCapacity = 10)
+    private val incomingFrames =
+        MutableSharedFlow<IncomingFrame>(replay = 0, extraBufferCapacity = 10)
 
     init {
         // Beobachte eingehende Daten vom WiFiDirectService
@@ -93,17 +95,17 @@ class TransportManagerImpl @Inject constructor(
 
     override fun startBeaconing() {
         Log.d(TAG, "Starting beaconing")
-        
+
         // Starte die Entdeckung von Geräten
         wifiDirectDiscovery.startDiscovery()
-        
+
         // Starte den Service zum Empfangen von Daten
         wifiDirectService.startService()
     }
 
     override fun stopBeaconing() {
         Log.d(TAG, "Stopping beaconing")
-        
+
         // Stoppe alle WiFi Direct-Aktivitäten
         wifiDirectDiscovery.stopDiscovery()
         wifiDirectService.stopService()
@@ -120,10 +122,10 @@ override suspend fun sendManifest(paketId: String, manifestJson: String) {
     if (connectionState == null || !connectionState.groupFormed) {
         throw IllegalStateException("No active WiFi Direct connection. Please ensure devices are connected.")
     }
-    
+
     val targetAddress = connectionState.groupOwnerAddress?.hostAddress
         ?: throw IllegalStateException("No connected device to send data to")
-    
+
     Log.d(TAG, "Using target address: $targetAddress for group owner: ${connectionState.isGroupOwner}")
 
     // Sende die Daten über den Service
@@ -225,10 +227,10 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
             Log.e(TAG, "No active WiFi Direct connection, cannot send paket")
             return
         }
-        
+
         Log.d(TAG, "Using connection: isGroupOwner=${connectionState.isGroupOwner}, " +
                 "groupOwnerAddress=${connectionState.groupOwnerAddress?.hostAddress}")
-        
+
         // 1. Manifest generieren und senden
         val manifestJson = buildManifestForPaket(paketId.value)
         Log.d(TAG, "Generated manifest: $manifestJson")
@@ -236,7 +238,7 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
 
         // 2. Chunks senden
         sendChunksForPaket(paketId.value, peerId.value)
-        
+
         Log.d(TAG, "Successfully sent paket ${paketId.value}")
     } catch (e: Exception) {
         Log.e(TAG, "Error sending paket ${paketId.value}", e)
@@ -247,7 +249,7 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
 
     private suspend fun buildManifestForPaket(paketId: String): String {
     Log.d(TAG, "Building manifest for paket $paketId")
-    
+
     try {
         // Hier getPaketDetailUseCase verwenden, nicht createPaketUseCase
         val paket = getPaketDetailUseCase(PaketId(paketId))
@@ -255,7 +257,7 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
             Log.e(TAG, "Paket not found: $paketId")
             return "{\"paketId\": \"$paketId\", \"error\": \"Paket not found\"}"
         }
-        
+
         val manifestData = JSONObject().apply {
             put("paketId", paketId)
             put("title", paket.meta.title)
@@ -271,20 +273,23 @@ override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
 put("priority", paket.meta.priority)
             put("maxHops", paket.meta.maxHops ?: -1) // -1 bedeutet unbegrenzt
             put("currentHopCount", paket.currentHopCount) // Aktueller Hop-Count
-            
+
             // Füge Datei-Metadaten hinzu
             val filesArray = JSONArray()
             paket.files.forEachIndexed { index, file ->
-                JSONObject().apply { 
+                        val fileName = File(file.path).name
+
+                // TODO file name auf empfänger noch falsch, aber richtig gepsiehcer in DB!
+                JSONObject().apply {
                     put("id", "file_${index}_${paketId}")
-                    put("name", file.path)  // FileEntry hat 'path', nicht 'name'
+                    put("name", fileName)  // FileEntry hat 'path', nicht 'name'
                     put("size", file.sizeBytes)  // FileEntry hat 'sizeBytes', nicht 'size'
                     put("mimeType", file.mime)   // FileEntry hat 'mime', nicht 'mimeType'
                 }.also { filesArray.put(it) }
             }
             put("files", filesArray)
         }.toString()
-        
+
         Log.d(TAG, "Created manifest: $manifestData")
         return manifestData
     } catch (e: Exception) {
@@ -368,7 +373,7 @@ put("priority", paket.meta.priority)
 
                 // Manifest parsen und Paket erstellen
                 val paket = parseManifestAndCreatePaket(paketId, manifestJson, peerId)
-                
+
                 // Speichere das Paket in der Datenbank
                 savePaketUseCase(paket)
 
@@ -388,7 +393,7 @@ put("priority", paket.meta.priority)
 
                 // Starte einen INCOMING Transfer im Repository
                 _receivedManifests.emit(Pair(PaketId(paketId), peerId))
-                
+
                 // Setze den Transfer auf ACTIVE
                 progressCallback.updateProgress(PaketId(paketId), peerId, 10)
                 transferRepository.updateState(PaketId(paketId), peerId, TransferState.ACTIVE)
@@ -409,10 +414,10 @@ else if (dataAsString.startsWith(CHUNK_PREFIX)) {
         if (idParts.size >= 2) {
             val paketId = idParts[1]
             val fileId = if (idParts.size >= 3) idParts[2] else "file_0_$paketId"
-            
+
             // Speichere die Chunk-Daten in einer temporären Datei
             val success = saveChunkToFile(PaketId(paketId), fileId, chunkData)
-            
+
             if (success) {
                 // Aktualisiere den Fortschritt im Repository
                 val peerId = PeerId("direct-$sourceAddress")
@@ -427,7 +432,7 @@ if (isLastChunk) {
     transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
     Log.d(TAG, "Transfer completed for paket $paketId")
 }
-                
+
                 // Erstelle ein IncomingFrame für den Chunk und emittiere es
                 val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
                 incomingFrames.emit(frame)
@@ -443,7 +448,7 @@ if (isLastChunk) {
             Log.e(TAG, "Error processing received data", e)
         }
     }
-    
+
     /**
      * Verbindet mit einem Peer unter Verwendung der WiFiDirectDiscovery
      */
@@ -454,7 +459,7 @@ if (isLastChunk) {
     private fun parseManifestAndCreatePaket(paketId: String, manifestJson: String, peerId: PeerId): Paket {
     try {
         val jsonObject = JSONObject(manifestJson)
-        
+
         // Extrahiere Metadaten
         val title = jsonObject.optString("title", "Unbekanntes Paket")
         val description = jsonObject.optString("description", "")
@@ -470,7 +475,7 @@ if (isLastChunk) {
 val priority = jsonObject.optInt("priority", 1)
         val maxHops = jsonObject.optInt("maxHops", -1).let { if (it == -1) null else it }
         val currentHopCount = jsonObject.optInt("currentHopCount", 0)
-        
+
         // Erstelle Paket-Metadaten
 val meta = PaketMeta(
     title = title,
@@ -478,13 +483,13 @@ val meta = PaketMeta(
     tags = tags,
     ttlSeconds = ttlSeconds,
     priority = priority,
-    maxHops = maxHops 
+    maxHops = maxHops
 )
-        
+
         // Verarbeite Dateien
         val files = mutableListOf<FileEntry>()
         val filesArray = jsonObject.optJSONArray("files")
-        
+
         if (filesArray != null) {
             for (i in 0 until filesArray.length()) {
                 val fileObject = filesArray.getJSONObject(i)
@@ -492,26 +497,25 @@ val meta = PaketMeta(
                 val fileName = fileObject.getString("name")
                 val fileSize = fileObject.getLong("size")
                 val fileMime = fileObject.optString("mimeType", "application/octet-stream")
-                
+
 val filesDir = File(context.filesDir, "received_files")
 if (!filesDir.exists()) {
     filesDir.mkdirs()
 }
-val filePath = File(filesDir, "${paketId}_${fileId}.bin").absolutePath
-                
+val filePath = File(filesDir, "${paketId}_${fileId}_$fileName").absolutePath
                 // Füge die Datei hinzu
                 files.add(
-    FileEntry(
-        path = filePath,
-        mime = fileMime,
-        sizeBytes = fileSize,
-        orderIdx = i  // Verwende den Index aus der Schleife als orderIdx
-    )
+                    FileEntry(
+                        path = filePath,
+                        mime = fileMime,
+                        sizeBytes = fileSize,
+                        orderIdx = i  // Verwende den Index aus der Schleife als orderIdx
+                    )
                 )
             }
         }
 
-        
+
         // Erstelle und gib das Paket zurück
 return Paket(
     id = PaketId(paketId),
@@ -521,9 +525,9 @@ return Paket(
     fileCount = files.size,  // Hier die Anzahl der Dateien angeben
     createdUtc = System.currentTimeMillis(),
     files = files,
-                currentHopCount = currentHopCount,
-            maxHopCount = maxHops
-        )
+    currentHopCount = currentHopCount,
+    maxHopCount = maxHops
+)
     } catch (e: Exception) {
         Log.e(TAG, "Error parsing manifest JSON", e)
         // Erstelle ein minimales Paket als Fallback
@@ -549,28 +553,28 @@ private fun saveChunkToFile(paketId: PaketId, fileId: String, data: ByteArray): 
     try {
         // Erstelle einen Dateinamen basierend auf der Paket-ID und Datei-ID
         val fileName = "${paketId.value}_${fileId.replace('/', '_')}.bin"
-        
+
         // Verwende einen dauerhaften Speicherort statt des Cache-Verzeichnisses
         val filesDir = File(context.filesDir, "received_files")
         if (!filesDir.exists()) {
             filesDir.mkdirs()
         }
-        
+
         val file = File(filesDir, fileName)
-        
+
         // Schreibe die Daten in die Datei
         FileOutputStream(file).use { outputStream ->
             outputStream.write(data)
             outputStream.flush()
         }
-        
+
         Log.d(TAG, "Successfully saved chunk data to ${file.absolutePath}")
-        
+
         // Starte eine Coroutine zum Aktualisieren des Dateipfads
         coroutineScope.launch {
             updateFilePathInPaket(paketId, fileId, file.absolutePath)
         }
-        
+
         return true
     } catch (e: Exception) {
         Log.e(TAG, "Error saving chunk data to file", e)
@@ -583,7 +587,7 @@ private suspend fun updateFilePathInPaket(paketId: PaketId, fileId: String, abso
     try {
         // Lade das aktuelle Paket
         val paket = getPaketDetailUseCase(paketId) ?: return
-        
+
         // Finde und aktualisiere die entsprechende Datei
         val updatedFiles = paket.files.map { file ->
     if (file.path.contains(fileId)) {
@@ -592,13 +596,13 @@ private suspend fun updateFilePathInPaket(paketId: PaketId, fileId: String, abso
         file
     }
         }
-        
+
         // Erstelle ein aktualisiertes Paket
         val updatedPaket = paket.copy(files = updatedFiles)
-        
+
         // Speichere das aktualisierte Paket
         savePaketUseCase(updatedPaket)
-        
+
         Log.d(TAG, "Updated file path in paket $paketId for file $fileId")
     } catch (e: Exception) {
         Log.e(TAG, "Error updating file path in paket", e)

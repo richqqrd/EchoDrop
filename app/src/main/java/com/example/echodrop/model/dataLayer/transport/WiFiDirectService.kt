@@ -1,4 +1,4 @@
-package com.example.echodrop.model.domainLayer.transport
+package com.example.echodrop.model.dataLayer.transport
 
 import android.content.Context
 import android.net.wifi.p2p.WifiP2pInfo
@@ -20,8 +20,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.ServerSocket
@@ -185,11 +183,11 @@ private fun startServer() {
             // WICHTIG: Definiere eine kontinuierliche Schleife, die auf Verbindungen wartet
             while (isRunning.get() && serverSocket != null && !serverSocket!!.isClosed) {
                 Log.d(TAG, "Server loop iteration - ready to accept connections on port $localPort")
-                
+
                 try {
                     // WICHTIG: Statt blockierendem accept(), verwende ein Timeout-Muster
                     var clientSocket: Socket? = null
-                    withTimeoutOrNull(5000) { // 5-Sekunden Timeout 
+                    withTimeoutOrNull(5000) { // 5-Sekunden Timeout
                         Log.d(TAG, "Waiting for accept() to return...")
                         clientSocket = withContext(Dispatchers.IO) {
                             try {
@@ -204,7 +202,7 @@ private fun startServer() {
                     if (clientSocket != null) {
                         val clientAddress = clientSocket!!.inetAddress.hostAddress ?: "unknown"
                         Log.d(TAG, "Client connected from: $clientAddress")
-                        
+
                         // Starte einen separaten Coroutine für die Client-Verarbeitung
                         coroutineScope.launch {
                             handleClient(clientSocket!!)
@@ -222,7 +220,7 @@ private fun startServer() {
                     }
                 }
             }
-            
+
             Log.d(TAG, "Server loop ended. Running: ${isRunning.get()}, Socket closed: ${serverSocket?.isClosed ?: true}")
         } catch (e: Exception) {
             Log.e(TAG, "Fatal server error: ${e.message}", e)

@@ -3,7 +3,7 @@ package com.example.echodrop.di
 import com.example.echodrop.model.domainLayer.transport.DefaultTransferProgressCallback  // Korrekter Import
 import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
 import com.example.echodrop.model.domainLayer.transport.TransportManager
-import com.example.echodrop.model.domainLayer.transport.TransportManagerImpl
+import com.example.echodrop.model.dataLayer.transport.TransportManagerImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides

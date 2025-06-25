@@ -1,7 +1,8 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.dataLayer.database.entities
 
 import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
 import com.example.echodrop.model.dataLayer.database.entities.toDomain
+import com.example.echodrop.model.domainLayer.model.FileEntry
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -128,7 +129,7 @@ class FileEntryEntityTest {
    val domainModel = entity.toDomain()
 
    // Assert
-   assertTrue(domainModel is com.example.echodrop.model.domainLayer.model.FileEntry)
+   assertTrue(domainModel is FileEntry)
    assertEquals(entity.path, domainModel.path)
    assertEquals(entity.mime, domainModel.mime)
    assertEquals(entity.sizeBytes, domainModel.sizeBytes)

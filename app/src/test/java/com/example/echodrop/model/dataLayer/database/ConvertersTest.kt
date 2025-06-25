@@ -1,4 +1,4 @@
-package com.example.echodrop.model.database
+package com.example.echodrop.model.dataLayer.database
 
 import com.example.echodrop.model.domainLayer.model.Converters
 import com.example.echodrop.model.domainLayer.model.TransferState

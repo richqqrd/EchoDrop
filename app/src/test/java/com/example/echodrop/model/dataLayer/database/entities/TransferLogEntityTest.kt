@@ -1,4 +1,4 @@
-package com.example.echodrop.model.entities
+package com.example.echodrop.model.dataLayer.database.entities
 
 import com.example.echodrop.model.domainLayer.model.TransferState
 import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
@@ -22,7 +22,7 @@ class TransferLogEntityTest {
    // Arrange & Act
    val paketId = "package-123"
    val peerId = "peer-456"
-   val state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE
+   val state = TransferState.ACTIVE
    val progressPct = 75
    val lastUpdateUtc = 1620000000000L
 
@@ -86,7 +86,7 @@ class TransferLogEntityTest {
 
    val differentPaketId = baseEntity.copy(paketId = "package-456")
    val differentPeerId = baseEntity.copy(peerId = "peer-789")
-   val differentState = baseEntity.copy(state = com.example.echodrop.model.domainLayer.model.TransferState.QUEUED)
+   val differentState = baseEntity.copy(state = TransferState.QUEUED)
    val differentProgress = baseEntity.copy(progressPct = 50)
    val differentTimestamp = baseEntity.copy(lastUpdateUtc = 1630000000000L)
 
@@ -140,10 +140,10 @@ class TransferLogEntityTest {
    )
 
    // Assert
-   assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, queuedEntity.state)
-   assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE, activeEntity.state)
-   assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.DONE, doneEntity.state)
-   assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.FAILED, failedEntity.state)
+   assertEquals(TransferState.QUEUED, queuedEntity.state)
+   assertEquals(TransferState.ACTIVE, activeEntity.state)
+   assertEquals(TransferState.DONE, doneEntity.state)
+   assertEquals(TransferState.FAILED, failedEntity.state)
   }
  }
 
