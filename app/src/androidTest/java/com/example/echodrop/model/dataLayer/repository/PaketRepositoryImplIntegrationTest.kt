@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
  * Integration test for PaketRepositoryImpl
  */
 @RunWith(AndroidJUnit4::class)
-class PaketRepositoryIntegrationTest {
+class PaketRepositoryImplIntegrationTest {
     private lateinit var db: EchoDatabase
     private lateinit var repository: PaketRepositoryImpl
 

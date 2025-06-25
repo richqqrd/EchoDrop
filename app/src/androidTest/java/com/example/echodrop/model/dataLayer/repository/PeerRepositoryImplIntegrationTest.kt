@@ -20,7 +20,7 @@ import org.junit.runner.RunWith
  * Integration test for PeerRepositoryImpl
  */
 @RunWith(AndroidJUnit4::class)
-class PeerRepositoryIntegrationTest {
+class PeerRepositoryIntegrationImplTest {
     private lateinit var db: EchoDatabase
     private lateinit var repository: PeerRepositoryImpl
 

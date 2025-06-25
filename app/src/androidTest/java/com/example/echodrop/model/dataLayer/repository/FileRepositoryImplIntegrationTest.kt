@@ -20,7 +20,7 @@ import org.junit.Assert.*
  * Integration test for FileRepositoryImpl
  */
 @RunWith(AndroidJUnit4::class)
-class FileRepositoryIntegrationTest {
+class FileRepositoryIntegrationImplTest {
     private lateinit var db: EchoDatabase
     private lateinit var repository: FileRepositoryImpl
 
