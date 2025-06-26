@@ -1,4 +1,4 @@
-package com.example.echodrop.model.daos
+package com.example.echodrop.model.dataLayer.database.daos
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider

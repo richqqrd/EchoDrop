@@ -101,8 +101,11 @@ dependencies {
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation("io.mockk:mockk:1.13.8")
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
-
-    // Coroutines test
+    androidTestImplementation("io.mockk:mockk-agent:1.13.8")
+    androidTestImplementation("org.mockito:mockito-android:5.8.0")
+    androidTestImplementation("org.mockito:mockito-core:5.8.0")
+    androidTestImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    androidTestImplementation("io.mockk:mockk-android:1.13.8")    // Coroutines test
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
 
     implementation("androidx.compose.material:material-icons-extended:1.6.0")

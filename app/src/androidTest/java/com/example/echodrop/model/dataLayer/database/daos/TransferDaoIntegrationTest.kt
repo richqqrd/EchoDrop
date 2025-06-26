@@ -1,4 +1,4 @@
-package com.example.echodrop.model.daos
+package com.example.echodrop.model.dataLayer.database.daos
 
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
@@ -92,7 +92,7 @@ class TransferDaoIntegrationTest {
         assertEquals(1, logs.size)
         assertEquals(testPaketId, logs[0].paketId)
         assertEquals(testPeerId, logs[0].peerId)
-        assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.QUEUED, logs[0].state)
+        assertEquals(TransferState.QUEUED, logs[0].state)
     }
 
     @Test
@@ -134,7 +134,7 @@ class TransferDaoIntegrationTest {
         transferDao.upsert(initialLog)
 
         val updatedLog = initialLog.copy(
-            state = com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE,
+            state = TransferState.ACTIVE,
             progressPct = 25,
             lastUpdateUtc = System.currentTimeMillis() + 1000
         )
@@ -142,7 +142,7 @@ class TransferDaoIntegrationTest {
 
         val retrievedLog = transferDao.findById(testPaketId, testPeerId)
 
-        assertEquals(com.example.echodrop.model.domainLayer.model.TransferState.ACTIVE, retrievedLog?.state)
+        assertEquals(TransferState.ACTIVE, retrievedLog?.state)
         assertEquals(25, retrievedLog?.progressPct)
     }
 

@@ -1,4 +1,4 @@
-package com.example.echodrop.model.transport
+package com.example.echodrop.model.dataLayer.transport
 
 import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
