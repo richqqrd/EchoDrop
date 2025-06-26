@@ -26,7 +26,7 @@ import kotlin.concurrent.thread
  * Integrationstest für WiFiDirectService
  */
 @RunWith(AndroidJUnit4::class)
-class WiFiDirectIntegrationTest {
+class WiFiDirectServiceIntegrationTest {
 
     private lateinit var context: Context
     private lateinit var wifiDirectService: WiFiDirectService
