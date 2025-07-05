@@ -60,7 +60,8 @@ class PaketDetailViewModel @Inject constructor(
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d", 
             "f6:30:b9:51:fe:4b",
-            "a6:d7:3c:00:e8:ec"
+            "a6:d7:3c:00:e8:ec",
+            "0a:2e:5f:f1:00:b0"
         )
     }
 
@@ -254,7 +255,7 @@ fun shareWithDevice(deviceAddress: String) {
         }
         return
     }
-    
+
     viewModelScope.launch {
         try {
             Log.d(TAG, "Connecting to device: $deviceAddress")
