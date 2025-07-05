@@ -198,18 +198,6 @@ fun TransferManagerScreen(
                                             color = Color.Gray
                                         )
                                     }
-
-                                    Button(
-                                        onClick = { viewModel.connectToDevice(device.deviceAddress) },
-                                        enabled = !uiState.connectedDevices.contains(device.deviceAddress)
-                                    ) {
-                                        Text(
-                                            if (uiState.connectedDevices.contains(device.deviceAddress))
-                                                "Verbunden"
-                                            else
-                                                "Verbinden"
-                                        )
-                                    }
                                 }
                                 Divider()
                             }

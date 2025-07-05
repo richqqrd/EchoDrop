@@ -153,35 +153,6 @@ class TransferManagerViewModel @Inject constructor(
             }
         }
 
-
-        // Beobachte Verbindungsstatus und sende Pakete wenn verbunden
-        viewModelScope.launch {
-            observeConnectionStateUseCase().collect { connectionState ->
-                if (connectionState.isConnected) {
-                    // Für jedes verbundene Gerät
-                    connectionState.connectedDevices.forEach { deviceAddress ->
-                        // Hole alle verfügbaren Pakete
-                        val pakete = observeInboxUseCase().first()
-                        
-                        // Erstelle PeerId für das verbundene Gerät
-                        val peerId = PeerId("direct-$deviceAddress")
-                        
-                        // Sende jedes Paket
-                        pakete.forEach { paket ->
-                            try {
-                                startTransferUseCase(paket.id, peerId)
-                            } catch (e: Exception) {
-                                Log.e("TransferManagerViewModel", "Fehler beim Senden von Paket ${paket.id} an $deviceAddress: ${e.message}")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        startAutoDiscoveryAndConnect()
-    }
-
     fun startDiscovery() {
         discoveryJob?.cancel()
         discoveryJob = viewModelScope.launch {
@@ -208,16 +179,6 @@ class TransferManagerViewModel @Inject constructor(
 
     fun toggleDebugMode() {
         _state.update { it.copy(isDebugMode = !it.isDebugMode) }
-    }
-
-    fun connectToDevice(deviceAddress: String) {
-        viewModelScope.launch {
-            connectToDeviceUseCase(deviceAddress)
-            // Der Verbindungsstatus wird automatisch über den Flow aktualisiert
-            _state.update {
-                it.copy(connectedDevices = it.connectedDevices + deviceAddress)
-            }
-        }
     }
 
     fun pauseTransfer(transferId: String) {
@@ -327,30 +288,6 @@ class TransferManagerViewModel @Inject constructor(
         }
     }
 
-    private fun startAutoDiscoveryAndConnect() {
-        autoConnectJob?.cancel()
-        autoConnectJob = viewModelScope.launch {
-            startDiscovery()
-
-            // Beobachte die entdeckten Geräte und versuche automatisch zu verbinden
-            observeDiscoveredDevicesUseCase().collect { devices ->
-                devices.forEach { device ->
-                    try {
-                        // Prüfe ob wir bereits mit diesem Gerät verbunden sind
-                        if (!DEVICE_BLACKLIST.contains(device.deviceAddress) &&
-                            !_state.value.connectedDevices.contains(device.deviceAddress)) {
-                            Log.d("TransferManagerViewModel", "Versuche Verbindung mit ${device.deviceName}")
-                            connectToDevice(device.deviceAddress)
-                            // Warte kurz nach jedem Verbindungsversuch
-                            delay(2000)
-                        }
-                    } catch (e: Exception) {
-                        Log.e("TransferManagerViewModel", "Fehler beim Verbinden mit ${device.deviceName}: ${e.message}")
-                    }
-                }
-            }
-        }
-    }
 
     override fun onCleared() {
         super.onCleared()
