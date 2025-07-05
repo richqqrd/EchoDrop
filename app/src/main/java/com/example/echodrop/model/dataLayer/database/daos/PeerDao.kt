@@ -2,8 +2,7 @@ package com.example.echodrop.model.dataLayer.database.daos
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
 
@@ -28,7 +27,7 @@ interface PeerDao {
      *
      * @param peer The `PeerEntity` object to be inserted or updated.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(peer: PeerEntity)
 
     /**

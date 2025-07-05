@@ -90,8 +90,10 @@ class PaketRepositoryImpl @Inject constructor(
         }
 
     override suspend fun purgeExpire(nowUtc: Long): Int {
-        return paketDao.purgeExpired(nowUtc)
-        }
+        val deleted = paketDao.purgeExpired(nowUtc)
+        android.util.Log.d("PaketRepositoryImpl", "purgeExpire deleted $deleted paket(s) older than $nowUtc")
+        return deleted
+    }
 
         override suspend fun upsert(paket: Paket) {
     // Speichere das Paket-Entity

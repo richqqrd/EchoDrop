@@ -38,5 +38,7 @@ class PeerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun purgeStalePeers(olderThanUtc: Long) {
-        peerDao.purgeStale(olderThanUtc)    }
+        val deleted = peerDao.purgeStale(olderThanUtc)
+        android.util.Log.d("PeerRepositoryImpl", "purgeStalePeers deleted $deleted peer(s) older than $olderThanUtc")
+    }
 }

@@ -72,7 +72,8 @@ class TransferRepositoryImpl @Inject constructor(
     }
 
     override suspend fun cancel(paketId: PaketId, peerId: PeerId) {
-        transferDao.delete(paketId.value, peerId.value)
+        val deleted = transferDao.delete(paketId.value, peerId.value)
+        android.util.Log.d("TransferRepositoryImpl", "cancel removed $deleted transfer rows for paket=${paketId.value} peer=${peerId.value}")
     }
 
     override suspend fun updateProgress(paketId: PaketId, peerId: PeerId, progressPct: Int) {

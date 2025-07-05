@@ -40,6 +40,8 @@ import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
+import java.io.FileInputStream
+import java.util.concurrent.TimeUnit
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -59,6 +61,7 @@ class TransportManagerImpl @Inject constructor(
         private const val TAG = "TransportManagerImpl"
         private const val MANIFEST_PREFIX = "MAN|"
         private const val CHUNK_PREFIX = "CHK|"
+        private const val CHUNK_SIZE = 64 * 1024 // 64 KB – muss <= WiFiDirectService.BUFFER_SIZE sein
         private const val MAX_ATTEMPTS = 3
         private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
         private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 Stunden
@@ -117,6 +120,21 @@ class TransportManagerImpl @Inject constructor(
                 } catch (e: Exception) {
                     Log.e(TAG, "Error during connection attempts cleanup", e)
                 }
+            }
+        }
+
+        // Zusätzlich: Bereinige veraltete Peers (nicht gesehen > 7 Tage)
+        coroutineScope.launch {
+            val interval = TimeUnit.HOURS.toMillis(6) // alle 6 h prüfen
+            val peerCutoff = TimeUnit.DAYS.toMillis(7) // 7 Tage
+            while (isActive) {
+                try {
+                    val deleted = peerRepository.purgeStalePeers(System.currentTimeMillis() - peerCutoff)
+                    Log.d(TAG, "Peer cleanup removed $deleted stale peer(s)")
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error during peer cleanup", e)
+                }
+                delay(interval)
             }
         }
     }
@@ -246,8 +264,6 @@ class TransportManagerImpl @Inject constructor(
     }
 
     override suspend fun sendPaket(paketId: PaketId, peerId: PeerId) {
-        Log.d(TAG, "Sending paket ${paketId.value} to peer ${peerId.value}")
-
         try {
             val deviceAddress = if (peerId.value.startsWith("direct-")) {
                 peerId.value.substringAfter("direct-")
@@ -255,11 +271,23 @@ class TransportManagerImpl @Inject constructor(
                 return // Keine WiFi Direct Adresse
             }
 
-                    // Blacklist-Prüfung hier hinzufügen
+            // Prüfe Blacklist **vor** jeglichen weiteren Aktionen
             if (DEVICE_BLACKLIST.contains(deviceAddress)) {
-                Log.d(TAG, "Skipping send attempt - device $deviceAddress is blacklisted")
+                Log.d(TAG, "Device $deviceAddress is blacklisted – not sending paket ${paketId.value}")
                 return
             }
+
+            // Stelle sicher, dass ein Peer-Eintrag existiert (erforderlich für FK in transfer_log)
+            val peerIdEntity = PeerId("direct-$deviceAddress")
+            val minimalPeer = Peer(
+                id = peerIdEntity,
+                alias = "WiFi Direct Peer",
+                lastSeenUtc = System.currentTimeMillis()
+            )
+            peerRepository.upsertPeer(minimalPeer)
+
+            // Erst jetzt loggen, dass der Versand tatsächlich versucht wird
+            Log.d(TAG, "Sending paket ${paketId.value} to peer ${peerId.value}")
 
             if (isDeviceAlreadyTried(deviceAddress, paketId)) {
                 Log.d(TAG, "Skipping send attempt - max retries reached for device $deviceAddress")
@@ -347,23 +375,40 @@ class TransportManagerImpl @Inject constructor(
         }
     }
 
-    // Hilfsmethode zum Senden aller Chunks eines Pakets
+    // Hilfsmethode: Sende alle Dateien eines Pakets stückweise an den verbundenen Peer
     private suspend fun sendChunksForPaket(paketId: String, peerId: String) {
-        // In einer vollständigen Implementation würdest du hier das Repository nutzen
-        // und die tatsächlichen Datei-Chunks aus der Datenbank oder dem Dateisystem laden
-
-        // Für einen ersten Test können wir einen Dummy-Chunk senden
-        val dummyData = "Das ist ein Test-Chunk für Paket $paketId".toByteArray()
-        val chunkId = "chunk1_$paketId"
-
-        // Extrahiere die Zieladresse aus peerId (für WiFi Direct)
-        val targetAddress = if (peerId.startsWith("direct-")) {
-            peerId.substringAfter("direct-")
-        } else {
-            peerId // Falls es ein anderes Format ist
+        // Lade Paket inkl. Dateien
+        val paket = getPaketDetailUseCase(PaketId(paketId)) ?: run {
+            Log.e(TAG, "Paket $paketId nicht gefunden – breche Chunk-Versand ab")
+            return
         }
 
-        sendChunk(chunkId, dummyData)
+        // Iteriere über Dateien
+        paket.files.forEachIndexed { fileIdx, fileEntry ->
+            val file = File(fileEntry.path)
+            if (!file.exists()) {
+                Log.e(TAG, "Datei ${file.absolutePath} existiert nicht – überspringe")
+                return@forEachIndexed
+            }
+
+            val fileId = "file_${fileIdx}_${paketId}"
+
+            file.inputStream().use { input ->
+                val buffer = ByteArray(CHUNK_SIZE)
+                var bytesRead: Int
+                var chunkIdx = 0
+                while (input.read(buffer).also { bytesRead = it } != -1) {
+                    val dataToSend = if (bytesRead == CHUNK_SIZE) buffer else buffer.copyOf(bytesRead)
+
+                    val chunkId = "chunk${chunkIdx}_${paketId}_${fileId}"
+                    Log.d(TAG, "Sende Chunk $chunkId (${bytesRead}B) an $peerId")
+
+                    sendChunk(chunkId, dataToSend)
+
+                    chunkIdx++
+                }
+            }
+        }
     }
 
     // Diese Hilfsklasse sollte auch definiert werden
@@ -439,12 +484,15 @@ class TransportManagerImpl @Inject constructor(
                     val frame = IncomingFrame.Manifest(sourceAddress, paketId, manifestJson)
                     incomingFrames.emit(frame)
 
-                    // Starte einen INCOMING Transfer im Repository
+                    // 1) Persistiere einen TransferLog-Eintrag, damit UI/Fortschritt sichtbar wird
+                    transferRepository.startTransfer(PaketId(paketId), peerId)
+
+                    // 2) Optionale Notification über SharedFlow
                     _receivedManifests.emit(Pair(PaketId(paketId), peerId))
 
                     // Setze den Transfer auf ACTIVE
                     progressCallback.updateProgress(PaketId(paketId), peerId, 10)
-                    transferRepository.updateState(PaketId(paketId), peerId, TransferState.ACTIVE)
+                    // startTransfer hat den Status bereits auf ACTIVE gesetzt, daher kein zweites Update nötig
                 }
             }
             // Prüfe, ob es sich um einen Chunk handelt
@@ -461,52 +509,57 @@ class TransportManagerImpl @Inject constructor(
                     val idParts = chunkId.split("_")
                     if (idParts.size >= 2) {
                         val paketId = idParts[1]
-                        val fileId = if (idParts.size >= 3) idParts[2] else "file_0_$paketId"
+                        // fileId kann selbst Unterstriche enthalten (z. B. "file_0_<paket>") -> alle restlichen Teile wieder zusammenfügen
+                        val fileId = if (idParts.size >= 3) idParts.subList(2, idParts.size).joinToString("_") else "file_0_$paketId"
 
                         // Speichere die Chunk-Daten in einer temporären Datei
                         val success = saveChunkToFile(PaketId(paketId), fileId, chunkData)
-// Im Chunk-Empfangs-Block:
-if (success) {
-    val peerId = PeerId("direct-$sourceAddress")
-    
-    // Lade das aktuelle Paket
-    val paket = getPaketDetailUseCase(PaketId(paketId))
-    if (paket != null) {
-        // Aktualisiere empfangene Bytes für dieses Paket
-        val currentReceived = receivedBytesMap.getOrDefault(paketId, 0L)
-        val newReceived = currentReceived + chunkData.size
-        receivedBytesMap[paketId] = newReceived
+                        if (success) {
+                            val peerId = PeerId("direct-$sourceAddress")
+                            
+                            // Lade das aktuelle Paket
+                            val paket = getPaketDetailUseCase(PaketId(paketId))
+                            if (paket != null) {
+                                // Aktualisiere empfangene Bytes für dieses Paket
+                                val currentReceived = receivedBytesMap.getOrDefault(paketId, 0L)
+                                val newReceived = currentReceived + chunkData.size
+                                receivedBytesMap[paketId] = newReceived
 
-        // Berechne den tatsächlichen Fortschritt
-        val totalBytes = paket.sizeBytes
-        val currentProgress = if (totalBytes > 0) {
-            ((newReceived * 100) / totalBytes).toInt()
-        } else {
-            50 // Fallback wenn keine Größe bekannt
-        }
+                                // Berechne den tatsächlichen Fortschritt
+                                val totalBytes = paket.sizeBytes
+                                val currentProgress = if (totalBytes > 0) {
+                                    ((newReceived * 100) / totalBytes).toInt()
+                                } else {
+                                    50 // Fallback wenn keine Größe bekannt
+                                }
 
-        Log.d(TAG, "Paket $paketId: Empfangen $newReceived von $totalBytes Bytes ($currentProgress%)")
-        Log.d(TAG, "Aktualisiere Fortschritt für Peer $peerId auf $currentProgress%")
-        
-        progressCallback.updateProgress(PaketId(paketId), peerId, currentProgress)
+                                // Verhindere, dass ein höherer Fortschritt (z. B. 100 %) durch einen niedrigeren Wert überschrieben wird
+                                val previousProgress = receivedBytesMap.getOrDefault("${paketId}_lastProgress", 0L).toInt()
+                                val effectiveProgress = maxOf(currentProgress, previousProgress)
 
-        // Wenn alle Bytes empfangen wurden
-        if (newReceived >= totalBytes) {
-            Log.d(TAG, "Paket $paketId vollständig empfangen, setze auf 100%")
-            progressCallback.updateProgress(PaketId(paketId), peerId, 100)
-            transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
-            // Cleanup
-            receivedBytesMap.remove(paketId)
-            Log.d(TAG, "Transfer completed for paket $paketId")
-        }
+                                Log.d(TAG, "Paket $paketId: Empfangen $newReceived von $totalBytes Bytes ($currentProgress%), wir melden $effectiveProgress%")
+                                progressCallback.updateProgress(PaketId(paketId), peerId, effectiveProgress)
 
-        // Erstelle ein IncomingFrame für den Chunk und emittiere es
-        val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
-        incomingFrames.emit(frame)
-    } else {
-        Log.e(TAG, "Paket $paketId nicht gefunden für Fortschrittsberechnung")
-    }
-}
+                                // Merke uns den zuletzt gemeldeten Fortschritt
+                                receivedBytesMap["${paketId}_lastProgress"] = effectiveProgress.toLong()
+
+                                // Wenn alle Bytes empfangen wurden
+                                if (newReceived >= totalBytes) {
+                                    Log.d(TAG, "Paket $paketId vollständig empfangen, setze auf 100%")
+                                    progressCallback.updateProgress(PaketId(paketId), peerId, 100)
+                                    transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
+                                    // Cleanup
+                                    receivedBytesMap.remove(paketId)
+                                    Log.d(TAG, "Transfer completed for paket $paketId")
+                                }
+
+                                // Erstelle ein IncomingFrame für den Chunk und emittiere es
+                                val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
+                                incomingFrames.emit(frame)
+                            } else {
+                                Log.e(TAG, "Paket $paketId nicht gefunden für Fortschrittsberechnung")
+                            }
+                        }
                     }
                 }
             }
@@ -618,36 +671,44 @@ if (success) {
         }
     }
 
-    private fun saveChunkToFile(paketId: PaketId, fileId: String, data: ByteArray): Boolean {
-        try {
-            // Erstelle einen Dateinamen basierend auf der Paket-ID und Datei-ID
-            val fileName = "${paketId.value}_${fileId.replace('/', '_')}.bin"
+    private suspend fun saveChunkToFile(paketId: PaketId, fileId: String, data: ByteArray): Boolean {
+        return try {
+            // Versuche den bereits in der DB hinterlegten Dateipfad zu ermitteln
+            val paket = getPaketDetailUseCase(paketId)
+            val fileEntry = paket?.files?.firstOrNull { it.path.contains(fileId) }
 
-            // Verwende einen dauerhaften Speicherort statt des Cache-Verzeichnisses
-            val filesDir = File(context.filesDir, "received_files")
-            if (!filesDir.exists()) {
-                filesDir.mkdirs()
+            // Fallback-Pfad falls Manifest/DB (noch) nicht vorhanden
+            val file: File = if (fileEntry != null) {
+                File(fileEntry.path)
+            } else {
+                // Gleiche Logik wie in parseManifestAndCreatePaket, aber ohne Dateinamen → verwende *.part
+                val filesDir = File(context.filesDir, "received_files")
+                if (!filesDir.exists()) filesDir.mkdirs()
+                File(filesDir, "${paketId.value}_${fileId.replace('/', '_')}.part")
             }
 
-            val file = File(filesDir, fileName)
+            // Stelle sicher, dass Verzeichnisse existieren
+            file.parentFile?.takeIf { !it.exists() }?.mkdirs()
 
-            // Schreibe die Daten in die Datei
-            FileOutputStream(file).use { outputStream ->
+            // Chunk anhängen (append = true)
+            FileOutputStream(file, /*append=*/ true).use { outputStream ->
                 outputStream.write(data)
                 outputStream.flush()
             }
 
-            Log.d(TAG, "Successfully saved chunk data to ${file.absolutePath}")
-
-            // Starte eine Coroutine zum Aktualisieren des Dateipfads
-            coroutineScope.launch {
-                updateFilePathInPaket(paketId, fileId, file.absolutePath)
+            if (fileEntry == null) {
+                // Wenn wir nur einen Fallback-Pfad hatten, aktualisiere jetzt den Pfad in der DB,
+                // damit die UI später den korrekten Namen kennt.
+                coroutineScope.launch {
+                    updateFilePathInPaket(paketId, fileId, file.absolutePath)
+                }
             }
 
-            return true
+            Log.d(TAG, "Successfully appended ${data.size} B to ${file.absolutePath}")
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Error saving chunk data to file", e)
-            return false
+            false
         }
     }
 
@@ -686,14 +747,16 @@ if (success) {
             delay(5000) // Warte 5 Sekunden, um Geräte zu entdecken
 
             // 2. Hole die Liste der aktuell entdeckten Geräte
-            val devices = wifiDirectDiscovery.discoveredDevices.value
+            val allDevices = wifiDirectDiscovery.discoveredDevices.value
+            // Filtere Geräte, die auf der Blacklist stehen, direkt heraus
+            val devices = allDevices.filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
 
             if (devices.isEmpty()) {
-                Log.d(TAG, "Keine Geräte zum Weiterleiten von Paket ${paket.id.value} gefunden")
+                Log.d(TAG, "Keine passenden Geräte (nach Blacklist-Filter) für Weiterleitung von Paket ${paket.id.value} gefunden")
                 return
             }
 
-            Log.d(TAG, "Versuche, Paket ${paket.id.value} an ${devices.size} Geräte weiterzuleiten")
+            Log.d(TAG, "Versuche, Paket ${paket.id.value} an ${devices.size} von ${allDevices.size} entdeckten Gerät(en) weiterzuleiten")
 
             // 3. Inkrementiere den Hop-Counter
             val forwardedPaket = paket.incrementHopCount()

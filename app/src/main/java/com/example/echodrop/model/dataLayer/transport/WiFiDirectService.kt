@@ -40,7 +40,8 @@ class WiFiDirectService @Inject constructor(
     companion object {
         private const val TAG = "WiFiDirectService"
         private const val PORT = 8988
-        private const val BUFFER_SIZE = 1024 * 8 // 64KB Puffer
+        // Größe der Daten-Chunks (sowohl zum Senden als auch Empfangen) – 64 KB
+        private const val BUFFER_SIZE = 64 * 1024
     }
 
 private val serverLock = Any()  // Synchronisierungsobjekt
@@ -64,6 +65,7 @@ private val serverLock = Any()  // Synchronisierungsobjekt
     // Server-Socket
     private var serverSocket: ServerSocket? = null
     private val isRunning = AtomicBoolean(false)
+
 
     /**
      * Startet den WiFi Direct Service
@@ -322,11 +324,11 @@ private fun startServer() {
                     val inputStream = socket.getInputStream()
 
                         // Sende zuerst die PaketID
-    val paketIdBytes = paketId.value.toByteArray()
-    val paketIdLength = paketIdBytes.size
-    outputStream.write(paketIdLength) // Länge der PaketID
-    outputStream.write(paketIdBytes)  // PaketID selbst
-    outputStream.flush()
+                    val paketIdBytes = paketId.value.toByteArray()
+                    val paketIdLength = paketIdBytes.size
+                    outputStream.write(paketIdLength) // Länge der PaketID
+                    outputStream.write(paketIdBytes)  // PaketID selbst
+                    outputStream.flush()
 
                     // Sende zuerst die Größe der Nachricht (4 Bytes)
                     val size = data.size
@@ -449,12 +451,20 @@ private fun startServer() {
             val inputStream = clientSocket.getInputStream()
             val outputStream = clientSocket.getOutputStream()
 
-                    // Lese zuerst die PaketID
-        val paketIdLength = inputStream.read()
-        val paketIdBytes = ByteArray(paketIdLength)
-        inputStream.read(paketIdBytes)
-        val paketId = PaketId(String(paketIdBytes))
-            // Lese zuerst die Größe (4 Bytes)
+                        // Lese zuerst die PaketID
+            val paketIdLength = inputStream.read()
+            if (paketIdLength <= 0) {
+                Log.e(TAG, "Invalid paketId length: $paketIdLength")
+                return
+            }
+            val paketIdBytes = ByteArray(paketIdLength)
+            val readBytes = inputStream.read(paketIdBytes)
+            if (readBytes != paketIdLength) {
+                Log.e(TAG, "Could not read complete paketId, expected $paketIdLength bytes but got $readBytes")
+                return
+            }
+            val paketId = PaketId(String(paketIdBytes))
+                // Lese zuerst die Größe (4 Bytes)
             Log.d(TAG, "Reading size header from $clientAddress")
             val sizeBuffer = ByteArray(4)
             val bytesRead = inputStream.read(sizeBuffer)

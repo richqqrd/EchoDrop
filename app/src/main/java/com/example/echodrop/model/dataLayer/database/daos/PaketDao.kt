@@ -2,8 +2,7 @@ package com.example.echodrop.model.dataLayer.database.daos
 
 import androidx.room.Dao
 import androidx.room.Query
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 
@@ -37,7 +36,7 @@ interface PaketDao {
      *
      * @param paket The `PaketEntity` object to be inserted or updated.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun upsert(paket: PaketEntity)
 
     /**
