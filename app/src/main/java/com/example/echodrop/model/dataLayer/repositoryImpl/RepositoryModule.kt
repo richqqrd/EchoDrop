@@ -4,14 +4,17 @@ package com.example.echodrop.model.dataLayer.repositoryImpl
 import com.example.echodrop.model.dataLayer.repositoryImpl.FileRepositoryImpl
 import com.example.echodrop.model.dataLayer.repositoryImpl.PaketRepositoryImpl
 import com.example.echodrop.model.dataLayer.repositoryImpl.TransferRepositoryImpl
+import com.example.echodrop.model.dataLayer.repositoryImpl.ConnectionAttemptRepositoryImpl
 import com.example.echodrop.model.domainLayer.repository.FileRepository
 import com.example.echodrop.model.domainLayer.repository.PaketRepository
 import com.example.echodrop.model.domainLayer.repository.PeerRepository
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
+import com.example.echodrop.model.domainLayer.repository.ConnectionAttemptRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import dagger.Provides
 import javax.inject.Singleton
 
 @Module
@@ -36,5 +39,9 @@ abstract class RepositoryModule {
         peerRepositoryImpl: PeerRepositoryImpl
     ): PeerRepository
 
-
+    @Singleton
+    @Binds
+    abstract fun bindConnectionAttemptRepository(
+        impl: ConnectionAttemptRepositoryImpl
+    ): ConnectionAttemptRepository
 }

@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.echodrop.model.dataLayer.database.daos.ChunkDao
+import com.example.echodrop.model.dataLayer.database.daos.ConnectionAttemptDao
 import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
 import com.example.echodrop.model.dataLayer.database.daos.PaketDao
 import com.example.echodrop.model.dataLayer.database.daos.PeerDao
@@ -13,6 +14,7 @@ import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
 import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
 import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
 import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
+import com.example.echodrop.model.dataLayer.database.entities.ConnectionAttemptEntity
 import com.example.echodrop.model.domainLayer.model.Converters
 
 /**
@@ -23,14 +25,15 @@ import com.example.echodrop.model.domainLayer.model.Converters
  * and DAOs required for database operations.
  */
 @Database(
-    version = 2,
+    version = 3,
     exportSchema = false,
     entities = [
         PaketEntity::class,
         FileEntryEntity::class,
         ChunkEntity::class,
         PeerEntity::class,
-        TransferLogEntity::class
+        TransferLogEntity::class,
+        ConnectionAttemptEntity::class
     ]
 )
 
@@ -71,4 +74,6 @@ abstract class EchoDatabase : RoomDatabase(){
      * @return An instance of `TransferDao`.
      */
     abstract fun transferDao(): TransferDao
+
+    abstract fun connectionAttemptDao(): ConnectionAttemptDao
 }

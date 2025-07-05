@@ -3,6 +3,7 @@ package com.example.echodrop.model.dataLayer.database
 import android.content.Context
 import androidx.room.Room
 import com.example.echodrop.model.dataLayer.database.daos.ChunkDao
+import com.example.echodrop.model.dataLayer.database.daos.ConnectionAttemptDao
 import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
 import com.example.echodrop.model.dataLayer.database.daos.PaketDao
 import com.example.echodrop.model.dataLayer.database.daos.PeerDao
@@ -74,6 +75,9 @@ object DatabaseModule {
      * @return An instance of `TransferDao`.
      */
     @Provides fun provideTransferDao(db: EchoDatabase): TransferDao = db.transferDao()
+
+    @Provides fun provideConnectionAttemptDao(db: EchoDatabase): ConnectionAttemptDao = db.connectionAttemptDao()
+
 
 
 }
