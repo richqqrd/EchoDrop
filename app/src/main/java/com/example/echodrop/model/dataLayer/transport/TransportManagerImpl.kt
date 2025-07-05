@@ -63,6 +63,9 @@ class TransportManagerImpl @Inject constructor(
         private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
         private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 Stunden
 
+        private val receivedBytesMap = mutableMapOf<String, Long>()
+
+
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d",
             "f6:30:b9:51:fe:4b",
@@ -462,26 +465,48 @@ class TransportManagerImpl @Inject constructor(
 
                         // Speichere die Chunk-Daten in einer temporären Datei
                         val success = saveChunkToFile(PaketId(paketId), fileId, chunkData)
+// Im Chunk-Empfangs-Block:
+if (success) {
+    val peerId = PeerId("direct-$sourceAddress")
+    
+    // Lade das aktuelle Paket
+    val paket = getPaketDetailUseCase(PaketId(paketId))
+    if (paket != null) {
+        // Aktualisiere empfangene Bytes für dieses Paket
+        val currentReceived = receivedBytesMap.getOrDefault(paketId, 0L)
+        val newReceived = currentReceived + chunkData.size
+        receivedBytesMap[paketId] = newReceived
 
-                        if (success) {
-                            // Aktualisiere den Fortschritt im Repository
-                            val peerId = PeerId("direct-$sourceAddress")
-                            progressCallback.updateProgress(PaketId(paketId), peerId, 75)
+        // Berechne den tatsächlichen Fortschritt
+        val totalBytes = paket.sizeBytes
+        val currentProgress = if (totalBytes > 0) {
+            ((newReceived * 100) / totalBytes).toInt()
+        } else {
+            50 // Fallback wenn keine Größe bekannt
+        }
 
-                            // Prüfen, ob dies der letzte Chunk war (hier vereinfacht angenommen)
-                            // In einer vollständigen Implementierung würdest du den Fortschritt verfolgen
-                            val isLastChunk = true // Vereinfachte Annahme für das Beispiel
+        Log.d(TAG, "Paket $paketId: Empfangen $newReceived von $totalBytes Bytes ($currentProgress%)")
+        Log.d(TAG, "Aktualisiere Fortschritt für Peer $peerId auf $currentProgress%")
+        
+        progressCallback.updateProgress(PaketId(paketId), peerId, currentProgress)
 
-                            if (isLastChunk) {
-                                progressCallback.updateProgress(PaketId(paketId), peerId, 100)
-                                transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
-                                Log.d(TAG, "Transfer completed for paket $paketId")
-                            }
+        // Wenn alle Bytes empfangen wurden
+        if (newReceived >= totalBytes) {
+            Log.d(TAG, "Paket $paketId vollständig empfangen, setze auf 100%")
+            progressCallback.updateProgress(PaketId(paketId), peerId, 100)
+            transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
+            // Cleanup
+            receivedBytesMap.remove(paketId)
+            Log.d(TAG, "Transfer completed for paket $paketId")
+        }
 
-                            // Erstelle ein IncomingFrame für den Chunk und emittiere es
-                            val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
-                            incomingFrames.emit(frame)
-                        }
+        // Erstelle ein IncomingFrame für den Chunk und emittiere es
+        val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
+        incomingFrames.emit(frame)
+    } else {
+        Log.e(TAG, "Paket $paketId nicht gefunden für Fortschrittsberechnung")
+    }
+}
                     }
                 }
             }

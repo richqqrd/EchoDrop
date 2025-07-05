@@ -480,6 +480,9 @@ private fun startServer() {
                 totalBytesRead += chunk
                 val progress = (totalBytesRead * 100) / messageSize
                 Log.d(TAG, "Received $totalBytesRead/$messageSize bytes ($progress%)")
+
+                _transferProgress.emit(Triple(paketId, clientAddress, progress))
+
             }
 
             if (totalBytesRead == messageSize) {
