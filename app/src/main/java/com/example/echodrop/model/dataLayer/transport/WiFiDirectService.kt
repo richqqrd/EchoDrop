@@ -40,7 +40,7 @@ class WiFiDirectService @Inject constructor(
     companion object {
         private const val TAG = "WiFiDirectService"
         private const val PORT = 8988
-        private const val BUFFER_SIZE = 1024 * 64 // 64KB Puffer
+        private const val BUFFER_SIZE = 1024 * 8 // 64KB Puffer
     }
 
 private val serverLock = Any()  // Synchronisierungsobjekt

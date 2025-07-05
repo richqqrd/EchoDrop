@@ -62,6 +62,13 @@ class TransportManagerImpl @Inject constructor(
         private const val MAX_ATTEMPTS = 3
         private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
         private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 Stunden
+
+        private val DEVICE_BLACKLIST = setOf(
+            "f6:30:b9:4a:18:9d",
+            "f6:30:b9:51:fe:4b",
+            "a6:d7:3c:00:e8:ec",
+            "0a:2e:5f:f1:00:b0"
+        )
     }
 
     private val gson = Gson()
@@ -243,6 +250,12 @@ class TransportManagerImpl @Inject constructor(
                 peerId.value.substringAfter("direct-")
             } else {
                 return // Keine WiFi Direct Adresse
+            }
+
+                    // Blacklist-Prüfung hier hinzufügen
+            if (DEVICE_BLACKLIST.contains(deviceAddress)) {
+                Log.d(TAG, "Skipping send attempt - device $deviceAddress is blacklisted")
+                return
             }
 
             if (isDeviceAlreadyTried(deviceAddress, paketId)) {
