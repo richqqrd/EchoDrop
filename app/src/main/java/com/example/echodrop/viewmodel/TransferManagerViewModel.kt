@@ -87,7 +87,7 @@ class TransferManagerViewModel @Inject constructor(
     companion object {
         // Blacklist von Geräte-Adressen (MAC-Adressen)
         private val DEVICE_BLACKLIST = setOf(
-            "f6:30:b9:4a:18:9d", 
+            "f6:30:b9:4a:18:9d",  
             "f6:30:b9:51:fe:4b",
             "a6:d7:3c:00:e8:ec"
         )
@@ -152,6 +152,7 @@ class TransferManagerViewModel @Inject constructor(
                 }
             }
         }
+    }
 
     fun startDiscovery() {
         discoveryJob?.cancel()
@@ -287,7 +288,6 @@ class TransferManagerViewModel @Inject constructor(
             deviceAddress = this@toWifiP2pDevice.deviceAddress
         }
     }
-
 
     override fun onCleared() {
         super.onCleared()
