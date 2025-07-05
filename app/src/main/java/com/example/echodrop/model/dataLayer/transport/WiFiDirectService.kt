@@ -321,6 +321,13 @@ private fun startServer() {
                     val outputStream = socket.getOutputStream()
                     val inputStream = socket.getInputStream()
 
+                        // Sende zuerst die PaketID
+    val paketIdBytes = paketId.value.toByteArray()
+    val paketIdLength = paketIdBytes.size
+    outputStream.write(paketIdLength) // Länge der PaketID
+    outputStream.write(paketIdBytes)  // PaketID selbst
+    outputStream.flush()
+
                     // Sende zuerst die Größe der Nachricht (4 Bytes)
                     val size = data.size
                     val sizeBytes = byteArrayOf(
@@ -442,6 +449,11 @@ private fun startServer() {
             val inputStream = clientSocket.getInputStream()
             val outputStream = clientSocket.getOutputStream()
 
+                    // Lese zuerst die PaketID
+        val paketIdLength = inputStream.read()
+        val paketIdBytes = ByteArray(paketIdLength)
+        inputStream.read(paketIdBytes)
+        val paketId = PaketId(String(paketIdBytes))
             // Lese zuerst die Größe (4 Bytes)
             Log.d(TAG, "Reading size header from $clientAddress")
             val sizeBuffer = ByteArray(4)
