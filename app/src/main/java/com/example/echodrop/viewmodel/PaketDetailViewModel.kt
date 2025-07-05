@@ -56,6 +56,14 @@ class PaketDetailViewModel @Inject constructor(
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase
 ) : ViewModel() {
 
+    companion object {
+        private val DEVICE_BLACKLIST = setOf(
+            "f6:30:b9:4a:18:9d", 
+            "f6:30:b9:51:fe:4b",
+            "a6:d7:3c:00:e8:ec"
+        )
+    }
+
     private val _state = MutableStateFlow(PaketDetailState(isLoading = true))
     val state: StateFlow<PaketDetailState> = _state
 
@@ -237,6 +245,16 @@ class PaketDetailViewModel @Inject constructor(
 fun shareWithDevice(deviceAddress: String) {
     val currentPaket = state.value.paket ?: return
 
+    if (DEVICE_BLACKLIST.contains(deviceAddress)) {
+        _state.update {
+            it.copy(
+                error = "Dieses Gerät ist blockiert",
+                isLoading = false
+            )
+        }
+        return
+    }
+    
     viewModelScope.launch {
         try {
             Log.d(TAG, "Connecting to device: $deviceAddress")
