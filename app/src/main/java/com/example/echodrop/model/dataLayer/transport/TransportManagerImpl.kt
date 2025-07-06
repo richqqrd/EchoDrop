@@ -42,6 +42,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import java.io.FileInputStream
 import java.util.concurrent.TimeUnit
+import com.example.echodrop.model.domainLayer.transport.ForwardEvent
+import kotlinx.coroutines.Job
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -54,7 +56,8 @@ class TransportManagerImpl @Inject constructor(
     private val savePaketUseCase: SavePaketUseCase,
     private val getPaketDetailUseCase: GetPaketDetailUseCase,
     private val progressCallback: TransferProgressCallback,
-    private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow<Pair<PaketId, PeerId>>()
+    private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow<Pair<PaketId, PeerId>>(),
+    private val _forwardEvents: MutableSharedFlow<ForwardEvent> = MutableSharedFlow<ForwardEvent>(replay = 0, extraBufferCapacity = 20)
 ) : TransportManager {
 
     companion object {
@@ -81,6 +84,16 @@ class TransportManagerImpl @Inject constructor(
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val incomingFrames = MutableSharedFlow<IncomingFrame>(replay = 0, extraBufferCapacity = 10)
     private val connectionAttempts = mutableMapOf<String, MutableList<ConnectionAttempt>>()
+
+    // Liste aller noch laufenden Auto-Forward Jobs, damit wir sie bei Beacon-Stopp abbrechen können
+    private val forwardJobs = mutableListOf<Job>()
+
+    /**
+     * Flag, ob Beaconing (und damit ausdrücklich das automatische Weiterleiten) aktiv ist.
+     * Wird von startBeaconing/stopBeaconing gesetzt und von processReceivedData geprüft.
+     */
+    @Volatile
+    private var beaconingActive: Boolean = false
 
     init {
         // Beobachte eingehende Daten vom WiFiDirectService
@@ -142,6 +155,8 @@ class TransportManagerImpl @Inject constructor(
     override fun startBeaconing() {
         Log.d(TAG, "Starting beaconing")
 
+        beaconingActive = true
+
         // Starte die Entdeckung von Geräten
         wifiDirectDiscovery.startDiscovery()
 
@@ -151,6 +166,14 @@ class TransportManagerImpl @Inject constructor(
 
     override fun stopBeaconing() {
         Log.d(TAG, "Stopping beaconing")
+
+        beaconingActive = false
+
+        // Laufende Auto-Forward-Jobs abbrechen
+        synchronized(forwardJobs) {
+            forwardJobs.forEach { it.cancel() }
+            forwardJobs.clear()
+        }
 
         // Stoppe alle WiFi Direct-Aktivitäten
         wifiDirectDiscovery.stopDiscovery()
@@ -471,13 +494,18 @@ class TransportManagerImpl @Inject constructor(
                     savePaketUseCase(paket)
 
                     if (paket.canBeForwarded()) {
-                        Log.d(TAG, "Paket ${paket.id.value} kann weitergeleitet werden (Hop ${paket.currentHopCount}/${paket.maxHopCount})")
-                        coroutineScope.launch {
-                            delay(10000) // Warte 10 Sekunden vor der Weiterleitung
-                            autoForwardPaket(paket)
+                        if (beaconingActive) {
+                            Log.d(TAG, "[Forward] Paket ${paket.id.value} wird in 10s weitergeleitet (Hop ${paket.currentHopCount}/${paket.maxHopCount}). Beaconing ist aktiv.")
+                            val job = coroutineScope.launch {
+                                delay(10_000) // Kurze Pause, um UI/Transfers zu initialisieren
+                                autoForwardPaket(paket)
+                            }
+                            synchronized(forwardJobs) { forwardJobs += job }
+                        } else {
+                            Log.d(TAG, "[Forward] Paket ${paket.id.value} KÖNNTE weitergeleitet werden, aber Beaconing ist nicht aktiv – überspringe.")
                         }
                     } else {
-                        Log.d(TAG, "Paket ${paket.id.value} hat maximale Hop-Anzahl erreicht (${paket.currentHopCount}/${paket.maxHopCount})")
+                        Log.d(TAG, "[Forward] Paket ${paket.id.value} hat maximale Hop-Anzahl erreicht (${paket.currentHopCount}/${paket.maxHopCount})")
                     }
 
                     // Erstelle ein IncomingFrame für das Manifest und emittiere es
@@ -740,64 +768,116 @@ class TransportManagerImpl @Inject constructor(
     }
 
     private suspend fun autoForwardPaket(paket: Paket) {
+        if (!beaconingActive) {
+            Log.d(TAG, "[Forward] Beaconing inactive – breche Weiterleitung ab")
+            return
+        }
+
         try {
-            // 1. Starte Discovery, um Geräte zu finden
+            Log.d(TAG, "[Forward] Starte automatische Weiterleitung für Paket ${paket.id.value}")
+
+            // 1. Starte Discovery (falls nicht bereits aktiv)
             startDiscovery()
 
-            delay(5000) // Warte 5 Sekunden, um Geräte zu entdecken
+            delay(5_000) // Gib der Peer-Discovery etwas Zeit
 
-            // 2. Hole die Liste der aktuell entdeckten Geräte
+            // 2. Geräte ermitteln & filtern
             val allDevices = wifiDirectDiscovery.discoveredDevices.value
-            // Filtere Geräte, die auf der Blacklist stehen, direkt heraus
-            val devices = allDevices.filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
+            val candidates = allDevices
+                .filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
+                .shuffled()
+                .take(3) // max. 3 Versuche pro Weiterleitung
 
-            if (devices.isEmpty()) {
-                Log.d(TAG, "Keine passenden Geräte (nach Blacklist-Filter) für Weiterleitung von Paket ${paket.id.value} gefunden")
+            if (candidates.isEmpty()) {
+                Log.d(TAG, "[Forward] Keine geeigneten Peers gefunden – Abbruch")
                 return
             }
 
-            Log.d(TAG, "Versuche, Paket ${paket.id.value} an ${devices.size} von ${allDevices.size} entdeckten Gerät(en) weiterzuleiten")
-
-            // 3. Inkrementiere den Hop-Counter
+            // 3. Hop-Counter erhöhen und speichern, bevor wir senden
             val forwardedPaket = paket.incrementHopCount()
             savePaketUseCase(forwardedPaket)
 
-            // 4. Sende das Paket an jedes Gerät
-            devices.forEach { device ->
+            // 4. Iteriere über Kandidaten
+            for (device in candidates) {
+                if (!beaconingActive) {
+                    Log.d(TAG, "[Forward] Beaconing wurde gestoppt – breche Schleife ab")
+                    break
+                }
+                val devAddr = device.deviceAddress
+
+                // Retry-Limit prüfen
+                if (isDeviceAlreadyTried(devAddr, forwardedPaket.id)) {
+                    Log.d(TAG, "[Forward] $devAddr bereits $MAX_ATTEMPTS× erfolglos – überspringe")
+                    continue
+                }
+
+                Log.d(TAG, "[Forward] Verbinde zu ${device.deviceName} ($devAddr)")
+                _forwardEvents.emit(
+                    ForwardEvent(
+                        paketId = forwardedPaket.id,
+                        peerId = PeerId("direct-$devAddr"),
+                        stage = ForwardEvent.Stage.CONNECTING,
+                        message = "Verbinde zu ${device.deviceName}"
+                    )
+                )
+
                 try {
-                    // Verbinde mit dem Gerät
-                    connectToPeer(device.deviceAddress)
+                    connectToPeer(devAddr)
 
-                    // Warte auf Verbindungsaufbau
-                    delay(7000)
-
-                    // Prüfe Verbindungsstatus
-                    val connectionState = wifiDirectDiscovery.connectionInfo.value
-                    if (connectionState != null && connectionState.groupFormed) {
-                        // Erstelle einen Peer-Eintrag
-                        val peerId = PeerId("direct-${device.deviceAddress}")
-
-                        // Sende das Paket
-                        sendPaket(forwardedPaket.id, peerId)
-
-                        Log.d(TAG, "Paket ${forwardedPaket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
-
-                        // Warte nach dem Senden und trenne die Verbindung
-                        delay(5000)
-                        disconnectDevice()
-                    } else {
-                        Log.d(TAG, "Keine Verbindung zu ${device.deviceName} möglich für Weiterleitung")
+                    // Warte, bis die Gruppe steht
+                    val connected = waitForGroup()
+                    if (!connected) {
+                        Log.d(TAG, "[Forward] Timeout – Gruppe mit $devAddr nicht aufgebaut")
+                        _forwardEvents.emit(
+                            ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.TIMEOUT, "Timeout bei Verbindung")
+                        )
+                        connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
+                        continue
                     }
+
+                    // PeerId anlegen
+                    val peerId = PeerId("direct-$devAddr")
+
+                    // Paket senden
+                    sendPaket(forwardedPaket.id, peerId)
+                    _forwardEvents.emit(
+                        ForwardEvent(forwardedPaket.id, peerId, ForwardEvent.Stage.SENT, "Paket gesendet")
+                    )
+
+                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, true)
+
+                    Log.d(TAG, "[Forward] Paket ${forwardedPaket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
+
+                    // Nachgelagertes Disconnect
+                    disconnectDevice()
                 } catch (e: Exception) {
-                    Log.e(TAG, "Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
+                    Log.e(TAG, "[Forward] Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
+                    _forwardEvents.emit(
+                        ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.FAILED, e.message ?: "Unbekannter Fehler")
+                    )
+                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
+                    disconnectDevice()
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Fehler bei automatischer Weiterleitung: ${e.message}")
+            Log.e(TAG, "[Forward] Unerwarteter Fehler: ${e.message}", e)
         } finally {
-            // Beende Discovery nach der Weiterleitung
+            // Discovery beenden, damit UI-State sauber bleibt
             stopDiscovery()
         }
+    }
+
+    /**
+     * Wartet asynchron bis das Gerät einer WiFi-Direct-Gruppe beigetreten ist.
+     * @return true wenn groupFormed innerhalb der Wartezeit, sonst false
+     */
+    private suspend fun waitForGroup(maxWaitMs: Long = 20_000): Boolean {
+        val start = System.currentTimeMillis()
+        while (wifiDirectDiscovery.connectionInfo.value?.groupFormed != true) {
+            if (System.currentTimeMillis() - start > maxWaitMs) return false
+            delay(500)
+        }
+        return true
     }
 
     override suspend fun disconnectDevice() {
@@ -829,4 +909,6 @@ class TransportManagerImpl @Inject constructor(
         )
         return failedAttempts >= MAX_ATTEMPTS
     }
+
+    override fun observeForwardEvents() = _forwardEvents
 }

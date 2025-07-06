@@ -5,6 +5,7 @@ import com.example.echodrop.model.domainLayer.model.DeviceInfo
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
 import kotlinx.coroutines.flow.Flow
+import com.example.echodrop.model.domainLayer.transport.ForwardEvent
 
 interface TransportManager {
 
@@ -31,6 +32,9 @@ interface TransportManager {
 
     suspend fun forwardPaket(paketId: PaketId)
 
-
+    /**
+     * Liefert Echtzeitinformationen über automatische Weiterleitungsversuche. Nur aktiv, wenn Beaconing läuft.
+     */
+    fun observeForwardEvents(): Flow<ForwardEvent>
 
 }

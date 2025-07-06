@@ -17,6 +17,15 @@
     
     <!-- Für Zugriff auf MediaStore in API 30+ -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <!-- Ab Android 13 getrennte Media-Permissions -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:targetApi="33" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:targetApi="33" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:targetApi="33" />
+
+    <!-- Für ältere Geräte ggf. noch Schreibrecht nötig -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" 
+        android:maxSdkVersion="32" />
+    
     <application
         android:name=".EchoDropApplication"
         android:allowBackup="true"

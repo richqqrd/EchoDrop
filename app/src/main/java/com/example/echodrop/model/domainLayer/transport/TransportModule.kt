@@ -30,11 +30,14 @@ abstract class TransportModule {
     companion object {
         @Provides
         @Singleton
-        fun provideMutableSharedFlow(): MutableSharedFlow<Pair<com.example.echodrop.model.domainLayer.model.PaketId, com.example.echodrop.model.domainLayer.model.PeerId>> {
+        fun provideManifestSharedFlow(): MutableSharedFlow<Pair<com.example.echodrop.model.domainLayer.model.PaketId, com.example.echodrop.model.domainLayer.model.PeerId>> {
             return MutableSharedFlow()
         }
 
+        @Provides
+        @Singleton
+        fun provideForwardEventSharedFlow(): MutableSharedFlow<com.example.echodrop.model.domainLayer.transport.ForwardEvent> {
+            return MutableSharedFlow(replay = 0, extraBufferCapacity = 20)
+        }
     }
-
-
 }

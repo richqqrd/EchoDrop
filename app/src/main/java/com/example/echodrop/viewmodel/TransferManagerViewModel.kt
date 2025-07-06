@@ -26,6 +26,8 @@ import com.example.echodrop.model.domainLayer.model.TransferState
 import com.example.echodrop.model.domainLayer.model.TransferDirection
 import com.example.echodrop.model.domainLayer.usecase.paket.ObserveInboxUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
+import com.example.echodrop.model.domainLayer.transport.ForwardEvent
+import com.example.echodrop.model.domainLayer.usecase.network.ObserveForwardEventsUseCase
 
 data class TransferUiState(
     val isWifiDirectEnabled: Boolean = false,
@@ -36,7 +38,8 @@ data class TransferUiState(
     val connectedDevices: Set<String> = emptySet(),
     val sendingTransfers: List<TransferItem> = emptyList(),
     val receivingTransfers: List<TransferItem> = emptyList(),
-    val completedTransfers: List<TransferItem> = emptyList()
+    val completedTransfers: List<TransferItem> = emptyList(),
+    val forwardLog: List<ForwardEvent> = emptyList()
 )
 
 data class TransferItem(
@@ -65,7 +68,8 @@ class TransferManagerViewModel @Inject constructor(
 
     // Paket Use Cases
     private val observeInboxUseCase: ObserveInboxUseCase,
-    private val startTransferUseCase: StartTransferUseCase
+    private val startTransferUseCase: StartTransferUseCase,
+    private val observeForwardEventsUseCase: ObserveForwardEventsUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TransferUiState())
@@ -104,6 +108,16 @@ class TransferManagerViewModel @Inject constructor(
 
 
     init {
+        // collect forward events
+        viewModelScope.launch {
+            observeForwardEventsUseCase().collect { event ->
+                _state.update { st ->
+                    val newLog = (st.forwardLog + event).takeLast(50)
+                    st.copy(forwardLog = newLog)
+                }
+            }
+        }
+
         viewModelScope.launch {
             observeTransfersUseCase().collect { transfers ->
                 val sending = transfers.filter {
