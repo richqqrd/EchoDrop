@@ -76,7 +76,8 @@ class TransportManagerImpl @Inject constructor(
             "f6:30:b9:4a:18:9d",
             "f6:30:b9:51:fe:4b",
             "a6:d7:3c:00:e8:ec",
-            "0a:2e:5f:f1:00:b0"
+            "0a:2e:5f:f1:00:b0",
+            "66:07:f6:75:63:19"
         )
     }
 
@@ -498,7 +499,7 @@ class TransportManagerImpl @Inject constructor(
                             Log.d(TAG, "[Forward] Paket ${paket.id.value} wird in 10s weitergeleitet (Hop ${paket.currentHopCount}/${paket.maxHopCount}). Beaconing ist aktiv.")
                             val job = coroutineScope.launch {
                                 delay(10_000) // Kurze Pause, um UI/Transfers zu initialisieren
-                                autoForwardPaket(paket)
+                                autoForwardPaket(paket, sourceAddress)
                             }
                             synchronized(forwardJobs) { forwardJobs += job }
                         } else {
@@ -767,7 +768,7 @@ class TransportManagerImpl @Inject constructor(
         }
     }
 
-    private suspend fun autoForwardPaket(paket: Paket) {
+    private suspend fun autoForwardPaket(paket: Paket, excludeAddress: String? = null) {
         if (!beaconingActive) {
             Log.d(TAG, "[Forward] Beaconing inactive – breche Weiterleitung ab")
             return
@@ -785,6 +786,7 @@ class TransportManagerImpl @Inject constructor(
             val allDevices = wifiDirectDiscovery.discoveredDevices.value
             val candidates = allDevices
                 .filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
+                .filterNot { excludeAddress != null && it.deviceAddress == excludeAddress }
                 .shuffled()
                 .take(3) // max. 3 Versuche pro Weiterleitung
 
@@ -804,6 +806,22 @@ class TransportManagerImpl @Inject constructor(
                     break
                 }
                 val devAddr = device.deviceAddress
+
+                // Falls wir noch in einer bestehenden Gruppe sind, zuerst trennen und warten
+                if (wifiDirectDiscovery.connectionInfo.value?.groupFormed == true) {
+                    Log.d(TAG, "[Forward] Bestehende Gruppe erkannt – trenne, bevor ich zu $devAddr verbinde")
+                    disconnectDevice()
+                    val leftGroup = waitForNoGroup()
+                    if (!leftGroup) {
+                        Log.d(TAG, "[Forward] Konnte Gruppe nicht rechtzeitig verlassen – überspringe $devAddr")
+                        continue
+                    }
+
+                    // Neue Peer-Discovery starten, damit das zuvor verlassene Gerät uns wieder sieht
+                    Log.d(TAG, "[Forward] Starte erneute Peer-Discovery nach Gruppen-Trennung")
+                    startDiscovery()
+                    delay(4_000) // gib Android Zeit, neue Peers zu liefern
+                }
 
                 // Retry-Limit prüfen
                 if (isDeviceAlreadyTried(devAddr, forwardedPaket.id)) {
@@ -874,6 +892,15 @@ class TransportManagerImpl @Inject constructor(
     private suspend fun waitForGroup(maxWaitMs: Long = 20_000): Boolean {
         val start = System.currentTimeMillis()
         while (wifiDirectDiscovery.connectionInfo.value?.groupFormed != true) {
+            if (System.currentTimeMillis() - start > maxWaitMs) return false
+            delay(500)
+        }
+        return true
+    }
+
+    private suspend fun waitForNoGroup(maxWaitMs: Long = 15_000): Boolean {
+        val start = System.currentTimeMillis()
+        while (wifiDirectDiscovery.connectionInfo.value?.groupFormed == true) {
             if (System.currentTimeMillis() - start > maxWaitMs) return false
             delay(500)
         }

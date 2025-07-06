@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.IOException
 import javax.inject.Inject
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class PaketDetailState(
     val paket: PaketUi? = null,
@@ -243,75 +244,75 @@ class PaketDetailViewModel @Inject constructor(
         }
     }
 
-fun shareWithDevice(deviceAddress: String) {
-    val currentPaket = state.value.paket ?: return
+    fun shareWithDevice(deviceAddress: String) {
+        val currentPaket = state.value.paket ?: return
 
-    if (DEVICE_BLACKLIST.contains(deviceAddress)) {
-        _state.update {
-            it.copy(
-                error = "Dieses Gerät ist blockiert",
-                isLoading = false
-            )
-        }
-        return
-    }
-
-    viewModelScope.launch {
-        try {
-            Log.d(TAG, "Connecting to device: $deviceAddress")
-            _state.update { it.copy(isLoading = true) }
-
-            // Erstelle und speichere einen Peer-Eintrag bevor der Transfer gestartet wird
-            val peerId = PeerId("direct-$deviceAddress")
-
-            // Hole den Device-Namen aus der nearbyDevices-Liste
-            val deviceName = nearbyDevices.value.find { it.deviceAddress == deviceAddress }?.deviceName ?: "Unbekanntes Gerät"
-
-            // Erstelle einen Peer-Eintrag für dieses Gerät
-            val peer = Peer(
-                id = peerId,
-                alias = deviceName,
-                lastSeenUtc = System.currentTimeMillis()
-            )
-
-            // Speichere den Peer in der Datenbank
-            savePeerUseCase(peer)
-
-            // Verbinde mit dem Gerät
-            connectToDeviceUseCase(deviceAddress)
-
-            // HIER DIE ÄNDERUNG: Längere Wartezeit und Verbindungsüberprüfung
-Log.d(TAG, "Warte 7 Sekunden auf Verbindungsaufbau...")
-            delay(7000)
-            
-            // Prüfe Verbindungsstatus vor dem Transfer
-val connectionState = observeConnectionStateUseCase().first()
-if (connectionState == null || !connectionState.isConnected) {
-    Log.e(TAG, "Verbindungsstatus: $connectionState")
-    throw IOException("WiFi Direct Verbindung wurde nicht hergestellt")
-}
-
-            // Starte den Transfer
-            startTransfer(currentPaket.id, peerId)
-
+        if (DEVICE_BLACKLIST.contains(deviceAddress)) {
             _state.update {
                 it.copy(
-                    isLoading = false,
-                    message = "Transfer gestartet zu Gerät mit Adresse $deviceAddress"
-                )
-            }
-            Log.d(TAG, "Transfer initiated to device: $deviceAddress")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error sharing with device", e)
-            _state.update {
-                it.copy(
-                    error = "Fehler beim Teilen: ${e.message}",
+                    error = "Dieses Gerät ist blockiert",
                     isLoading = false
                 )
             }
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                Log.d(TAG, "Connecting to device: $deviceAddress")
+                _state.update { it.copy(isLoading = true) }
+
+                // Erstelle und speichere einen Peer-Eintrag bevor der Transfer gestartet wird
+                val peerId = PeerId("direct-$deviceAddress")
+
+                // Hole den Device-Namen aus der nearbyDevices-Liste
+                val deviceName = nearbyDevices.value.find { it.deviceAddress == deviceAddress }?.deviceName ?: "Unbekanntes Gerät"
+
+                // Erstelle einen Peer-Eintrag für dieses Gerät
+                val peer = Peer(
+                    id = peerId,
+                    alias = deviceName,
+                    lastSeenUtc = System.currentTimeMillis()
+                )
+
+                // Speichere den Peer in der Datenbank
+                savePeerUseCase(peer)
+
+                // Verbinde mit dem Gerät
+                connectToDeviceUseCase(deviceAddress)
+
+                // Warte bis die Verbindung steht (max 30 s)
+                val connected = withTimeoutOrNull(30_000) {
+                    observeConnectionStateUseCase()
+                        .first { it.isConnected }
+                }
+
+                if (connected == null) {
+                    Log.e(TAG, "Timeout – WiFi Direct Verbindung zu $deviceAddress nicht hergestellt")
+                    throw IOException("WiFi Direct Verbindung wurde nicht hergestellt")
+                }
+
+                // Starte den Transfer
+                startTransfer(currentPaket.id, peerId)
+
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        message = "Transfer gestartet zu Gerät mit Adresse $deviceAddress"
+                    )
+                }
+                Log.d(TAG, "Transfer initiated to device: $deviceAddress")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error sharing with device", e)
+                _state.update {
+                    it.copy(
+                        error = "Fehler beim Teilen: ${e.message}",
+                        isLoading = false
+                    )
+                }
+            }
         }
     }
-}
 
     private fun DeviceInfo.toWifiP2pDevice(): WifiP2pDevice {
         return WifiP2pDevice().apply {

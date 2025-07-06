@@ -224,22 +224,43 @@ class WiFiDirectDiscovery @Inject constructor(
      * Verbindung zu einem Gerät herstellen
      */
     fun connectToDevice(deviceAddress: String) {
-            Log.d(TAG, "Attempting to connect to device: $deviceAddress")
+        Log.d(TAG, "Attempting to connect to device: $deviceAddress")
 
-    // Prüfe aktiven Verbindungszustand
-    if (_connectionInfo.value != null) {
-        Log.d(TAG, "Already connected to a device. Current connection info: ${_connectionInfo.value}")
-        // Optional: Trennen der bestehenden Verbindung vor neuer Verbindung
-        // manager.removeGroup(channel, null)
-    }
-        val device = _discoveredDevices.value.find { it.deviceAddress == deviceAddress }
-        if (device == null) {
-            Log.e(TAG, "Device with address $deviceAddress not found")
-            return
+        // Prüfe aktiven Verbindungszustand
+        if (_connectionInfo.value != null && _connectionInfo.value!!.groupFormed) {
+            Log.d(TAG, "Currently in a group – disconnecting before connecting to $deviceAddress")
+            disconnectFromCurrentGroup()
+            // keine Suspend-Funktion – Warte 1 s, damit Broadcast EVENT ankommt
+            try { Thread.sleep(1000) } catch (_: InterruptedException) {}
         }
+        val device = _discoveredDevices.value.find { it.deviceAddress == deviceAddress }
 
-        if (!hasRequiredPermissions()) {
-            Log.e(TAG, "Missing required permissions for WiFi Direct")
+        // Wenn das Gerät nicht (mehr) in der aktuellen Liste ist, versuche trotzdem eine Direktverbindung
+        if (device == null) {
+            Log.w(TAG, "Device $deviceAddress nicht in aktueller Peer-Liste – versuche Direktverbindung")
+
+            if (!hasRequiredPermissions()) {
+                Log.e(TAG, "Missing required permissions for WiFi Direct")
+                return
+            }
+
+            val config = WifiP2pConfig().apply { this.deviceAddress = deviceAddress }
+
+            manager.connect(channel, config, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {
+                    Log.d(TAG, "Direct connection initiated successfully to $deviceAddress")
+                }
+
+                override fun onFailure(reason: Int) {
+                    val reasonStr = when(reason) {
+                        WifiP2pManager.ERROR -> "ERROR"
+                        WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
+                        WifiP2pManager.BUSY -> "BUSY"
+                        else -> "UNKNOWN"
+                    }
+                    Log.e(TAG, "Direct connection failed to $deviceAddress: $reasonStr")
+                }
+            })
             return
         }
 
@@ -285,48 +306,48 @@ class WiFiDirectDiscovery @Inject constructor(
     /**
      * Verbindung zu Gerät für ältere Android-Versionen
      */
-private fun connectToDeviceLegacy(device: WifiP2pDevice) {
-    if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-        != PackageManager.PERMISSION_GRANTED) {
-        Log.e(TAG, "Missing ACCESS_FINE_LOCATION permission")
-        return
-    }
+    private fun connectToDeviceLegacy(device: WifiP2pDevice) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "Missing ACCESS_FINE_LOCATION permission")
+            return
+        }
 
-    val config = WifiP2pConfig().apply {
-        deviceAddress = device.deviceAddress
-        // Füge Gruppenbesitzer-Intent hinzu - hilft bei Verbindungen
-        groupOwnerIntent = 0 // 0=neutral, 15=maximum intention to be group owner
-    }
+        val config = WifiP2pConfig().apply {
+            deviceAddress = device.deviceAddress
+            // Füge Gruppenbesitzer-Intent hinzu - hilft bei Verbindungen
+            groupOwnerIntent = 0 // 0=neutral, 15=maximum intention to be group owner
+        }
 
-    try {
-        manager.connect(channel, config, object : WifiP2pManager.ActionListener {
-            override fun onSuccess() {
-                Log.d(TAG, "Connection initiated successfully to ${device.deviceName} (Legacy)")
-            }
-
-            override fun onFailure(reason: Int) {
-                val reasonStr = when(reason) {
-                    WifiP2pManager.ERROR -> "ERROR"
-                    WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
-                    WifiP2pManager.BUSY -> "BUSY"
-                    else -> "UNKNOWN"
-                }
-                Log.e(TAG, "Connection failed to ${device.deviceName} (Legacy): $reasonStr")
-            }
-        })
-    } catch (e: Exception) {
-        // Fange die Exception ab und protokolliere sie
-        Log.e(TAG, "Exception during connect attempt: ${e.message}", e)
-
-        // Versuche den vorherigen Gruppenstatus zurückzusetzen
         try {
-            manager.cancelConnect(channel, null)
-            manager.removeGroup(channel, null)
-        } catch (e2: Exception) {
-            Log.e(TAG, "Error during cleanup: ${e2.message}")
+            manager.connect(channel, config, object : WifiP2pManager.ActionListener {
+                override fun onSuccess() {
+                    Log.d(TAG, "Connection initiated successfully to ${device.deviceName} (Legacy)")
+                }
+
+                override fun onFailure(reason: Int) {
+                    val reasonStr = when(reason) {
+                        WifiP2pManager.ERROR -> "ERROR"
+                        WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
+                        WifiP2pManager.BUSY -> "BUSY"
+                        else -> "UNKNOWN"
+                    }
+                    Log.e(TAG, "Connection failed to ${device.deviceName} (Legacy): $reasonStr")
+                }
+            })
+        } catch (e: Exception) {
+            // Fange die Exception ab und protokolliere sie
+            Log.e(TAG, "Exception during connect attempt: ${e.message}", e)
+
+            // Versuche den vorherigen Gruppenstatus zurückzusetzen
+            try {
+                manager.cancelConnect(channel, null)
+                manager.removeGroup(channel, null)
+            } catch (e2: Exception) {
+                Log.e(TAG, "Error during cleanup: ${e2.message}")
+            }
         }
     }
-}
 
     /**
      * Prüft, ob alle erforderlichen Berechtigungen vorhanden sind
@@ -482,33 +503,33 @@ private fun connectToDeviceLegacy(device: WifiP2pDevice) {
     }
 
     /**
- * Trennt die aktuelle Gruppenverbindung und bereinigt den Verbindungsstatus
- */
-fun disconnectFromCurrentGroup() {
-    Log.d(TAG, "Disconnecting from current group")
+     * Trennt die aktuelle Gruppenverbindung und bereinigt den Verbindungsstatus
+     */
+    fun disconnectFromCurrentGroup() {
+        Log.d(TAG, "Disconnecting from current group")
 
-    // Prüfe, ob eine aktive Verbindung vorhanden ist
-    if (_connectionInfo.value == null) {
-        Log.d(TAG, "No active connection to disconnect from")
-        return
-    }
-
-    // Gruppe entfernen
-    manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
-        override fun onSuccess() {
-            Log.d(TAG, "Successfully disconnected from group")
-            _connectionInfo.value = null
+        // Prüfe, ob eine aktive Verbindung vorhanden ist
+        if (_connectionInfo.value == null) {
+            Log.d(TAG, "No active connection to disconnect from")
+            return
         }
 
-        override fun onFailure(reason: Int) {
-            val reasonStr = when(reason) {
-                WifiP2pManager.ERROR -> "ERROR"
-                WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
-                WifiP2pManager.BUSY -> "BUSY"
-                else -> "UNKNOWN"
+        // Gruppe entfernen
+        manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
+            override fun onSuccess() {
+                Log.d(TAG, "Successfully disconnected from group")
+                _connectionInfo.value = null
             }
-            Log.e(TAG, "Failed to disconnect from group: $reasonStr")
-        }
-    })
-}
+
+            override fun onFailure(reason: Int) {
+                val reasonStr = when(reason) {
+                    WifiP2pManager.ERROR -> "ERROR"
+                    WifiP2pManager.P2P_UNSUPPORTED -> "P2P_UNSUPPORTED"
+                    WifiP2pManager.BUSY -> "BUSY"
+                    else -> "UNKNOWN"
+                }
+                Log.e(TAG, "Failed to disconnect from group: $reasonStr")
+            }
+        })
+    }
 }
