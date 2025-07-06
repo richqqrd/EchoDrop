@@ -8,7 +8,12 @@ import com.example.echodrop.model.domainLayer.model.DeviceInfo
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.model.domainLayer.model.TransferId
-import com.example.echodrop.model.domainLayer.usecase.network.*
+import com.example.echodrop.model.domainLayer.usecase.network.ConnectToDeviceUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.ObserveConnectionStateUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.ObserveDiscoveredDevicesUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.ObserveThisDeviceUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.StartBeaconingUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.StopBeaconingUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.*
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -45,8 +50,8 @@ data class TransferItem(
 @HiltViewModel
 class TransferManagerViewModel @Inject constructor(
     // Network Use Cases
-    private val startDiscoveryUseCase: StartDiscoveryUseCase,
-    private val stopDiscoveryUseCase: StopDiscoveryUseCase,
+    private val startBeaconingUseCase: StartBeaconingUseCase,
+    private val stopBeaconingUseCase: StopBeaconingUseCase,
     private val observeDiscoveredDevicesUseCase: ObserveDiscoveredDevicesUseCase,
     private val observeThisDeviceUseCase: ObserveThisDeviceUseCase,
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase,
@@ -157,7 +162,7 @@ class TransferManagerViewModel @Inject constructor(
     fun startDiscovery() {
         discoveryJob?.cancel()
         discoveryJob = viewModelScope.launch {
-            startDiscoveryUseCase()
+            startBeaconingUseCase()
             _state.update { it.copy(isDiscoveryActive = true) }
         }
     }
@@ -165,7 +170,7 @@ class TransferManagerViewModel @Inject constructor(
     fun stopDiscovery() {
         discoveryJob?.cancel()
         viewModelScope.launch {
-            stopDiscoveryUseCase()
+            stopBeaconingUseCase()
             _state.update { it.copy(isDiscoveryActive = false) }
         }
     }

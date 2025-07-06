@@ -12,8 +12,8 @@ import com.example.echodrop.model.domainLayer.usecase.file.GetFilesForPaketUseCa
 import com.example.echodrop.model.domainLayer.usecase.network.ConnectToDeviceUseCase
 import com.example.echodrop.model.domainLayer.usecase.network.ObserveConnectionStateUseCase
 import com.example.echodrop.model.domainLayer.usecase.network.ObserveDiscoveredDevicesUseCase
-import com.example.echodrop.model.domainLayer.usecase.network.StartDiscoveryUseCase
-import com.example.echodrop.model.domainLayer.usecase.network.StopDiscoveryUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.StartBeaconingUseCase
+import com.example.echodrop.model.domainLayer.usecase.network.StopBeaconingUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.DeletePaketUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.UpdatePaketMetaUseCase
@@ -48,8 +48,8 @@ class PaketDetailViewModel @Inject constructor(
     private val updatePaketMeta: UpdatePaketMetaUseCase,
     private val deletePaket: DeletePaketUseCase,
     private val startTransfer: StartTransferUseCase,
-    private val startDiscoveryUseCase: StartDiscoveryUseCase,
-    private val stopDiscoveryUseCase: StopDiscoveryUseCase,
+    private val startBeaconingUseCase: StartBeaconingUseCase,
+    private val stopBeaconingUseCase: StopBeaconingUseCase,
     private val observeDiscoveredDevicesUseCase: ObserveDiscoveredDevicesUseCase,
     private val connectToDeviceUseCase: ConnectToDeviceUseCase,
     private val savePeerUseCase: SavePeerUseCase,
@@ -219,7 +219,7 @@ class PaketDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 Log.d(TAG, "Starting device discovery")
-                startDiscoveryUseCase()
+                startBeaconingUseCase()
                 _isDiscoveryActive.value = true
             } catch (e: Exception) {
                 Log.e(TAG, "Error starting discovery", e)
@@ -234,7 +234,7 @@ class PaketDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 Log.d(TAG, "Stopping device discovery")
-                stopDiscoveryUseCase()
+                stopBeaconingUseCase()
                 _isDiscoveryActive.value = false
             } catch (e: Exception) {
                 // Fehler beim Stoppen der Discovery ist weniger kritisch

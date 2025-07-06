@@ -32,6 +32,7 @@ import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.util.FileUtils
 import kotlinx.coroutines.delay
 import java.io.File
+import androidx.compose.runtime.DisposableEffect
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,6 +74,15 @@ fun PaketDetailScreen(
         while (true) {
             now = System.currentTimeMillis()
             delay(1000)
+        }
+    }
+
+    // Stop Beaconing when we leave the screen via toggle function (public)
+    DisposableEffect(Unit) {
+        onDispose {
+            if (viewModel.isDiscoveryActive.value) {
+                viewModel.toggleDiscovery()
+            }
         }
     }
 
