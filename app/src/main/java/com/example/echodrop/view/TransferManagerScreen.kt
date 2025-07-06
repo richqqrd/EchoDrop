@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -17,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.echodrop.viewmodel.TransferManagerViewModel
+import androidx.compose.foundation.rememberScrollState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +39,7 @@ fun TransferManagerScreen(
         }
     }
 
+    val scrollState = rememberScrollState()
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,6 +71,7 @@ fun TransferManagerScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
+                .verticalScroll(scrollState)
         ) {
             // Status-Anzeige
             Card(
@@ -214,11 +218,48 @@ fun TransferManagerScreen(
                 }
             }
 
+            // Forward Log Card
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("Weiterleitungs-Log", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    if (uiState.forwardLog.isEmpty()) {
+                        Text("Keine Ereignisse", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                    } else {
+                        LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
+                            items(uiState.forwardLog.reversed()) { event ->
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    val (icon, tint) = when (event.stage) {
+                                        com.example.echodrop.model.domainLayer.transport.ForwardEvent.Stage.CONNECTING -> Icons.Default.Link to Color(0xFF1976D2)
+                                        com.example.echodrop.model.domainLayer.transport.ForwardEvent.Stage.TIMEOUT -> Icons.Default.HourglassEmpty to Color(0xFFFFA000)
+                                        com.example.echodrop.model.domainLayer.transport.ForwardEvent.Stage.SENT -> Icons.Default.Send to Color(0xFF388E3C)
+                                        com.example.echodrop.model.domainLayer.transport.ForwardEvent.Stage.FAILED -> Icons.Default.Error to Color(0xFFD32F2F)
+                                    }
+                                    Icon(icon, contentDescription = null, tint = tint)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "${event.paketId.value.take(6)}… → ${event.peerId?.value ?: "?"}: ${event.message}",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                Divider()
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Transfers
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
             ) {
                 Column(
                     modifier = Modifier
@@ -242,10 +283,8 @@ fun TransferManagerScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        LazyColumn(
-                            modifier = Modifier.heightIn(max = 120.dp)
-                        ) {
-                            items(uiState.sendingTransfers) { transfer ->
+                        Column {
+                            uiState.sendingTransfers.forEach { transfer ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -291,6 +330,9 @@ fun TransferManagerScreen(
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
+                    } else {
+                        Text("Keine sendenden Transfers", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -304,10 +346,8 @@ fun TransferManagerScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        LazyColumn(
-                            modifier = Modifier.heightIn(max = 120.dp)
-                        ) {
-                            items(uiState.receivingTransfers) { transfer ->
+                        Column {
+                            uiState.receivingTransfers.forEach { transfer ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -353,6 +393,9 @@ fun TransferManagerScreen(
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
                         }
+                    } else {
+                        Text("Keine eingehenden Transfers", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
 
                     // Abgeschlossene Transfers
@@ -366,10 +409,8 @@ fun TransferManagerScreen(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        LazyColumn(
-                            modifier = Modifier.heightIn(max = 120.dp)
-                        ) {
-                            items(uiState.completedTransfers.take(5)) { transfer ->
+                        Column {
+                            uiState.completedTransfers.take(5).forEach { transfer ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -395,6 +436,8 @@ fun TransferManagerScreen(
                                 Divider()
                             }
                         }
+                    } else {
+                        Text("Keine abgeschlossenen Transfers", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     }
 
                     // Debugmodus Bereich
