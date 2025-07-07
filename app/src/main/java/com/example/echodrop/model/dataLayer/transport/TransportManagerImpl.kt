@@ -45,6 +45,7 @@ import java.util.concurrent.TimeUnit
 import com.example.echodrop.model.domainLayer.transport.ForwardEvent
 import kotlinx.coroutines.Job
 import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
+import com.example.echodrop.model.domainLayer.transport.ChunkIO
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -59,14 +60,14 @@ class TransportManagerImpl @Inject constructor(
     private val progressCallback: TransferProgressCallback,
     private val manifestBuilder: ManifestBuilder,
     private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow<Pair<PaketId, PeerId>>(),
-    private val _forwardEvents: MutableSharedFlow<ForwardEvent> = MutableSharedFlow<ForwardEvent>(replay = 0, extraBufferCapacity = 20)
+    private val _forwardEvents: MutableSharedFlow<ForwardEvent> = MutableSharedFlow<ForwardEvent>(replay = 0, extraBufferCapacity = 20),
+    private val chunkIO: ChunkIO
 ) : TransportManager {
 
     companion object {
         private const val TAG = "TransportManagerImpl"
         private const val MANIFEST_PREFIX = "MAN|"
         private const val CHUNK_PREFIX = "CHK|"
-        private const val CHUNK_SIZE = 64 * 1024 // 64 KB – muss <= WiFiDirectService.BUFFER_SIZE sein
         private const val MAX_ATTEMPTS = 3
         private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
         private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 Stunden
@@ -357,29 +358,16 @@ class TransportManagerImpl @Inject constructor(
         }
 
         // Iteriere über Dateien
-        paket.files.forEachIndexed { fileIdx, fileEntry ->
-            val file = File(fileEntry.path)
-            if (!file.exists()) {
-                Log.e(TAG, "Datei ${file.absolutePath} existiert nicht – überspringe")
+        paket.files.forEachIndexed { idx, entry ->
+            val f = File(entry.path)
+            if (!f.exists()) {
+                Log.e(TAG, "Datei ${f.absolutePath} existiert nicht – überspringe")
                 return@forEachIndexed
             }
-
-            val fileId = "file_${fileIdx}_${paketId}"
-
-            file.inputStream().use { input ->
-                val buffer = ByteArray(CHUNK_SIZE)
-                var bytesRead: Int
-                var chunkIdx = 0
-                while (input.read(buffer).also { bytesRead = it } != -1) {
-                    val dataToSend = if (bytesRead == CHUNK_SIZE) buffer else buffer.copyOf(bytesRead)
-
-                    val chunkId = "chunk${chunkIdx}_${paketId}_${fileId}"
-                    Log.d(TAG, "Sende Chunk $chunkId (${bytesRead}B) an $peerId")
-
-                    sendChunk(chunkId, dataToSend)
-
-                    chunkIdx++
-                }
+            val fileId = "file_${idx}_${paketId}"
+            chunkIO.splitFile(f, "${paketId}_${fileId}").forEach { (chunkId, bytes) ->
+                Log.d(TAG, "Sende Chunk $chunkId (${bytes.size}B) an $peerId")
+                sendChunk(chunkId, bytes)
             }
         }
     }
@@ -491,7 +479,7 @@ class TransportManagerImpl @Inject constructor(
                         val fileId = if (idParts.size >= 3) idParts.subList(2, idParts.size).joinToString("_") else "file_0_$paketId"
 
                         // Speichere die Chunk-Daten in einer temporären Datei
-                        val success = saveChunkToFile(PaketId(paketId), fileId, chunkData)
+                        val success = chunkIO.appendChunk(PaketId(paketId), fileId, chunkData)
                         if (success) {
                             val peerId = PeerId("direct-$sourceAddress")
                             
@@ -646,74 +634,6 @@ class TransportManagerImpl @Inject constructor(
                 createdUtc = System.currentTimeMillis(),
                 files = emptyList()
             )
-        }
-    }
-
-    private suspend fun saveChunkToFile(paketId: PaketId, fileId: String, data: ByteArray): Boolean {
-        return try {
-            // Versuche den bereits in der DB hinterlegten Dateipfad zu ermitteln
-            val paket = getPaketDetailUseCase(paketId)
-            val fileEntry = paket?.files?.firstOrNull { it.path.contains(fileId) }
-
-            // Fallback-Pfad falls Manifest/DB (noch) nicht vorhanden
-            val file: File = if (fileEntry != null) {
-                File(fileEntry.path)
-            } else {
-                // Gleiche Logik wie in parseManifestAndCreatePaket, aber ohne Dateinamen → verwende *.part
-                val filesDir = File(context.filesDir, "received_files")
-                if (!filesDir.exists()) filesDir.mkdirs()
-                File(filesDir, "${paketId.value}_${fileId.replace('/', '_')}.part")
-            }
-
-            // Stelle sicher, dass Verzeichnisse existieren
-            file.parentFile?.takeIf { !it.exists() }?.mkdirs()
-
-            // Chunk anhängen (append = true)
-            FileOutputStream(file, /*append=*/ true).use { outputStream ->
-                outputStream.write(data)
-                outputStream.flush()
-            }
-
-            if (fileEntry == null) {
-                // Wenn wir nur einen Fallback-Pfad hatten, aktualisiere jetzt den Pfad in der DB,
-                // damit die UI später den korrekten Namen kennt.
-                coroutineScope.launch {
-                    updateFilePathInPaket(paketId, fileId, file.absolutePath)
-                }
-            }
-
-            Log.d(TAG, "Successfully appended ${data.size} B to ${file.absolutePath}")
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving chunk data to file", e)
-            false
-        }
-    }
-
-    // Neue Methode zum Aktualisieren des Dateipfads im Paket
-    private suspend fun updateFilePathInPaket(paketId: PaketId, fileId: String, absolutePath: String) {
-        try {
-            // Lade das aktuelle Paket
-            val paket = getPaketDetailUseCase(paketId) ?: return
-
-            // Finde und aktualisiere die entsprechende Datei
-            val updatedFiles = paket.files.map { file ->
-                if (file.path.contains(fileId)) {
-                    file.copy(path = absolutePath)
-                } else {
-                    file
-                }
-            }
-
-            // Erstelle ein aktualisiertes Paket
-            val updatedPaket = paket.copy(files = updatedFiles)
-
-            // Speichere das aktualisierte Paket
-            savePaketUseCase(updatedPaket)
-
-            Log.d(TAG, "Updated file path in paket $paketId for file $fileId")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error updating file path in paket", e)
         }
     }
 

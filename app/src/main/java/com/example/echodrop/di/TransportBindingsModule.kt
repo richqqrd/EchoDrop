@@ -1,9 +1,11 @@
 package com.example.echodrop.di
 
+import com.example.echodrop.model.dataLayer.transport.ChunkIOImpl
 import com.example.echodrop.model.dataLayer.transport.ManifestBuilderImpl
 import com.example.echodrop.model.dataLayer.transport.WiFiDirectDiscovery
 import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
 import com.example.echodrop.model.dataLayer.transport.TransportManagerImpl
+import com.example.echodrop.model.domainLayer.transport.ChunkIO
 import com.example.echodrop.model.domainLayer.transport.DeviceDiscovery
 import com.example.echodrop.model.domainLayer.transport.DirectSocketService
 import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
@@ -41,7 +43,10 @@ abstract class TransportBindingsModule {
     @Binds
     @Singleton
     abstract fun bindManifestBuilder(impl: ManifestBuilderImpl): ManifestBuilder
-
+   
+    @Binds @Singleton
+    abstract fun bindChunkIO(impl: ChunkIOImpl): ChunkIO
+    
     companion object {
         @Provides
         @Singleton
