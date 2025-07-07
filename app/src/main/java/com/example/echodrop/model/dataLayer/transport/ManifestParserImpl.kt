@@ -55,7 +55,7 @@ class ManifestParserImpl @Inject constructor(
 
                 val filesDir = File(context.filesDir, "received_files")
                 if (!filesDir.exists()) filesDir.mkdirs()
-                val filePath = File(filesDir, "${paketId}_${fileId}_${fileName}").absolutePath
+                val filePath = File(filesDir, "${fileId}_${fileName}").absolutePath
 
                 files += FileEntry(path = filePath, mime = mime, sizeBytes = fileSize, orderIdx = i)
             }
