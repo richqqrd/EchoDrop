@@ -59,6 +59,8 @@ fun EchoDropApp() {
                 paketId = paketId,
                 onBackClick = { navController.popBackStack() },
                 onOpenTransferManager = {
+                    // Erst den PaketDetailScreen aus dem Backstack entfernen, dann zum TransferManager navigieren
+                    navController.popBackStack()
                     navController.navigate("transferManager") {
                         launchSingleTop = true
                     }
