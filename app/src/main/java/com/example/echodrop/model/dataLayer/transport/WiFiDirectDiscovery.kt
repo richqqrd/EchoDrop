@@ -58,6 +58,9 @@ class WiFiDirectDiscovery @Inject constructor(
 
     // Flag, ob Discovery aktiv ist
     private var isDiscoveryActive = false
+    
+    // Neu: Merkt, ob der BroadcastReceiver bereits registriert wurde
+    private var receiverRegistered = false
 
     // IntentFilter für die WiFi P2P Broadcasts
     private val intentFilter = IntentFilter().apply {
@@ -81,11 +84,14 @@ class WiFiDirectDiscovery @Inject constructor(
 
         isDiscoveryActive = true
 
-        // Registriere den BroadcastReceiver
-        try {
-            context.registerReceiver(receiver, intentFilter)
-        } catch (e: IllegalArgumentException) {
-            Log.e(TAG, "Error registering receiver", e)
+        // Registriere den BroadcastReceiver nur, wenn er noch nicht registriert ist
+        if (!receiverRegistered) {
+            try {
+                context.registerReceiver(receiver, intentFilter)
+                receiverRegistered = true
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Error registering receiver", e)
+            }
         }
 
         // Starte die Peer-Discovery
@@ -100,10 +106,14 @@ class WiFiDirectDiscovery @Inject constructor(
 
         isDiscoveryActive = false
 
-        try {
-            context.unregisterReceiver(receiver)
-        } catch (e: IllegalArgumentException) {
-            Log.e(TAG, "Error unregistering receiver", e)
+        if (receiverRegistered) {
+            try {
+                context.unregisterReceiver(receiver)
+            } catch (e: IllegalArgumentException) {
+                Log.e(TAG, "Error unregistering receiver", e)
+            } finally {
+                receiverRegistered = false
+            }
         }
 
         // Stoppe die Peer-Discovery
@@ -230,8 +240,6 @@ class WiFiDirectDiscovery @Inject constructor(
         if (_connectionInfo.value != null && _connectionInfo.value!!.groupFormed) {
             Log.d(TAG, "Currently in a group – disconnecting before connecting to $deviceAddress")
             disconnectFromCurrentGroup()
-            // keine Suspend-Funktion – Warte 1 s, damit Broadcast EVENT ankommt
-            try { Thread.sleep(1000) } catch (_: InterruptedException) {}
         }
         val device = _discoveredDevices.value.find { it.deviceAddress == deviceAddress }
 

@@ -174,14 +174,6 @@ private fun startServer() {
 
             Log.d(TAG, "Server started on port $localPort. Waiting for clients...")
 
-            // Teste den Server mit einer lokalen Verbindung
-            testServerLocally(localPort)
-
-                            if (!isRunning.get()) {
-                    Log.w(TAG, "isRunning is false before entering server loop - fixing")
-                    isRunning.set(true)
-                }
-
             // WICHTIG: Definiere eine kontinuierliche Schleife, die auf Verbindungen wartet
             while (isRunning.get() && serverSocket != null && !serverSocket!!.isClosed) {
                 Log.d(TAG, "Server loop iteration - ready to accept connections on port $localPort")
@@ -239,24 +231,6 @@ private fun startServer() {
             serverSocket = null
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping server: ${e.message}", e)
-        }
-    }
-
-    private fun testServerLocally(port: Int) {
-        coroutineScope.launch(Dispatchers.IO) {
-            delay(1000) // Kurz warten, damit der Server initialisiert wird
-
-            try {
-                Log.d(TAG, "Testing local server connection to port $port")
-                val testSocket = Socket()
-                testSocket.connect(InetSocketAddress("127.0.0.1", port), 2000)
-                Log.d(TAG, "Local server test successful: connected to 127.0.0.1:$port")
-                testSocket.close()
-            } catch (e: Exception) {
-                Log.e(TAG, "Local server test failed: ${e.message}", e)
-                // Der lokale Test könnte aufgrund von Firewall/Routing-Problemen fehlschlagen
-                // Protokolliere das, aber beende nicht den Server
-            }
         }
     }
 
@@ -519,10 +493,6 @@ private fun startServer() {
             } else {
                 Log.e(TAG, "Incomplete data transfer: $totalBytesRead/$messageSize bytes")
             }
-            Log.d(TAG, "Sending ACK to $clientAddress")
-            outputStream.write("ACK".toByteArray())
-            outputStream.flush()
-            Log.d(TAG, "ACK sent to $clientAddress")
         } catch (e: Exception) {
             Log.e(TAG, "Error in handleClient: ${e.message}", e)
         } finally {
