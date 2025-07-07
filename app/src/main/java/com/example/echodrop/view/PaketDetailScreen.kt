@@ -492,7 +492,8 @@ fun FileItem(file: FileEntryUi) {
         ) {
             // Dateinamen extrahieren
             val fileName = remember(file.path) {
-                File(file.path).name
+                val raw = File(file.path).name
+                raw.substringAfterLast('_', raw)
             }
             
             // Dateigröße formatieren
