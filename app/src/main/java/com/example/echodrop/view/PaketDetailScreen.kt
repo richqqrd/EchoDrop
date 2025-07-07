@@ -33,6 +33,7 @@ import com.example.echodrop.util.FileUtils
 import kotlinx.coroutines.delay
 import java.io.File
 import androidx.compose.runtime.DisposableEffect
+import com.example.echodrop.view.FullscreenLoading
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -129,10 +130,7 @@ fun PaketDetailScreen(
                 .padding(padding)
         ) {
             if (state.isLoading) {
-                // Show loading indicator
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center)
-                )
+                FullscreenLoading("Übertrage Dateien …")
             } else if (state.error != null) {
                 // Show error message
                 Column(
