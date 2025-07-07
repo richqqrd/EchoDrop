@@ -119,6 +119,8 @@ class WiFiDirectDiscovery @Inject constructor(
             }
         }
 
+        _discoveredDevices.value = emptyList()
+
         // Stoppe die Peer-Discovery
         manager.stopPeerDiscovery(channel, null)
     }
