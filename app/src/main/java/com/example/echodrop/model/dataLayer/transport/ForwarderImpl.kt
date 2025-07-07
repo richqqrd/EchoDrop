@@ -64,10 +64,6 @@ class ForwarderImpl @Inject constructor(
                 return
             }
 
-            // 3. Hop-Counter erhöhen und speichern, bevor wir senden
-            val forwardedPaket = paket.incrementHopCount()
-            savePaketUseCase(forwardedPaket)
-
             // 4. Iteriere über Kandidaten
             for (device in candidates) {
                 val devAddr = device.deviceAddress
@@ -89,7 +85,7 @@ class ForwarderImpl @Inject constructor(
                 }
 
                 // Retry-Limit prüfen
-                if (isDeviceAlreadyTried(devAddr, forwardedPaket.id)) {
+                if (isDeviceAlreadyTried(devAddr, paket.id)) {
                     Log.d(TAG, "[Forward] $devAddr bereits $MAX_ATTEMPTS× erfolglos – überspringe")
                     continue
                 }
@@ -97,7 +93,7 @@ class ForwarderImpl @Inject constructor(
                 Log.d(TAG, "[Forward] Verbinde zu ${device.deviceName} ($devAddr)")
                 forwardFlow.emit(
                     ForwardEvent(
-                        paketId = forwardedPaket.id,
+                        paketId = paket.id,
                         peerId = PeerId("direct-$devAddr"),
                         stage = ForwardEvent.Stage.CONNECTING,
                         message = "Verbinde zu ${device.deviceName}"
@@ -113,32 +109,32 @@ class ForwarderImpl @Inject constructor(
                     if (!connected) {
                         Log.d(TAG, "[Forward] Timeout – Gruppe mit $devAddr nicht aufgebaut")
                         forwardFlow.emit(
-                            ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.TIMEOUT, "Timeout bei Verbindung")
+                            ForwardEvent(paket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.TIMEOUT, "Timeout bei Verbindung")
                         )
-                        connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
+                        connectionAttemptRepository.trackAttempt(devAddr, paket.id, false)
                         continue
                     }
 
                     val peerId = PeerId("direct-$devAddr")
 
                     // Paket senden – über TransportManager
-                    transportManagerLazy.get().sendPaket(forwardedPaket.id, peerId)
+                    transportManagerLazy.get().sendPaket(paket.id, peerId)
                     forwardFlow.emit(
-                        ForwardEvent(forwardedPaket.id, peerId, ForwardEvent.Stage.SENT, "Paket gesendet")
+                        ForwardEvent(paket.id, peerId, ForwardEvent.Stage.SENT, "Paket gesendet")
                     )
 
-                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, true)
+                    connectionAttemptRepository.trackAttempt(devAddr, paket.id, true)
 
-                    Log.d(TAG, "[Forward] Paket ${forwardedPaket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
+                    Log.d(TAG, "[Forward] Paket ${paket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
 
                     // Nachgelagertes Disconnect
                     deviceDiscovery.disconnectFromCurrentGroup()
                 } catch (e: Exception) {
                     Log.e(TAG, "[Forward] Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
                     forwardFlow.emit(
-                        ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.FAILED, e.message ?: "Unbekannter Fehler")
+                        ForwardEvent(paket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.FAILED, e.message ?: "Unbekannter Fehler")
                     )
-                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
+                    connectionAttemptRepository.trackAttempt(devAddr, paket.id, false)
                     deviceDiscovery.disconnectFromCurrentGroup()
                 }
             }

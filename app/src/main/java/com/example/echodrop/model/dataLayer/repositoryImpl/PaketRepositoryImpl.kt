@@ -55,6 +55,7 @@ class PaketRepositoryImpl @Inject constructor(
             ttlSeconds = meta.ttlSeconds, 
             priority = meta.priority, 
             hopLimit = meta.maxHops,
+            currentHopCount = 0,
             manifestHash = "", 
             createdUtc = System.currentTimeMillis()
         )
@@ -109,6 +110,7 @@ class PaketRepositoryImpl @Inject constructor(
         ttlSeconds = paket.meta.ttlSeconds, 
         priority = paket.meta.priority, 
         hopLimit = paket.meta.maxHops,
+        currentHopCount = paket.currentHopCount,
         manifestHash = "", 
         createdUtc = paket.createdUtc
     )

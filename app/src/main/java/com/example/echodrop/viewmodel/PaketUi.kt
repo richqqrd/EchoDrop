@@ -12,7 +12,7 @@ data class PaketUi (
     val files: List<FileEntryUi> = emptyList(),
     val ttlSeconds: Int = 3600,
     val priority: Int = 1,
-   val maxHops: Int?,
-   val createdUtc: Long // <-- HIER HINZUFÜGEN
-
-    )
+    val maxHops: Int?,
+    val currentHopCount: Int = 0,
+    val createdUtc: Long
+)

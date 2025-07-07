@@ -15,6 +15,7 @@ fun Paket.toUi(isSending: Boolean = false): PaketUi = PaketUi(
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
     maxHops = this.meta.maxHops,
+    currentHopCount = this.currentHopCount,
     createdUtc = this.createdUtc
 )
 
@@ -41,6 +42,7 @@ fun Paket.toDetailUi(files: List<FileEntryUi>): PaketUi = PaketUi(
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
     maxHops = this.meta.maxHops,
+    currentHopCount = this.currentHopCount,
     isSending = false,
     createdUtc = this.createdUtc 
 )

@@ -107,10 +107,9 @@ fun PaketDetailScreen(
                         )
                     }
 
-                    // Teilen-Button
-                    IconButton(
-                        onClick = { showShareDialog = true }
-                    ) {
+                    // Teilen-Button (deaktiviert, wenn Hop-Limit erreicht)
+                    val canShare = state.paket?.let { it.maxHops == null || it.currentHopCount < it.maxHops } ?: true
+                    IconButton(onClick = { if (canShare) showShareDialog = true }, enabled = canShare) {
                         Icon(Icons.Default.Share, contentDescription = "Teilen")
                     }
 
@@ -291,11 +290,18 @@ Spacer(modifier = Modifier.height(8.dp))
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-    text = "Maximale Weiterleitungen: ${state.paket!!.maxHops ?: "Unbegrenzt"}",
-    style = MaterialTheme.typography.bodyMedium
-)
-Spacer(modifier = Modifier.height(8.dp))
+                                if (state.paket!!.maxHops != null) {
+                                    val remaining = (state.paket!!.maxHops!! - state.paket!!.currentHopCount).coerceAtLeast(0)
+                                    Text(
+                                        text = "Weiterleitungen verbleibend: $remaining / ${state.paket!!.maxHops}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Weiterleitungen: Unbegrenzt",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
 
                                 Text(
                                     text = "Anzahl Dateien: ${state.paket!!.fileCount}",
@@ -376,102 +382,100 @@ Spacer(modifier = Modifier.height(8.dp))
         }
 
         // Share-Dialog
-// Share-Dialog
-// Share-Dialog
-if (showShareDialog) {
-    AlertDialog(
-        onDismissRequest = { showShareDialog = false },
-        title = { Text("Paket teilen") },
-        text = {
-            Column {
-                // Zeige nur den WiFi Direct-Inhalt an (ohne Tabs)
-                Text("Wähle ein Gerät zum Teilen des Pakets:")
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // WiFi Direct Gerätesuche aktivieren
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = if (viewModel.isDiscoveryActive.collectAsState().value)
-                            "Gerätesuche aktiv..." else "Gerätesuche starten",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Switch(
-                        checked = viewModel.isDiscoveryActive.collectAsState().value,
-                        onCheckedChange = { viewModel.toggleDiscovery() }
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Gerätelist anzeigen
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                ) {
-                    val devices by viewModel.nearbyDevices.collectAsState()
-                    
-                    if (devices.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
+        if (showShareDialog) {
+            AlertDialog(
+                onDismissRequest = { showShareDialog = false },
+                title = { Text("Paket teilen") },
+                text = {
+                    Column {
+                        // Zeige nur den WiFi Direct-Inhalt an (ohne Tabs)
+                        Text("Wähle ein Gerät zum Teilen des Pakets:")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // WiFi Direct Gerätesuche aktivieren
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Keine Geräte gefunden",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center
+                                text = if (viewModel.isDiscoveryActive.collectAsState().value)
+                                    "Gerätesuche aktiv..." else "Gerätesuche starten",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Switch(
+                                checked = viewModel.isDiscoveryActive.collectAsState().value,
+                                onCheckedChange = { viewModel.toggleDiscovery() }
                             )
                         }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize()
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Gerätelist anzeigen
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
                         ) {
-                            items(devices) { device ->
-                                Row(
+                            val devices by viewModel.nearbyDevices.collectAsState()
+                            
+                            if (devices.isEmpty()) {
+                                Box(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            viewModel.shareWithDevice(device.deviceAddress)
-                                            showShareDialog = false
-                                        }
+                                        .fillMaxSize()
                                         .padding(16.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Column {
-                                        Text(
-                                            text = device.deviceName
-                                                ?: "Unbekanntes Gerät",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-                                        Text(
-                                            text = device.deviceAddress,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color.Gray
-                                        )
+                                    Text(
+                                        text = "Keine Geräte gefunden",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            } else {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize()
+                                ) {
+                                    items(devices) { device ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clickable {
+                                                    viewModel.shareWithDevice(device.deviceAddress)
+                                                    showShareDialog = false
+                                                }
+                                                .padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column {
+                                                Text(
+                                                    text = device.deviceName
+                                                        ?: "Unbekanntes Gerät",
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                                Text(
+                                                    text = device.deviceAddress,
+                                                    style = MaterialTheme.typography.bodySmall,
+                                                    color = Color.Gray
+                                                )
+                                            }
+                                        }
+                                        Divider()
                                     }
                                 }
-                                Divider()
                             }
                         }
                     }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { showShareDialog = false }
+                    ) {
+                        Text("Schließen")
+                    }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { showShareDialog = false }
-            ) {
-                Text("Schließen")
-            }
+            )
         }
-    )
-}
     }
 }
 @Composable

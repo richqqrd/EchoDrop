@@ -170,6 +170,10 @@ class PaketDetailViewModel @Inject constructor(
 
     fun onSharePaket(peerId: PeerId) {
         val currentPaket = state.value.paket ?: return
+        if (currentPaket.maxHops != null && currentPaket.currentHopCount >= currentPaket.maxHops) {
+            _state.update { it.copy(error = "Maximale Weiterleitungen erreicht") }
+            return
+        }
 
         viewModelScope.launch {
             try {
@@ -246,6 +250,10 @@ class PaketDetailViewModel @Inject constructor(
 
     fun shareWithDevice(deviceAddress: String) {
         val currentPaket = state.value.paket ?: return
+        if (currentPaket.maxHops != null && currentPaket.currentHopCount >= currentPaket.maxHops) {
+            _state.update { it.copy(error = "Maximale Weiterleitungen erreicht") }
+            return
+        }
 
         if (DEVICE_BLACKLIST.contains(deviceAddress)) {
             _state.update {

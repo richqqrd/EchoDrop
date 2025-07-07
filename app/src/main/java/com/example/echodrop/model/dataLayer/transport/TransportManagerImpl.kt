@@ -278,6 +278,21 @@ class TransportManagerImpl @Inject constructor(
                 return
             }
 
+            // Prüfe Hop-Limit
+            val paket = getPaketDetailUseCase(paketId) ?: run {
+                Log.e(TAG, "Paket ${paketId.value} nicht gefunden – Abbruch")
+                return
+            }
+
+            if (!paket.canBeForwarded()) {
+                Log.d(TAG, "Paket ${paketId.value} hat maximale Hop-Anzahl erreicht – nicht senden")
+                return
+            }
+
+            // Hop-Counter erhöhen und speichern
+            val forwarded = paket.incrementHopCount()
+            savePaketUseCase(forwarded)
+
             // Stelle sicher, dass ein Peer-Eintrag existiert (erforderlich für FK in transfer_log)
             val peerIdEntity = PeerId("direct-$deviceAddress")
             val minimalPeer = Peer(
