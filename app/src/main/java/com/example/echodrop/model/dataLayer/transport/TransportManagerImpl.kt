@@ -325,7 +325,7 @@ class TransportManagerImpl @Inject constructor(
                 return
             }
 
-            transferRepository.startTransfer(paketId, peerId)
+            transferRepository.startTransfer(paketId, peerId, com.example.echodrop.model.domainLayer.model.TransferDirection.OUTGOING)
 
             val manifestJson = buildManifestForPaket(paketId.value)
             sendManifest(paketId.value, manifestJson)

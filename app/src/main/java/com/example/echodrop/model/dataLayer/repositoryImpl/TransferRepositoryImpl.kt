@@ -18,34 +18,38 @@ import javax.inject.Inject
  * @property transferDao The DAO used to access transfer data in the database.
  */
 class TransferRepositoryImpl @Inject constructor(
-    private val transferDao: TransferDao,
-    
+    private val transferDao: TransferDao
 ) : TransferRepository {
     override fun observeTransfers(): Flow<List<TransferLog>> {
-        return transferDao.observeAll().map{entityList ->
-            entityList.map {entity ->
+        return transferDao.observeAll().map { list ->
+            list.map { entity ->
                 TransferLog(
                     paketId = PaketId(entity.paketId),
                     peerId = PeerId(entity.peerId),
                     state = entity.state,
+                    direction = entity.direction,
                     progressPct = entity.progressPct,
-                    lastUpdateUtc = entity.lastUpdateUtc,
-                    direction = determineDirection(entity.peerId)
-
+                    lastUpdateUtc = entity.lastUpdateUtc
                 )
-            }}
+            }
+        }
     }
 
-    override suspend fun startTransfer(paketId: PaketId, peerId: PeerId) {
+    override suspend fun startTransfer(
+        paketId: PaketId,
+        peerId: PeerId,
+        direction: TransferDirection
+    ) {
         val now = System.currentTimeMillis()
         val existing = transferDao.findById(paketId.value, peerId.value)
         val toSave = if (existing != null) {
-            existing.copy(state = TransferState.ACTIVE, lastUpdateUtc = now)
+            existing.copy(state = TransferState.ACTIVE, lastUpdateUtc = now, direction = direction)
         } else {
             TransferLogEntity(
                 paketId       = paketId.value,
                 peerId        = peerId.value,
                 state         = TransferState.ACTIVE,
+                direction     = direction,
                 progressPct   = 0,
                 lastUpdateUtc = now
             )
@@ -97,17 +101,4 @@ class TransferRepositoryImpl @Inject constructor(
         )
         transferDao.upsert(updatedLog)
     }
-
-
-    private fun determineDirection(peerId: String): TransferDirection {
-        // Hier deine Logik zur Bestimmung der Richtung
-        // Beispiel: Alle PeerIDs, die mit "out-" beginnen, sind ausgehend
-        return if (peerId.startsWith("out-")) {
-            TransferDirection.OUTGOING
-        } else {
-            TransferDirection.INCOMING
-        }
-    }
-
-
 }

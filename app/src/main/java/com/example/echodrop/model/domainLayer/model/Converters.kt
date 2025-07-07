@@ -57,4 +57,11 @@ class Converters {
     fun toTransferState(value: String): TransferState {
         return TransferState.valueOf(value)
     }
-    }
+
+    // --- TransferDirection ---
+    @TypeConverter
+    fun fromTransferDirection(value: TransferDirection): String = value.name
+
+    @TypeConverter
+    fun toTransferDirection(value: String): TransferDirection = TransferDirection.valueOf(value)
+}

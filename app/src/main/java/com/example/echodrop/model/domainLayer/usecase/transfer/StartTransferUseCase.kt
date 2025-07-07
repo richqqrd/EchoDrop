@@ -17,8 +17,8 @@ class StartTransferUseCase @Inject constructor(
     private val transportManager: TransportManager
 ) {
     suspend operator fun invoke(paketId: PaketId, peerId: PeerId) {
-        // DB-Eintrag erstellen
-        repo.startTransfer(paketId, peerId)
+        // DB-Eintrag erstellen (Outgoing)
+        repo.startTransfer(paketId, peerId, com.example.echodrop.model.domainLayer.model.TransferDirection.OUTGOING)
         
         try {
             // Datenübertragung starten

@@ -23,8 +23,13 @@ interface TransferRepository {
      *
      * @param paketId The unique identifier of the package being transferred.
      * @param peerId The unique identifier of the peer involved in the transfer.
+     * @param direction The direction of the transfer.
      */
-    suspend fun startTransfer(paketId: PaketId, peerId: PeerId)
+    suspend fun startTransfer(
+        paketId: PaketId,
+        peerId: PeerId,
+        direction: com.example.echodrop.model.domainLayer.model.TransferDirection = com.example.echodrop.model.domainLayer.model.TransferDirection.INCOMING
+    )
 
     /**
      * Pauses a transfer for the specified package and peer.

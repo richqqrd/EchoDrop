@@ -38,6 +38,7 @@ data class TransferLogEntity(
     val paketId: String,
     val peerId: String,
     val state: TransferState,
+    val direction: com.example.echodrop.model.domainLayer.model.TransferDirection,
     val progressPct: Int,
     val lastUpdateUtc: Long
 )
