@@ -96,6 +96,9 @@ class WiFiDirectDiscovery @Inject constructor(
 
         // Starte die Peer-Discovery
         discoverPeers()
+
+        // Versuche die eigenen Geräteinformationen (inkl. MAC) sofort zu laden
+        updateThisDeviceInfo()
     }
 
     /**
@@ -539,5 +542,19 @@ class WiFiDirectDiscovery @Inject constructor(
                 Log.e(TAG, "Failed to disconnect from group: $reasonStr")
             }
         })
+    }
+
+    // Aktualisiert die Informationen über das eigene Gerät, wenn die Berechtigungen vorhanden sind
+    private fun updateThisDeviceInfo() {
+        if (!hasRequiredPermissions()) return
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            manager.requestDeviceInfo(channel) { device ->
+                if (device != null) {
+                    _thisDevice.value = device
+                    Log.d(TAG, "Refreshed thisDevice: ${device.deviceName} (${device.deviceAddress})")
+                }
+            }
+        }
     }
 }

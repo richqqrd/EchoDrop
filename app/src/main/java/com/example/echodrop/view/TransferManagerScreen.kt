@@ -137,11 +137,6 @@ fun TransferManagerScreen(
                             text = device?.deviceName ?: "Unbekannt",  // Lokale Variable nutzen
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Text(
-                            text = device?.deviceAddress ?: "",  // Lokale Variable nutzen
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
                     }
                 }
             }
