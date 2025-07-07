@@ -44,6 +44,7 @@ import java.io.FileInputStream
 import java.util.concurrent.TimeUnit
 import com.example.echodrop.model.domainLayer.transport.ForwardEvent
 import kotlinx.coroutines.Job
+import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -56,6 +57,7 @@ class TransportManagerImpl @Inject constructor(
     private val savePaketUseCase: SavePaketUseCase,
     private val getPaketDetailUseCase: GetPaketDetailUseCase,
     private val progressCallback: TransferProgressCallback,
+    private val manifestBuilder: ManifestBuilder,
     private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow<Pair<PaketId, PeerId>>(),
     private val _forwardEvents: MutableSharedFlow<ForwardEvent> = MutableSharedFlow<ForwardEvent>(replay = 0, extraBufferCapacity = 20)
 ) : TransportManager {
@@ -327,7 +329,7 @@ class TransportManagerImpl @Inject constructor(
 
             transferRepository.startTransfer(paketId, peerId, com.example.echodrop.model.domainLayer.model.TransferDirection.OUTGOING)
 
-            val manifestJson = buildManifestForPaket(paketId.value)
+            val manifestJson = manifestBuilder.build(paketId)
             sendManifest(paketId.value, manifestJson)
             sendChunksForPaket(paketId.value, peerId.value)
 
@@ -347,59 +349,6 @@ class TransportManagerImpl @Inject constructor(
         }
     }
 
-    private suspend fun buildManifestForPaket(paketId: String): String {
-        Log.d(TAG, "Building manifest for paket $paketId")
-
-        try {
-            // Hier getPaketDetailUseCase verwenden, nicht createPaketUseCase
-            val paket = getPaketDetailUseCase(PaketId(paketId))
-            if (paket == null) {
-                Log.e(TAG, "Paket not found: $paketId")
-                return "{\"paketId\": \"$paketId\", \"error\": \"Paket not found\"}"
-            }
-
-            val manifestData = JSONObject().apply {
-                put("paketId", paketId)
-                put("title", paket.meta.title)
-                put("description", paket.meta.description)
-
-                val tagsArray = JSONArray()
-                paket.meta.tags.forEach { tag ->
-                    tagsArray.put(tag)
-                }
-                put("tags", tagsArray)
-
-                put("ttlSeconds", paket.meta.ttlSeconds)
-                put("priority", paket.meta.priority)
-                put("maxHops", paket.meta.maxHops ?: -1) // -1 bedeutet unbegrenzt
-                put("currentHopCount", paket.currentHopCount) // Aktueller Hop-Count
-
-                // Füge Datei-Metadaten hinzu
-                val filesArray = JSONArray()
-                paket.files.forEachIndexed { index, file ->
-                    val fileName = File(file.path).name
-
-                    // TODO file name auf empfänger noch falsch, aber richtig gepsiehcer in DB!
-                    JSONObject().apply {
-                        put("id", "file_${index}_${paketId}")
-                        put("name", fileName)  // FileEntry hat 'path', nicht 'name'
-                        put("size", file.sizeBytes)  // FileEntry hat 'sizeBytes', nicht 'size'
-                        put("mimeType", file.mime)   // FileEntry hat 'mime', nicht 'mimeType'
-                    }.also { filesArray.put(it) }
-                }
-                put("files", filesArray)
-            }.toString()
-
-            Log.d(TAG, "Created manifest: $manifestData")
-            return manifestData
-        } catch (e: Exception) {
-            Log.e(TAG, "Error building manifest", e)
-            // Fallback zu einem minimalen Manifest
-            return "{\"paketId\": \"$paketId\", \"files\": []}"
-        }
-    }
-
-    // Hilfsmethode: Sende alle Dateien eines Pakets stückweise an den verbundenen Peer
     private suspend fun sendChunksForPaket(paketId: String, peerId: String) {
         // Lade Paket inkl. Dateien
         val paket = getPaketDetailUseCase(PaketId(paketId)) ?: run {

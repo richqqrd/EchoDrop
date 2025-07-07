@@ -5,6 +5,7 @@ import android.net.wifi.p2p.WifiP2pInfo
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.example.echodrop.model.domainLayer.model.PaketId
+import com.example.echodrop.model.domainLayer.transport.DirectSocketService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +37,7 @@ import kotlin.math.max
 @Singleton
 class WiFiDirectService @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+): DirectSocketService {
     companion object {
         private const val TAG = "WiFiDirectService"
         private const val PORT = 8988
@@ -70,7 +71,7 @@ private val serverLock = Any()  // Synchronisierungsobjekt
     /**
      * Startet den WiFi Direct Service
      */
-    fun startService() {
+    override fun startService() {
         Log.d(TAG, "Starting WiFi Direct service")
         isRunning.set(true)
 
@@ -82,7 +83,7 @@ private val serverLock = Any()  // Synchronisierungsobjekt
     /**
      * Stoppt den WiFi Direct Service
      */
-    fun stopService() {
+    override fun stopService() {
         Log.d(TAG, "Stopping WiFi Direct service")
         isRunning.set(false)
 
@@ -94,158 +95,12 @@ private val serverLock = Any()  // Synchronisierungsobjekt
         }
     }
 
-    /**
-     * Wird aufgerufen, wenn eine WiFi Direct Verbindung hergestellt wurde
-     */
-    fun onConnectionEstablished(info: WifiP2pInfo) {
-        groupOwnerAddress = info.groupOwnerAddress
-        isGroupOwner = info.isGroupOwner
-
-        Log.d(
-            TAG,
-            "Connection established - Group Owner: $isGroupOwner, Address: ${groupOwnerAddress?.hostAddress}"
-        )
-        Log.d(TAG, "Connection info - Group Formed: ${info.groupFormed}")
-
-
-    isRunning.set(true)
-
-        // Nur der Group Owner startet einen Server
-        if (isGroupOwner) {
-            Log.d(TAG, "Starting server as Group Owner")
-            startServer()
-
-            coroutineScope.launch {
-                delay(1000)
-                Log.d(
-                    TAG,
-                    "Server status after 1 second: running=${serverSocket != null && !serverSocket!!.isClosed}"
-                )
-            }
-        } else {
-            Log.d(TAG, "Client mode - will connect to server at ${groupOwnerAddress?.hostAddress}")
-            // Als Client müssen wir keinen Server starten
-        }
-
-        // Signalisiere erfolgreich hergestellte Verbindung
-        _connectionEstablished.value = true
-    }
-
-    /**
-     * Startet einen Server, der auf eingehende Verbindungen wartet
-     */
-private fun startServer() {
-    // Zuerst alten Server stoppen
-    stopServer()
-
-            isRunning.set(true)
-
-
-    coroutineScope.launch {
-        try {
-            Log.d(TAG, "Starting server as ${if (isGroupOwner) "Group Owner" else "Client"}")
-            val port = PORT
-
-            // Erstelle und binde den Socket explizit
-            serverSocket = withContext(Dispatchers.IO) {
-                try {
-                    val socket = ServerSocket()
-                    socket.reuseAddress = true
-                    socket.bind(InetSocketAddress("0.0.0.0", port))
-                    Log.d(TAG, "Server socket successfully bound to 0.0.0.0:$port")
-                    socket
-                } catch (e: IOException) {
-                    Log.e(TAG, "Failed to bind on port $port: ${e.message}", e)
-                    null
-                }
-            }
-
-            if (serverSocket == null) {
-                Log.e(TAG, "Failed to create server socket")
-                return@launch
-            }
-
-            // Überprüfe sofort, ob der Socket erfolgreich erstellt wurde
-            val localPort = serverSocket?.localPort ?: -1
-            if (localPort <= 0) {
-                Log.e(TAG, "Invalid server port: $localPort")
-                return@launch
-            }
-
-            Log.d(TAG, "Server started on port $localPort. Waiting for clients...")
-
-            // WICHTIG: Definiere eine kontinuierliche Schleife, die auf Verbindungen wartet
-            while (isRunning.get() && serverSocket != null && !serverSocket!!.isClosed) {
-                Log.d(TAG, "Server loop iteration - ready to accept connections on port $localPort")
-
-                try {
-                    // WICHTIG: Statt blockierendem accept(), verwende ein Timeout-Muster
-                    var clientSocket: Socket? = null
-                    withTimeoutOrNull(5000) { // 5-Sekunden Timeout
-                        Log.d(TAG, "Waiting for accept() to return...")
-                        clientSocket = withContext(Dispatchers.IO) {
-                            try {
-                                serverSocket?.accept()
-                            } catch (e: IOException) {
-                                Log.e(TAG, "Error accepting connection: ${e.message}")
-                                null
-                            }
-                        }
-                    }
-
-                    if (clientSocket != null) {
-                        val clientAddress = clientSocket!!.inetAddress.hostAddress ?: "unknown"
-                        Log.d(TAG, "Client connected from: $clientAddress")
-
-                        // Starte einen separaten Coroutine für die Client-Verarbeitung
-                        coroutineScope.launch {
-                            handleClient(clientSocket!!)
-                        }
-                    } else {
-                        Log.d(TAG, "No connection within timeout, continuing server loop")
-                        delay(500) // Kurze Pause
-                    }
-                } catch (e: Exception) {
-                    if (isRunning.get()) {
-                        Log.e(TAG, "Error in server loop: ${e.message}")
-                        delay(1000)
-                    } else {
-                        break
-                    }
-                }
-            }
-
-            Log.d(TAG, "Server loop ended. Running: ${isRunning.get()}, Socket closed: ${serverSocket?.isClosed ?: true}")
-        } catch (e: Exception) {
-            Log.e(TAG, "Fatal server error: ${e.message}", e)
-        }
-    }
-}
-
-    private fun stopServer() {
-        try {
-            if (serverSocket != null && !serverSocket!!.isClosed) {
-                Log.d(TAG, "Stopping server on port ${serverSocket?.localPort}")
-                serverSocket?.close()
-            }
-            serverSocket = null
-        } catch (e: Exception) {
-            Log.e(TAG, "Error stopping server: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Sendet Daten an einen bestimmten Peer
-     */
-    /**
-     * Sendet Daten an einen bestimmten Peer
-     */
-    suspend fun sendData(
+    override suspend fun sendData(
         data: ByteArray,
         targetAddress: String,
-        paketId: PaketId,
-        port: Int = PORT
+        paketId: PaketId
     ) {
+        val port = PORT
         Log.d(
             TAG,
             "Preparing to send ${data.size} bytes to $targetAddress for paket ${paketId.value}"
@@ -393,7 +248,7 @@ private fun startServer() {
      * Beobachtet eingehende Daten
      * @return Flow von Paaren (Quell-Adresse, Daten)
      */
-    fun observeIncomingData(): Flow<Pair<String, ByteArray>> {
+    override fun observeIncomingData(): Flow<Pair<String, ByteArray>> {
         return _incomingData.asSharedFlow()
     }
 
@@ -401,8 +256,40 @@ private fun startServer() {
      * Beobachtet den Fortschritt von Transfers
      * @return Flow von Triples (PaketId, Zieladresse, Fortschritt in %)
      */
-    fun observeTransferProgress(): Flow<Triple<PaketId, String, Int>> {
+    override fun observeTransferProgress(): Flow<Triple<PaketId, String, Int>> {
         return _transferProgress.asSharedFlow()
+    }
+
+    override fun onConnectionEstablished(info: WifiP2pInfo) {
+        groupOwnerAddress = info.groupOwnerAddress
+        isGroupOwner = info.isGroupOwner
+
+        Log.d(
+            TAG,
+            "Connection established - Group Owner: $isGroupOwner, Address: ${groupOwnerAddress?.hostAddress}"
+        )
+        Log.d(TAG, "Connection info - Group Formed: ${info.groupFormed}")
+
+        isRunning.set(true)
+
+        if (isGroupOwner) {
+            Log.d(TAG, "Starting server as Group Owner")
+            startServer()
+
+            // kleine Verzögerung, um sicherzustellen, dass der Server läuft
+            coroutineScope.launch {
+                delay(1000)
+                Log.d(
+                    TAG,
+                    "Server status after 1 second: running=${serverSocket != null && serverSocket?.isClosed == false}"
+                )
+            }
+        } else {
+            Log.d(TAG, "Client mode - will connect to server at ${groupOwnerAddress?.hostAddress}")
+        }
+
+        // Notify observers
+        _connectionEstablished.value = true
     }
 
     // Füge diese Methode am Ende der Klasse hinzu
@@ -501,6 +388,65 @@ private fun startServer() {
             } catch (e: IOException) {
                 Log.e(TAG, "Error closing client socket: ${e.message}", e)
             }
+        }
+    }
+
+    /**
+     * Startet einen Server, der eingehende Socket-Verbindungen akzeptiert, falls dieses Gerät
+     * Group-Owner ist. Läuft in einer IO-Coroutine und ruft für jeden Client `handleClient()` auf.
+     */
+    private fun startServer() {
+        // Erst evtl. alten Server stoppen
+        stopServer()
+
+        isRunning.set(true)
+
+        coroutineScope.launch {
+            try {
+                // ServerSocket erstellen und binden
+                serverSocket = withContext(Dispatchers.IO) {
+                    ServerSocket().apply {
+                        reuseAddress = true
+                        bind(InetSocketAddress("0.0.0.0", PORT))
+                    }
+                }
+
+                Log.d(TAG, "Server started on port ${serverSocket?.localPort}")
+
+                // Haupt-Accept-Schleife
+                while (isRunning.get() && serverSocket?.isClosed == false) {
+                    val client = withContext(Dispatchers.IO) {
+                        try {
+                            serverSocket?.accept()
+                        } catch (e: IOException) {
+                            Log.e(TAG, "Accept failed: ${e.message}")
+                            null
+                        }
+                    }
+
+                    if (client != null) {
+                        Log.d(TAG, "Client connected from ${client.inetAddress?.hostAddress}")
+                        launch { handleClient(client) }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Server loop error", e)
+            } finally {
+                stopServer()
+            }
+        }
+    }
+
+    /**
+     * Beendet den ServerSocket, falls aktiv.
+     */
+    private fun stopServer() {
+        try {
+            serverSocket?.close()
+        } catch (e: IOException) {
+            Log.e(TAG, "Error stopping server", e)
+        } finally {
+            serverSocket = null
         }
     }
 }

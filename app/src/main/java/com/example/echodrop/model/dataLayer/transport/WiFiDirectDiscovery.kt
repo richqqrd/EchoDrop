@@ -31,7 +31,7 @@ import javax.inject.Singleton
 @Singleton
 class WiFiDirectDiscovery @Inject constructor(
     @ApplicationContext private val context: Context
-) {
+): com.example.echodrop.model.domainLayer.transport.DeviceDiscovery {
     companion object {
         private const val TAG = "WiFiDirectDiscovery"
     }
@@ -46,15 +46,15 @@ class WiFiDirectDiscovery @Inject constructor(
 
     // Flow für gefundene Geräte
     private val _discoveredDevices = MutableStateFlow<List<WifiP2pDevice>>(emptyList())
-    val discoveredDevices: StateFlow<List<WifiP2pDevice>> = _discoveredDevices.asStateFlow()
+    override val discoveredDevices: StateFlow<List<WifiP2pDevice>> = _discoveredDevices.asStateFlow()
 
     // Flow für Verbindungsinformationen (wenn eine Verbindung hergestellt wurde)
     private val _connectionInfo = MutableStateFlow<WifiP2pInfo?>(null)
-    val connectionInfo: StateFlow<WifiP2pInfo?> = _connectionInfo.asStateFlow()
+    override val connectionInfo: StateFlow<WifiP2pInfo?> = _connectionInfo.asStateFlow()
 
     // Flow für das aktuelle Gerät
     private val _thisDevice = MutableStateFlow<WifiP2pDevice?>(null)
-    val thisDevice: StateFlow<WifiP2pDevice?> = _thisDevice.asStateFlow()
+    override val thisDevice: StateFlow<WifiP2pDevice?> = _thisDevice.asStateFlow()
 
     // Flag, ob Discovery aktiv ist
     private var isDiscoveryActive = false
@@ -73,7 +73,7 @@ class WiFiDirectDiscovery @Inject constructor(
     /**
      * Startet die Peer-Discovery
      */
-    fun startDiscovery() {
+    override fun startDiscovery() {
         Log.d(TAG, "Starting discovery")
 
         // Prüfe Berechtigungen
@@ -104,7 +104,7 @@ class WiFiDirectDiscovery @Inject constructor(
     /**
      * Stoppt die Peer-Discovery
      */
-    fun stopDiscovery() {
+    override fun stopDiscovery() {
         Log.d(TAG, "Stopping discovery")
 
         isDiscoveryActive = false
@@ -238,7 +238,7 @@ class WiFiDirectDiscovery @Inject constructor(
     /**
      * Verbindung zu einem Gerät herstellen
      */
-    fun connectToDevice(deviceAddress: String) {
+    override fun connectToDevice(deviceAddress: String) {
         Log.d(TAG, "Attempting to connect to device: $deviceAddress")
 
         // Prüfe aktiven Verbindungszustand
@@ -518,7 +518,7 @@ class WiFiDirectDiscovery @Inject constructor(
     /**
      * Trennt die aktuelle Gruppenverbindung und bereinigt den Verbindungsstatus
      */
-    fun disconnectFromCurrentGroup() {
+    override fun disconnectFromCurrentGroup() {
         Log.d(TAG, "Disconnecting from current group")
 
         // Prüfe, ob eine aktive Verbindung vorhanden ist
