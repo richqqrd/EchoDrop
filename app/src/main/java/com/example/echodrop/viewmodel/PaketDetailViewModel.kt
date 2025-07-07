@@ -37,7 +37,8 @@ data class PaketDetailState(
     val isDeleting: Boolean = false,
     val error: String? = null,
     val isEditing: Boolean = false,
-    val message: String? = null
+    val message: String? = null,
+    val navigateToManager: Boolean = false
 )
 
 private const val TAG = "PaketDetailViewModel"
@@ -189,9 +190,13 @@ class PaketDetailViewModel @Inject constructor(
 
                 // Rest wie bisher
                 startTransfer(currentPaket.id, peerId)
+                // Paket neu laden, um aktualisierten Hop-Count anzuzeigen
+                loadPaketDetail(currentPaket.id.value)
                 _state.update {
-                    it.copy(message = "Transfer gestartet")
+                    it.copy(message = "Paket wird gesendet", navigateToManager = true)
                 }
+                // Nach dem Start reload, um Hop-Count zu aktualisieren
+                loadPaketDetail(currentPaket.id.value)
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -306,7 +311,8 @@ class PaketDetailViewModel @Inject constructor(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        message = "Transfer gestartet zu Gerät mit Adresse $deviceAddress"
+                        message = "Transfer gestartet zu Gerät mit Adresse $deviceAddress",
+                        navigateToManager = true
                     )
                 }
                 Log.d(TAG, "Transfer initiated to device: $deviceAddress")
@@ -328,6 +334,8 @@ class PaketDetailViewModel @Inject constructor(
             deviceAddress = this@toWifiP2pDevice.deviceAddress
         }
     }
+
+    fun clearNavigationFlag() { _state.update { it.copy(navigateToManager = false) } }
 
     override fun onCleared() {
         super.onCleared()

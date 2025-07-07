@@ -57,7 +57,12 @@ fun EchoDropApp() {
             // Using PaketDetailScreen with PaketDetailViewModel
             PaketDetailScreen(
                 paketId = paketId,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onOpenTransferManager = {
+                    navController.navigate("transferManager") {
+                        launchSingleTop = true
+                    }
+                }
             )
         }
 

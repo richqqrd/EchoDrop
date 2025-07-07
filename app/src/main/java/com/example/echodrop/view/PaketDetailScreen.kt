@@ -40,8 +40,9 @@ import com.example.echodrop.view.FullscreenLoading
 @Composable
 fun PaketDetailScreen(
     paketId: String,
-    viewModel: PaketDetailViewModel = hiltViewModel(),
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onOpenTransferManager: () -> Unit,
+    viewModel: PaketDetailViewModel = hiltViewModel()
 ) {
     // Load package details when the screen is displayed
     LaunchedEffect(paketId) {
@@ -84,6 +85,13 @@ fun PaketDetailScreen(
             if (viewModel.isDiscoveryActive.value) {
                 viewModel.toggleDiscovery()
             }
+        }
+    }
+
+    LaunchedEffect(state.navigateToManager) {
+        if (state.navigateToManager) {
+            onOpenTransferManager()
+            viewModel.clearNavigationFlag()
         }
     }
 
