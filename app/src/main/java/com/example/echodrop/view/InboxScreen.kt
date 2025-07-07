@@ -216,10 +216,6 @@ fun PaketListItem(
             IconButton(onClick = { onShare(paket.id) }) {
                 Icon(Icons.Default.Share, contentDescription = "Share Paket")
             }
-            if (isSending) {
-                Spacer(Modifier.width(8.dp))
-                CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
-            }
         }
     }
 }
