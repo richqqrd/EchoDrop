@@ -5,6 +5,7 @@ import com.example.echodrop.model.dataLayer.transport.ManifestBuilderImpl
 import com.example.echodrop.model.dataLayer.transport.WiFiDirectDiscovery
 import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
 import com.example.echodrop.model.dataLayer.transport.TransportManagerImpl
+import com.example.echodrop.model.dataLayer.transport.ForwarderImpl
 import com.example.echodrop.model.domainLayer.transport.ChunkIO
 import com.example.echodrop.model.domainLayer.transport.DeviceDiscovery
 import com.example.echodrop.model.domainLayer.transport.DirectSocketService
@@ -12,6 +13,7 @@ import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
 import com.example.echodrop.model.domainLayer.transport.TransportManager
 import com.example.echodrop.model.domainLayer.transport.DefaultTransferProgressCallback
 import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
+import com.example.echodrop.model.domainLayer.transport.Forwarder
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -43,9 +45,21 @@ abstract class TransportBindingsModule {
     @Binds
     @Singleton
     abstract fun bindManifestBuilder(impl: ManifestBuilderImpl): ManifestBuilder
+
+    @Binds
+    @Singleton
+    abstract fun bindForwarder(impl: ForwarderImpl): Forwarder
    
     @Binds @Singleton
     abstract fun bindChunkIO(impl: ChunkIOImpl): ChunkIO
+    
+    @Binds
+    @Singleton
+    abstract fun bindMaintenanceScheduler(impl: com.example.echodrop.model.dataLayer.transport.MaintenanceSchedulerImpl): com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
+    
+    @Binds
+    @Singleton
+    abstract fun bindManifestParser(impl: com.example.echodrop.model.dataLayer.transport.ManifestParserImpl): com.example.echodrop.model.domainLayer.transport.ManifestParser
     
     companion object {
         @Provides

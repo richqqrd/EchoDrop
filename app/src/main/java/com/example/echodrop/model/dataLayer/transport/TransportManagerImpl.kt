@@ -34,18 +34,17 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.json.JSONArray
-import org.json.JSONObject
+import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
+import com.example.echodrop.model.domainLayer.transport.ManifestParser
+import com.example.echodrop.model.domainLayer.transport.ChunkIO
+import kotlinx.coroutines.Job
+import com.example.echodrop.model.domainLayer.transport.Forwarder
+import com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
 import java.io.File
 import java.io.FileOutputStream
+import java.io.FileInputStream
 import javax.inject.Inject
 import javax.inject.Singleton
-import java.io.FileInputStream
-import java.util.concurrent.TimeUnit
-import com.example.echodrop.model.domainLayer.transport.ForwardEvent
-import kotlinx.coroutines.Job
-import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
-import com.example.echodrop.model.domainLayer.transport.ChunkIO
 
 @Singleton
 class TransportManagerImpl @Inject constructor(
@@ -59,9 +58,11 @@ class TransportManagerImpl @Inject constructor(
     private val getPaketDetailUseCase: GetPaketDetailUseCase,
     private val progressCallback: TransferProgressCallback,
     private val manifestBuilder: ManifestBuilder,
-    private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow<Pair<PaketId, PeerId>>(),
-    private val _forwardEvents: MutableSharedFlow<ForwardEvent> = MutableSharedFlow<ForwardEvent>(replay = 0, extraBufferCapacity = 20),
-    private val chunkIO: ChunkIO
+    private val manifestParser: ManifestParser,
+    private val _receivedManifests: MutableSharedFlow<Pair<PaketId, PeerId>> = MutableSharedFlow(),
+    private val chunkIO: ChunkIO,
+    private val forwarder: Forwarder,
+    private val maintenanceScheduler: MaintenanceScheduler
 ) : TransportManager {
 
     companion object {
@@ -70,10 +71,6 @@ class TransportManagerImpl @Inject constructor(
         private const val CHUNK_PREFIX = "CHK|"
         private const val MAX_ATTEMPTS = 3
         private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
-        private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 Stunden
-
-        private val receivedBytesMap = mutableMapOf<String, Long>()
-
 
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d",
@@ -98,6 +95,8 @@ class TransportManagerImpl @Inject constructor(
      */
     @Volatile
     private var beaconingActive: Boolean = false
+
+    private val receivedBytesMap = mutableMapOf<String, Long>()
 
     init {
         // Beobachte eingehende Daten vom WiFiDirectService
@@ -128,32 +127,7 @@ class TransportManagerImpl @Inject constructor(
             }
         }
 
-        coroutineScope.launch {
-            while (isActive) {
-                try {
-                    val cutoffTime = System.currentTimeMillis() - CLEANUP_TIMEOUT
-                    connectionAttemptRepository.cleanupOldAttempts(cutoffTime)
-                    delay(CLEANUP_TIMEOUT)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error during connection attempts cleanup", e)
-                }
-            }
-        }
-
-        // Zusätzlich: Bereinige veraltete Peers (nicht gesehen > 7 Tage)
-        coroutineScope.launch {
-            val interval = TimeUnit.HOURS.toMillis(6) // alle 6 h prüfen
-            val peerCutoff = TimeUnit.DAYS.toMillis(7) // 7 Tage
-            while (isActive) {
-                try {
-                    val deleted = peerRepository.purgeStalePeers(System.currentTimeMillis() - peerCutoff)
-                    Log.d(TAG, "Peer cleanup removed $deleted stale peer(s)")
-                } catch (e: Exception) {
-                    Log.e(TAG, "Error during peer cleanup", e)
-                }
-                delay(interval)
-            }
-        }
+        // Wartungs-Aufgaben werden nun vom MaintenanceScheduler erledigt
     }
 
     override fun startBeaconing() {
@@ -425,8 +399,8 @@ class TransportManagerImpl @Inject constructor(
                     )
                     peerRepository.upsertPeer(peer)
 
-                    // Manifest parsen und Paket erstellen
-                    val paket = parseManifestAndCreatePaket(paketId, manifestJson, peerId)
+                    // Manifest in Paket umwandeln
+                    val paket = manifestParser.parse(paketId, manifestJson, peerId)
 
                     // Speichere das Paket in der Datenbank
                     savePaketUseCase(paket)
@@ -545,213 +519,14 @@ class TransportManagerImpl @Inject constructor(
         wifiDirectDiscovery.connectToDevice(deviceAddress)
     }
 
-    private fun parseManifestAndCreatePaket(paketId: String, manifestJson: String, peerId: PeerId): Paket {
-        try {
-            val jsonObject = JSONObject(manifestJson)
-
-            // Extrahiere Metadaten
-            val title = jsonObject.optString("title", "Unbekanntes Paket")
-            val description = jsonObject.optString("description", "")
-
-            val tagsArray = jsonObject.optJSONArray("tags")
-            val tags = mutableListOf<String>()
-            if (tagsArray != null) {
-                for (i in 0 until tagsArray.length()) {
-                    tags.add(tagsArray.getString(i))
-                }
-            }
-            val ttlSeconds = jsonObject.optInt("ttlSeconds", 3600)
-            val priority = jsonObject.optInt("priority", 1)
-            val maxHops = jsonObject.optInt("maxHops", -1).let { if (it == -1) null else it }
-            val currentHopCount = jsonObject.optInt("currentHopCount", 0)
-
-            // Erstelle Paket-Metadaten
-            val meta = PaketMeta(
-                title = title,
-                description = description,
-                tags = tags,
-                ttlSeconds = ttlSeconds,
-                priority = priority,
-                maxHops = maxHops
-            )
-
-            // Verarbeite Dateien
-            val files = mutableListOf<FileEntry>()
-            val filesArray = jsonObject.optJSONArray("files")
-
-            if (filesArray != null) {
-                for (i in 0 until filesArray.length()) {
-                    val fileObject = filesArray.getJSONObject(i)
-                    val fileId = fileObject.getString("id")
-                    val fileName = fileObject.getString("name")
-                    val fileSize = fileObject.getLong("size")
-                    val fileMime = fileObject.optString("mimeType", "application/octet-stream")
-
-                    val filesDir = File(context.filesDir, "received_files")
-                    if (!filesDir.exists()) {
-                        filesDir.mkdirs()
-                    }
-                    val filePath = File(filesDir, "${paketId}_${fileId}_$fileName").absolutePath
-                    // Füge die Datei hinzu
-                    files.add(
-                        FileEntry(
-                            path = filePath,
-                            mime = fileMime,
-                            sizeBytes = fileSize,
-                            orderIdx = i  // Verwende den Index aus der Schleife als orderIdx
-                        )
-                    )
-                }
-            }
-
-            // Erstelle und gib das Paket zurück
-            return Paket(
-                id = PaketId(paketId),
-                meta = meta,
-                sizeBytes = files.sumOf { it.sizeBytes },  // Berechne die Gesamtgröße
-                sha256 = "",  // Leerer SHA256-Wert für jetzt
-                fileCount = files.size,  // Hier die Anzahl der Dateien angeben
-                createdUtc = System.currentTimeMillis(),
-                files = files,
-                currentHopCount = currentHopCount,
-                maxHopCount = maxHops
-            )
-        } catch (e: Exception) {
-            Log.e(TAG, "Error parsing manifest JSON", e)
-            // Erstelle ein minimales Paket als Fallback
-            return Paket(
-                id = PaketId(paketId),
-                meta = PaketMeta(
-                    title = "Empfangenes Paket",
-                    description = "Fehler beim Parsen des Manifests",
-                    tags = emptyList(),
-                    ttlSeconds = 3600,
-                    priority = 1
-                ),
-                sizeBytes = 0L,
-                sha256 = "",
-                fileCount = 0,
-                createdUtc = System.currentTimeMillis(),
-                files = emptyList()
-            )
-        }
-    }
-
     private suspend fun autoForwardPaket(paket: Paket, excludeAddress: String? = null) {
         if (!beaconingActive) {
             Log.d(TAG, "[Forward] Beaconing inactive – breche Weiterleitung ab")
             return
         }
 
-        try {
-            Log.d(TAG, "[Forward] Starte automatische Weiterleitung für Paket ${paket.id.value}")
-
-            // 1. Starte Discovery (falls nicht bereits aktiv)
-            startDiscovery()
-
-            delay(5_000) // Gib der Peer-Discovery etwas Zeit
-
-            // 2. Geräte ermitteln & filtern
-            val allDevices = wifiDirectDiscovery.discoveredDevices.value
-            val candidates = allDevices
-                .filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
-                .filterNot { excludeAddress != null && it.deviceAddress == excludeAddress }
-                .shuffled()
-                .take(3) // max. 3 Versuche pro Weiterleitung
-
-            if (candidates.isEmpty()) {
-                Log.d(TAG, "[Forward] Keine geeigneten Peers gefunden – Abbruch")
-                return
-            }
-
-            // 3. Hop-Counter erhöhen und speichern, bevor wir senden
-            val forwardedPaket = paket.incrementHopCount()
-            savePaketUseCase(forwardedPaket)
-
-            // 4. Iteriere über Kandidaten
-            for (device in candidates) {
-                if (!beaconingActive) {
-                    Log.d(TAG, "[Forward] Beaconing wurde gestoppt – breche Schleife ab")
-                    break
-                }
-                val devAddr = device.deviceAddress
-
-                // Falls wir noch in einer bestehenden Gruppe sind, zuerst trennen und warten
-                if (wifiDirectDiscovery.connectionInfo.value?.groupFormed == true) {
-                    Log.d(TAG, "[Forward] Bestehende Gruppe erkannt – trenne, bevor ich zu $devAddr verbinde")
-                    disconnectDevice()
-                    val leftGroup = waitForNoGroup()
-                    if (!leftGroup) {
-                        Log.d(TAG, "[Forward] Konnte Gruppe nicht rechtzeitig verlassen – überspringe $devAddr")
-                        continue
-                    }
-
-                    // Neue Peer-Discovery starten, damit das zuvor verlassene Gerät uns wieder sieht
-                    Log.d(TAG, "[Forward] Starte erneute Peer-Discovery nach Gruppen-Trennung")
-                    startDiscovery()
-                    delay(4_000) // gib Android Zeit, neue Peers zu liefern
-                }
-
-                // Retry-Limit prüfen
-                if (isDeviceAlreadyTried(devAddr, forwardedPaket.id)) {
-                    Log.d(TAG, "[Forward] $devAddr bereits $MAX_ATTEMPTS× erfolglos – überspringe")
-                    continue
-                }
-
-                Log.d(TAG, "[Forward] Verbinde zu ${device.deviceName} ($devAddr)")
-                _forwardEvents.emit(
-                    ForwardEvent(
-                        paketId = forwardedPaket.id,
-                        peerId = PeerId("direct-$devAddr"),
-                        stage = ForwardEvent.Stage.CONNECTING,
-                        message = "Verbinde zu ${device.deviceName}"
-                    )
-                )
-
-                try {
-                    connectToPeer(devAddr)
-
-                    // Warte, bis die Gruppe steht
-                    val connected = waitForGroup()
-                    if (!connected) {
-                        Log.d(TAG, "[Forward] Timeout – Gruppe mit $devAddr nicht aufgebaut")
-                        _forwardEvents.emit(
-                            ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.TIMEOUT, "Timeout bei Verbindung")
-                        )
-                        connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
-                        continue
-                    }
-
-                    // PeerId anlegen
-                    val peerId = PeerId("direct-$devAddr")
-
-                    // Paket senden
-                    sendPaket(forwardedPaket.id, peerId)
-                    _forwardEvents.emit(
-                        ForwardEvent(forwardedPaket.id, peerId, ForwardEvent.Stage.SENT, "Paket gesendet")
-                    )
-
-                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, true)
-
-                    Log.d(TAG, "[Forward] Paket ${forwardedPaket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
-
-                    // Nachgelagertes Disconnect
-                    disconnectDevice()
-                } catch (e: Exception) {
-                    Log.e(TAG, "[Forward] Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
-                    _forwardEvents.emit(
-                        ForwardEvent(forwardedPaket.id, PeerId("direct-$devAddr"), ForwardEvent.Stage.FAILED, e.message ?: "Unbekannter Fehler")
-                    )
-                    connectionAttemptRepository.trackAttempt(devAddr, forwardedPaket.id, false)
-                    disconnectDevice()
-                }
-            }
-        } catch (e: Exception) {
-            Log.e(TAG, "[Forward] Unerwarteter Fehler: ${e.message}", e)
-        } finally {
-            // Discovery beenden, damit UI-State sauber bleibt
-            stopDiscovery()
-        }
+        // Delegiere an Forwarder-Komponente
+        forwarder.autoForward(paket, excludeAddress)
     }
 
     /**
@@ -806,5 +581,5 @@ class TransportManagerImpl @Inject constructor(
         return failedAttempts >= MAX_ATTEMPTS
     }
 
-    override fun observeForwardEvents() = _forwardEvents
+    override fun observeForwardEvents() = forwarder.events
 }
