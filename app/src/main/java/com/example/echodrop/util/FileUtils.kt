@@ -180,7 +180,7 @@ fun copyUriToAppFile(context: Context, uri: Uri, nameHint: String? = null): Stri
 /**
  * Extrahiert den Dateinamen aus einer URI
  */
-private fun getFileNameFromUri(context: Context, uri: Uri): String? {
+fun getFileNameFromUri(context: Context, uri: Uri): String? {
     val cursor = context.contentResolver.query(
         uri, null, null, null, null
     ) ?: return null

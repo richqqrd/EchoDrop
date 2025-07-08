@@ -20,6 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.echodrop.viewmodel.CreatePaketViewModel
+import com.example.echodrop.util.FileUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -187,7 +188,12 @@ item {
                 }
 
                 items(state.uris) { uri ->
-                    val fileName = uri.lastPathSegment ?: "Unbekannte Datei"
+                    val context = LocalContext.current
+                    // Ermittle den echten Dateinamen über DISPLAY_NAME des ContentResolvers.
+                    val fileName = remember(uri) {
+                        FileUtils.getFileNameFromUri(context, uri) ?: uri.lastPathSegment ?: "Unbekannte Datei"
+                    }
+
                     Card(
                         modifier = Modifier.fillMaxWidth()
                     ) {
