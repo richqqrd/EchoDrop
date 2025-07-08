@@ -15,12 +15,10 @@ import com.example.echodrop.model.domainLayer.model.PaketMeta
  * @property description An optional description of the package.
  * @property tags A list of tags associated with the package.
  * @property sizeBytes The total size of the package in bytes.
- * @property sha256 The SHA-256 checksum of the package.
  * @property fileCount The number of files contained in the package.
  * @property ttlSeconds The time-to-live (TTL) of the package in seconds.
  * @property priority The priority level of the package.
  * @property hopLimit An optional hop limit for the package.
- * @property manifestHash The hash of the package manifest.
  * @property createdUtc The timestamp (in UTC) when the package was created.
  */
 @Entity(tableName = "paket")
@@ -31,13 +29,11 @@ data class PaketEntity(
     val description: String?,
     val tags: List<String>,
     val sizeBytes: Long,
-    val sha256: String,
     val fileCount: Int,
     val ttlSeconds: Int,
     val priority: Int,
     val hopLimit: Int?,
     val currentHopCount: Int = 0,
-    val manifestHash: String,
     val createdUtc: Long
     )
 
@@ -59,10 +55,9 @@ fun PaketEntity.toDomain(files: List<FileEntry>): Paket =
             maxHops = hopLimit
         ),
         sizeBytes = sizeBytes,
-        sha256 = sha256,
         fileCount = fileCount,
         createdUtc = createdUtc,
         files = files,
-                currentHopCount = currentHopCount, // Hier den aktuellen Hop-Count übergeben
+        currentHopCount = currentHopCount,
         maxHopCount = hopLimit 
     )

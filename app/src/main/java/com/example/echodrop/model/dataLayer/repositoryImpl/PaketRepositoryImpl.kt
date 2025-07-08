@@ -50,13 +50,11 @@ class PaketRepositoryImpl @Inject constructor(
             description = meta.description, 
             tags = meta.tags,
             sizeBytes = totalSize, 
-            sha256 = "",
             fileCount = files.size,
             ttlSeconds = meta.ttlSeconds, 
             priority = meta.priority, 
             hopLimit = meta.maxHops,
             currentHopCount = 0,
-            manifestHash = "", 
             createdUtc = System.currentTimeMillis()
         )
 
@@ -105,13 +103,11 @@ class PaketRepositoryImpl @Inject constructor(
         description = paket.meta.description, 
         tags = paket.meta.tags,
         sizeBytes = paket.files.sumOf { it.sizeBytes }, 
-        sha256 = paket.sha256 ?: "",
         fileCount = paket.files.size,
         ttlSeconds = paket.meta.ttlSeconds, 
         priority = paket.meta.priority, 
         hopLimit = paket.meta.maxHops,
         currentHopCount = paket.currentHopCount,
-        manifestHash = "", 
         createdUtc = paket.createdUtc
     )
     paketDao.upsert(paketEntity)

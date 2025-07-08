@@ -15,11 +15,10 @@ data class Paket (
     val id: PaketId,
     val meta: PaketMeta,
     val sizeBytes: Long,
-    val sha256: String,
     val fileCount: Int,
     val createdUtc: Long,
     val files: List<FileEntry>,
-        val currentHopCount: Int = 0,
+    val currentHopCount: Int = 0,
     val maxHopCount: Int? = null
 ) {
         fun canBeForwarded(): Boolean {

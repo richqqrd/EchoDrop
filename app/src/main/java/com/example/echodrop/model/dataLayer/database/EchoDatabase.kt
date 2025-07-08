@@ -25,7 +25,7 @@ import com.example.echodrop.model.domainLayer.model.Converters
  * and DAOs required for database operations.
  */
 @Database(
-    version = 4,
+    version = 5,
     exportSchema = false,
     entities = [
         PaketEntity::class,

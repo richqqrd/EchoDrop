@@ -64,7 +64,6 @@ class ManifestParserImpl @Inject constructor(
                 id = PaketId(paketId),
                 meta = meta,
                 sizeBytes = files.sumOf { it.sizeBytes },
-                sha256 = "",
                 fileCount = files.size,
                 createdUtc = System.currentTimeMillis(),
                 files = files,
@@ -84,7 +83,6 @@ class ManifestParserImpl @Inject constructor(
                     priority = 1
                 ),
                 sizeBytes = 0L,
-                sha256 = "",
                 fileCount = 0,
                 createdUtc = System.currentTimeMillis(),
                 files = emptyList()
