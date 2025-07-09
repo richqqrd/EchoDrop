@@ -1,10 +1,10 @@
 package com.example.echodrop.model.dataLayer.repository
 
-import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
-import com.example.echodrop.model.dataLayer.database.daos.PaketDao
-import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
-import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
-import com.example.echodrop.model.dataLayer.repositoryImpl.PaketRepositoryImpl
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.FileEntryDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.PaketDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.FileEntryEntity
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.impl.repository.PaketRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PaketMeta

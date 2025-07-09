@@ -10,7 +10,7 @@ import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.model.domainLayer.model.PaketMeta
 import com.example.echodrop.model.domainLayer.usecase.file.InsertFilesUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.CreatePaketUseCase
-import com.example.echodrop.util.FileUtils
+import com.example.echodrop.model.dataLayer.datasource.platform.file.FileUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -20,7 +20,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.echodrop.viewmodel.CreatePaketViewModel
-import com.example.echodrop.util.FileUtils
+import com.example.echodrop.model.dataLayer.datasource.platform.file.FileUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

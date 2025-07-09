@@ -11,29 +11,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.viewmodel.FileEntryUi
 import com.example.echodrop.viewmodel.PaketDetailViewModel
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.InsertDriveFile
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
-import com.example.echodrop.model.domainLayer.model.FileEntry
-import com.example.echodrop.util.FileUtils
+import com.example.echodrop.model.dataLayer.datasource.platform.file.FileUtils
 import kotlinx.coroutines.delay
 import java.io.File
 import androidx.compose.runtime.DisposableEffect
-import com.example.echodrop.view.FullscreenLoading
 
 
 @OptIn(ExperimentalMaterial3Api::class)

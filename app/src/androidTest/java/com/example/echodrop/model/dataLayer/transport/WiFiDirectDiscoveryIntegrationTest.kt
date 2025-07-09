@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.net.wifi.p2p.WifiP2pManager
 import androidx.core.content.ContextCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectDiscovery
 import io.mockk.*
 import kotlinx.coroutines.test.runTest
 import org.junit.Before

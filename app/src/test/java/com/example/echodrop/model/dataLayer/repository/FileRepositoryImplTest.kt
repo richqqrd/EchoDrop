@@ -1,8 +1,8 @@
 package com.example.echodrop.model.dataLayer.repository
 
-import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
-import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
-import com.example.echodrop.model.dataLayer.repositoryImpl.FileRepositoryImpl
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.FileEntryDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.FileEntryEntity
+import com.example.echodrop.model.dataLayer.impl.repository.FileRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.model.domainLayer.model.PaketId
 import kotlinx.coroutines.test.runTest

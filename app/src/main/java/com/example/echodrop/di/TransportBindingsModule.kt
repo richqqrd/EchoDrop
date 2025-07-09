@@ -1,11 +1,13 @@
 package com.example.echodrop.di
 
-import com.example.echodrop.model.dataLayer.transport.ChunkIOImpl
-import com.example.echodrop.model.dataLayer.transport.ManifestBuilderImpl
-import com.example.echodrop.model.dataLayer.transport.WiFiDirectDiscovery
-import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
-import com.example.echodrop.model.dataLayer.transport.TransportManagerImpl
-import com.example.echodrop.model.dataLayer.transport.ForwarderImpl
+import com.example.echodrop.model.dataLayer.impl.transport.ChunkIOImpl
+import com.example.echodrop.model.dataLayer.impl.transport.ManifestBuilderImpl
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectDiscovery
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectService
+import com.example.echodrop.model.dataLayer.impl.transport.TransportManagerImpl
+import com.example.echodrop.model.dataLayer.impl.transport.ForwarderImpl
+import com.example.echodrop.model.dataLayer.impl.transport.MaintenanceSchedulerImpl
+import com.example.echodrop.model.dataLayer.impl.transport.ManifestParserImpl
 import com.example.echodrop.model.domainLayer.transport.ChunkIO
 import com.example.echodrop.model.domainLayer.transport.DeviceDiscovery
 import com.example.echodrop.model.domainLayer.transport.DirectSocketService
@@ -55,11 +57,11 @@ abstract class TransportBindingsModule {
     
     @Binds
     @Singleton
-    abstract fun bindMaintenanceScheduler(impl: com.example.echodrop.model.dataLayer.transport.MaintenanceSchedulerImpl): com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
+    abstract fun bindMaintenanceScheduler(impl: MaintenanceSchedulerImpl): com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
     
     @Binds
     @Singleton
-    abstract fun bindManifestParser(impl: com.example.echodrop.model.dataLayer.transport.ManifestParserImpl): com.example.echodrop.model.domainLayer.transport.ManifestParser
+    abstract fun bindManifestParser(impl: ManifestParserImpl): com.example.echodrop.model.domainLayer.transport.ManifestParser
     
     companion object {
         @Provides

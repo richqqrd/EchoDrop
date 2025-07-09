@@ -1,7 +1,7 @@
 package com.example.echodrop.model.dataLayer.database.entities
 
-import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
-import com.example.echodrop.model.dataLayer.database.entities.toDomain
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.toDomain
 import com.example.echodrop.model.domainLayer.model.FileEntry
 import com.example.echodrop.model.domainLayer.model.Paket
 import com.example.echodrop.model.domainLayer.model.PaketId

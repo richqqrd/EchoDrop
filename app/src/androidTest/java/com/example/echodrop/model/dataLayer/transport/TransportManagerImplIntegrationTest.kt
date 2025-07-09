@@ -5,6 +5,9 @@ import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectDiscovery
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectService
+import com.example.echodrop.model.dataLayer.impl.transport.TransportManagerImpl
 import com.example.echodrop.model.domainLayer.model.*
 import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
 import com.example.echodrop.model.domainLayer.repository.TransferRepository

@@ -10,13 +10,11 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.example.echodrop.util.PermissionManager
+import com.example.echodrop.model.dataLayer.datasource.platform.file.PermissionManager
 import com.example.echodrop.view.EchoDropApp
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import android.Manifest
-import androidx.core.app.ActivityCompat
-import androidx.appcompat.app.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable

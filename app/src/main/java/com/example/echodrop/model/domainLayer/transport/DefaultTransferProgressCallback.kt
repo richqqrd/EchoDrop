@@ -1,10 +1,9 @@
 package com.example.echodrop.model.domainLayer.transport
 
 
-import com.example.echodrop.model.dataLayer.database.daos.TransferDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.TransferDao
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
-import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
 import javax.inject.Inject
 import javax.inject.Singleton
 

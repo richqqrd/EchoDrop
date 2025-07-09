@@ -1,9 +1,9 @@
 package com.example.echodrop.model.dataLayer.repository
 
-import com.example.echodrop.model.dataLayer.database.daos.TransferDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.TransferDao
 import com.example.echodrop.model.domainLayer.model.TransferState
-import com.example.echodrop.model.dataLayer.database.entities.TransferLogEntity
-import com.example.echodrop.model.dataLayer.repositoryImpl.TransferRepositoryImpl
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.TransferLogEntity
+import com.example.echodrop.model.dataLayer.impl.repository.TransferRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.PaketId
 import com.example.echodrop.model.domainLayer.model.PeerId
 import com.example.echodrop.model.domainLayer.transport.TransportManager

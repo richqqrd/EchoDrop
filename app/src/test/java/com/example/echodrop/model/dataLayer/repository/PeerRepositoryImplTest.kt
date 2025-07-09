@@ -1,8 +1,8 @@
 package com.example.echodrop.model.dataLayer.repository
 
-import com.example.echodrop.model.dataLayer.database.daos.PeerDao
-import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
-import com.example.echodrop.model.dataLayer.repositoryImpl.PeerRepositoryImpl
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.PeerDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PeerEntity
+import com.example.echodrop.model.dataLayer.impl.repository.PeerRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.Peer
 import com.example.echodrop.model.domainLayer.model.PeerId
 import kotlinx.coroutines.flow.first

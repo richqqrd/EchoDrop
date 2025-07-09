@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.echodrop.model.dataLayer.database.EchoDatabase
-import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
-import com.example.echodrop.model.dataLayer.database.entities.PeerEntity
-import com.example.echodrop.model.dataLayer.repositoryImpl.TransferRepositoryImpl
+import com.example.echodrop.model.dataLayer.datasource.persistence.EchoDatabase
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PeerEntity
+import com.example.echodrop.model.dataLayer.impl.repository.TransferRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest

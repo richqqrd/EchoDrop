@@ -3,11 +3,11 @@ package com.example.echodrop.model.dataLayer.database.daos
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.echodrop.model.dataLayer.database.EchoDatabase
-import com.example.echodrop.model.dataLayer.database.daos.FileEntryDao
-import com.example.echodrop.model.dataLayer.database.daos.PaketDao
-import com.example.echodrop.model.dataLayer.database.entities.FileEntryEntity
-import com.example.echodrop.model.dataLayer.database.entities.PaketEntity
+import com.example.echodrop.model.dataLayer.datasource.persistence.EchoDatabase
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.FileEntryDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.daos.PaketDao
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.FileEntryEntity
+import com.example.echodrop.model.dataLayer.datasource.persistence.entities.PaketEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before

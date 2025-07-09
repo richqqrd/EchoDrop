@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.example.echodrop.model.domainLayer.model.PaketId
-import com.example.echodrop.model.dataLayer.transport.WiFiDirectService
+import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectService
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
