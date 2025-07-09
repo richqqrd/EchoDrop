@@ -2,6 +2,7 @@ package com.example.echodrop.model.dataLayer.database.entities
 
 import com.example.echodrop.model.domainLayer.model.TransferState
 import com.example.echodrop.model.dataLayer.datasource.persistence.entities.TransferLogEntity
+import com.example.echodrop.model.domainLayer.model.TransferDirection
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -24,12 +25,14 @@ class TransferLogEntityTest {
    val peerId = "peer-456"
    val state = TransferState.ACTIVE
    val progressPct = 75
+   val direction = TransferDirection.OUTGOING
    val lastUpdateUtc = 1620000000000L
 
    val transferLogEntity = TransferLogEntity(
     paketId = paketId,
     peerId = peerId,
     state = state,
+    direction = direction,
     progressPct = progressPct,
     lastUpdateUtc = lastUpdateUtc
    )
@@ -38,6 +41,7 @@ class TransferLogEntityTest {
    assertEquals(paketId, transferLogEntity.paketId)
    assertEquals(peerId, transferLogEntity.peerId)
    assertEquals(state, transferLogEntity.state)
+   assertEquals(direction, transferLogEntity.direction)
    assertEquals(progressPct, transferLogEntity.progressPct)
    assertEquals(lastUpdateUtc, transferLogEntity.lastUpdateUtc)
   }
@@ -55,6 +59,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.ACTIVE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
@@ -63,6 +68,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.ACTIVE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
@@ -80,6 +86,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.ACTIVE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
@@ -87,6 +94,7 @@ class TransferLogEntityTest {
    val differentPaketId = baseEntity.copy(paketId = "package-456")
    val differentPeerId = baseEntity.copy(peerId = "peer-789")
    val differentState = baseEntity.copy(state = TransferState.QUEUED)
+   val differentDirection = baseEntity.copy(direction = TransferDirection.INCOMING)
    val differentProgress = baseEntity.copy(progressPct = 50)
    val differentTimestamp = baseEntity.copy(lastUpdateUtc = 1630000000000L)
 
@@ -94,6 +102,7 @@ class TransferLogEntityTest {
    assertNotEquals(baseEntity, differentPaketId)
    assertNotEquals(baseEntity, differentPeerId)
    assertNotEquals(baseEntity, differentState)
+   assertNotEquals(baseEntity, differentDirection)
    assertNotEquals(baseEntity, differentProgress)
    assertNotEquals(baseEntity, differentTimestamp)
   }
@@ -111,6 +120,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.QUEUED,
+    direction = TransferDirection.OUTGOING,
     progressPct = 0,
     lastUpdateUtc = 1620000000000L
    )
@@ -119,6 +129,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.ACTIVE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 50,
     lastUpdateUtc = 1620000000001L
    )
@@ -127,6 +138,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.DONE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 100,
     lastUpdateUtc = 1620000000002L
    )
@@ -135,6 +147,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.FAILED,
+    direction = TransferDirection.OUTGOING,
     progressPct = 75,
     lastUpdateUtc = 1620000000003L
    )
@@ -153,12 +166,13 @@ class TransferLogEntityTest {
 
   @Test
   @DisplayName("Entities with same ID combination are equal")
-  fun entitiesWithSameIdCombinationAreEqual() {
+  fun entitiesWithSameIdCombinationAreNotEqual() {
    // Arrange
    val entity1 = TransferLogEntity(
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.ACTIVE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 75,
     lastUpdateUtc = 1620000000000L
    )
@@ -168,6 +182,7 @@ class TransferLogEntityTest {
     paketId = "package-123",
     peerId = "peer-456",
     state = TransferState.DONE,
+    direction = TransferDirection.OUTGOING,
     progressPct = 100,
     lastUpdateUtc = 1630000000000L
    )

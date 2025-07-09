@@ -16,6 +16,10 @@ import org.mockito.Mockito.*
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import android.util.Log
+import io.mockk.mockkStatic
+import io.mockk.every
+import io.mockk.unmockkAll
 
 /**
  * Test class for the `PeerRepositoryImpl` implementation.
@@ -45,7 +49,12 @@ class PeerRepositoryImplTest {
  fun setup() {
   mockPeerDao = mock(PeerDao::class.java)
   repository = PeerRepositoryImpl(mockPeerDao)
+  mockkStatic(Log::class)
+  every { Log.d(any(), any()) } returns 0
  }
+
+ @org.junit.jupiter.api.AfterEach
+ fun tearDown() { unmockkAll() }
 
  @Test
  @DisplayName("observeKnownPeers returns mapped domain models from DAO")
@@ -121,6 +130,9 @@ class PeerRepositoryImplTest {
  @DisplayName("purgeStalePeers calls DAO with correct timestamp")
  fun purgeStalePeersCallsDaoWithCorrectTimestamp() = runTest {
   val cutoffTime = 1620000000000L
+
+  // Stub return value to avoid NullPointer when unboxing
+  whenever(mockPeerDao.purgeStale(cutoffTime)).thenReturn(2)
 
   repository.purgeStalePeers(cutoffTime)
 

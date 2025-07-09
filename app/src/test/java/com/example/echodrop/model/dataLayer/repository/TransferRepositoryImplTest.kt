@@ -2,6 +2,7 @@ package com.example.echodrop.model.dataLayer.repository
 
 import com.example.echodrop.model.dataLayer.datasource.persistence.daos.TransferDao
 import com.example.echodrop.model.domainLayer.model.TransferState
+import com.example.echodrop.model.domainLayer.model.TransferDirection
 import com.example.echodrop.model.dataLayer.datasource.persistence.entities.TransferLogEntity
 import com.example.echodrop.model.dataLayer.impl.repository.TransferRepositoryImpl
 import com.example.echodrop.model.domainLayer.model.PaketId
@@ -18,6 +19,10 @@ import org.mockito.Mockito.*
 import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import android.util.Log
+import io.mockk.mockkStatic
+import io.mockk.every
+import io.mockk.unmockkAll
 
 /**
  * Test class for the `TransferRepositoryImpl` implementation.
@@ -31,11 +36,13 @@ class TransferRepositoryImplTest {
 
  private val testPaketId = "paket-123"
  private val testPeerId = "peer-456"
+ private val testDirection = TransferDirection.OUTGOING
  private val testTransferLogEntities = listOf(
   TransferLogEntity(
    paketId = testPaketId,
    peerId = testPeerId,
    state = TransferState.ACTIVE,
+   direction = testDirection,
    progressPct = 50,
    lastUpdateUtc = 1620000000000L
   ),
@@ -43,6 +50,7 @@ class TransferRepositoryImplTest {
    paketId = "paket-789",
    peerId = "peer-012",
    state = TransferState.QUEUED,
+   direction = TransferDirection.INCOMING,
    progressPct = 0,
    lastUpdateUtc = 1620000001000L
   )
@@ -54,7 +62,12 @@ class TransferRepositoryImplTest {
   mockTransportManager = mock(TransportManager::class.java)
   repository = TransferRepositoryImpl(mockTransferDao)
 
+  mockkStatic(Log::class)
+  every { Log.d(any(), any()) } returns 0
  }
+
+ @org.junit.jupiter.api.AfterEach
+ fun tearDown() { unmockkAll() }
 
  @Test
  @DisplayName("observeTransfers returns mapped domain models from DAO")
@@ -68,12 +81,14 @@ class TransferRepositoryImplTest {
   assertEquals(PaketId(testPaketId), result[0].paketId)
   assertEquals(PeerId(testPeerId), result[0].peerId)
   assertEquals(TransferState.ACTIVE, result[0].state)
+  assertEquals(testDirection, result[0].direction)
   assertEquals(50, result[0].progressPct)
   assertEquals(1620000000000L, result[0].lastUpdateUtc)
 
   assertEquals(PaketId("paket-789"), result[1].paketId)
   assertEquals(PeerId("peer-012"), result[1].peerId)
   assertEquals(TransferState.QUEUED, result[1].state)
+  assertEquals(TransferDirection.INCOMING, result[1].direction)
   assertEquals(0, result[1].progressPct)
   assertEquals(1620000001000L, result[1].lastUpdateUtc)
  }
@@ -85,6 +100,7 @@ class TransferRepositoryImplTest {
    paketId = testPaketId,
    peerId = testPeerId,
    state = TransferState.ACTIVE,
+   direction = testDirection,
    progressPct = 50,
    lastUpdateUtc = 1620000000000L
   )
@@ -104,6 +120,7 @@ class TransferRepositoryImplTest {
   assertEquals(testPaketId, updatedEntity.paketId)
   assertEquals(testPeerId, updatedEntity.peerId)
   assertEquals(TransferState.PAUSED, updatedEntity.state)
+  assertEquals(testDirection, updatedEntity.direction)
   assertEquals(50, updatedEntity.progressPct)
   assertTrue(updatedEntity.lastUpdateUtc >= 1620000000000L)
  }
@@ -130,6 +147,7 @@ class TransferRepositoryImplTest {
    paketId = testPaketId,
    peerId = testPeerId,
    state = TransferState.QUEUED,
+   direction = testDirection,
    progressPct = 50,
    lastUpdateUtc = 1620000000000L
   )
@@ -149,6 +167,7 @@ class TransferRepositoryImplTest {
   assertEquals(testPaketId, updatedEntity.paketId)
   assertEquals(testPeerId, updatedEntity.peerId)
   assertEquals(TransferState.ACTIVE, updatedEntity.state)
+  assertEquals(testDirection, updatedEntity.direction)
   assertEquals(50, updatedEntity.progressPct)
   assertTrue(updatedEntity.lastUpdateUtc >= 1620000000000L)
  }
@@ -171,6 +190,8 @@ class TransferRepositoryImplTest {
  @Test
  @DisplayName("cancel calls DAO delete with correct IDs")
  fun cancelCallsDaoDeleteWithCorrectIds() = runTest {
+  whenever(mockTransferDao.delete(testPaketId, testPeerId)).thenReturn(1)
+
   repository.cancel(
       PaketId(testPaketId),
       PeerId(testPeerId)

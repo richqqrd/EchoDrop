@@ -39,7 +39,6 @@ class PaketTest {
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
-    sha256 = "abc123hash",
     fileCount = 1,
     createdUtc = 1620000000000L,
     files = fileEntries
@@ -48,7 +47,6 @@ class PaketTest {
    assertEquals(paketId, paket.id)
    assertEquals(meta, paket.meta)
    assertEquals(1024L, paket.sizeBytes)
-   assertEquals("abc123hash", paket.sha256)
    assertEquals(1, paket.fileCount)
    assertEquals(1620000000000L, paket.createdUtc)
    assertEquals(fileEntries, paket.files)
@@ -83,7 +81,6 @@ class PaketTest {
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
-    sha256 = "abc123hash",
     fileCount = 1,
     createdUtc = 1620000000000L,
     files = fileEntries
@@ -93,7 +90,6 @@ class PaketTest {
     id = paketId,
     meta = meta,
     sizeBytes = 1024L,
-    sha256 = "abc123hash",
     fileCount = 1,
     createdUtc = 1620000000000L,
     files = fileEntries
@@ -126,7 +122,6 @@ class PaketTest {
     id = com.example.echodrop.model.domainLayer.model.PaketId("id1"),
     meta = meta,
     sizeBytes = 1024L,
-    sha256 = "abc123hash",
     fileCount = 1,
     createdUtc = 1620000000000L,
     files = fileEntries
@@ -136,7 +131,6 @@ class PaketTest {
     id = com.example.echodrop.model.domainLayer.model.PaketId("id2"),
     meta = meta,
     sizeBytes = 1024L,
-    sha256 = "abc123hash",
     fileCount = 1,
     createdUtc = 1620000000000L,
     files = fileEntries
@@ -184,7 +178,6 @@ class PaketTest {
      1
     ),
     sizeBytes = 600L,
-    sha256 = "hash",
     fileCount = 3,
     createdUtc = System.currentTimeMillis(),
     files = fileEntries
@@ -230,7 +223,6 @@ class PaketTest {
      1
     ),
     sizeBytes = expectedTotalSize,
-    sha256 = "hash",
     fileCount = 3,
     createdUtc = System.currentTimeMillis(),
     files = fileEntries

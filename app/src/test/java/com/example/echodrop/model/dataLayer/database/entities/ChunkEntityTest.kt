@@ -31,7 +31,6 @@ class ChunkEntityTest {
     fileId = fileId,
     offset = offset,
     size = size,
-    sha256 = sha256,
     completed = completed
    )
 
@@ -40,7 +39,6 @@ class ChunkEntityTest {
    assertEquals(fileId, chunkEntity.fileId)
    assertEquals(offset, chunkEntity.offset)
    assertEquals(size, chunkEntity.size)
-   assertEquals(sha256, chunkEntity.sha256)
    assertEquals(completed, chunkEntity.completed)
   }
  }
@@ -58,7 +56,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 1024L,
     size = 512,
-    sha256 = "abc123hash456def",
     completed = true
    )
 
@@ -67,7 +64,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 1024L,
     size = 512,
-    sha256 = "abc123hash456def",
     completed = true
    )
 
@@ -85,7 +81,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 1024L,
     size = 512,
-    sha256 = "abc123hash456def",
     completed = true
    )
 
@@ -93,7 +88,6 @@ class ChunkEntityTest {
    val differentFileId = baseChunk.copy(fileId = "file-999")
    val differentOffset = baseChunk.copy(offset = 2048L)
    val differentSize = baseChunk.copy(size = 1024)
-   val differentHash = baseChunk.copy(sha256 = "different-hash")
    val differentCompleted = baseChunk.copy(completed = false)
 
    // Assert
@@ -101,7 +95,6 @@ class ChunkEntityTest {
    assertNotEquals(baseChunk, differentFileId)
    assertNotEquals(baseChunk, differentOffset)
    assertNotEquals(baseChunk, differentSize)
-   assertNotEquals(baseChunk, differentHash)
    assertNotEquals(baseChunk, differentCompleted)
   }
  }
@@ -119,7 +112,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 0L,
     size = 0,
-    sha256 = "empty-hash",
     completed = true
    )
 
@@ -136,7 +128,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 1024L,
     size = 512,
-    sha256 = "hash",
     completed = true
    )
 
@@ -145,7 +136,6 @@ class ChunkEntityTest {
     fileId = "file-456",
     offset = 1024L,
     size = 512,
-    sha256 = "hash",
     completed = false
    )
 

@@ -44,12 +44,10 @@ class PaketEntityTest {
     description = description,
     tags = tags,
     sizeBytes = sizeBytes,
-    sha256 = sha256,
     fileCount = fileCount,
     ttlSeconds = ttlSeconds,
     priority = priority,
     hopLimit = hopLimit,
-    manifestHash = manifestHash,
     createdUtc = createdUtc
    )
 
@@ -60,12 +58,10 @@ class PaketEntityTest {
    assertEquals(description, paketEntity.description)
    assertEquals(tags, paketEntity.tags)
    assertEquals(sizeBytes, paketEntity.sizeBytes)
-   assertEquals(sha256, paketEntity.sha256)
    assertEquals(fileCount, paketEntity.fileCount)
    assertEquals(ttlSeconds, paketEntity.ttlSeconds)
    assertEquals(priority, paketEntity.priority)
    assertEquals(hopLimit, paketEntity.hopLimit)
-   assertEquals(manifestHash, paketEntity.manifestHash)
    assertEquals(createdUtc, paketEntity.createdUtc)
   }
 
@@ -80,12 +76,10 @@ class PaketEntityTest {
     description = null,
     tags = listOf("test"),
     sizeBytes = 1024L,
-    sha256 = "hash",
     fileCount = 1,
     ttlSeconds = 3600,
     priority = 1,
     hopLimit = null,
-    manifestHash = "manifest-hash",
     createdUtc = 1620000000000L
    )
 
@@ -110,12 +104,10 @@ class PaketEntityTest {
     description = "Description",
     tags = listOf("test", "sample"),
     sizeBytes = 1024L,
-    sha256 = "hash",
     fileCount = 2,
     ttlSeconds = 3600,
     priority = 1,
     hopLimit = 5,
-    manifestHash = "manifest-hash",
     createdUtc = 1620000000000L
    )
 
@@ -126,12 +118,10 @@ class PaketEntityTest {
     description = "Description",
     tags = listOf("test", "sample"),
     sizeBytes = 1024L,
-    sha256 = "hash",
     fileCount = 2,
     ttlSeconds = 3600,
     priority = 1,
     hopLimit = 5,
-    manifestHash = "manifest-hash",
     createdUtc = 1620000000000L
    )
 
@@ -151,12 +141,10 @@ class PaketEntityTest {
     description = "Description",
     tags = listOf("test"),
     sizeBytes = 1024L,
-    sha256 = "hash",
     fileCount = 2,
     ttlSeconds = 3600,
     priority = 1,
     hopLimit = 5,
-    manifestHash = "manifest-hash",
     createdUtc = 1620000000000L
    )
 
@@ -166,12 +154,10 @@ class PaketEntityTest {
    val differentDescription = baseEntity.copy(description = "Different description")
    val differentTags = baseEntity.copy(tags = listOf("different", "tags"))
    val differentSize = baseEntity.copy(sizeBytes = 2048L)
-   val differentHash = baseEntity.copy(sha256 = "different-hash")
    val differentFileCount = baseEntity.copy(fileCount = 3)
    val differentTtl = baseEntity.copy(ttlSeconds = 7200)
    val differentPriority = baseEntity.copy(priority = 2)
    val differentHopLimit = baseEntity.copy(hopLimit = 10)
-   val differentManifestHash = baseEntity.copy(manifestHash = "different-manifest")
    val differentCreatedUtc = baseEntity.copy(createdUtc = 1630000000000L)
 
    // Assert - test each property difference causes inequality
@@ -181,12 +167,10 @@ class PaketEntityTest {
    assertNotEquals(baseEntity, differentDescription)
    assertNotEquals(baseEntity, differentTags)
    assertNotEquals(baseEntity, differentSize)
-   assertNotEquals(baseEntity, differentHash)
    assertNotEquals(baseEntity, differentFileCount)
    assertNotEquals(baseEntity, differentTtl)
    assertNotEquals(baseEntity, differentPriority)
    assertNotEquals(baseEntity, differentHopLimit)
-   assertNotEquals(baseEntity, differentManifestHash)
    assertNotEquals(baseEntity, differentCreatedUtc)
   }
  }
@@ -217,12 +201,10 @@ class PaketEntityTest {
     description = description,
     tags = tags,
     sizeBytes = sizeBytes,
-    sha256 = sha256,
     fileCount = fileCount,
     ttlSeconds = ttlSeconds,
     priority = priority,
     hopLimit = 5,
-    manifestHash = "manifest-hash",
     createdUtc = createdUtc
    )
 
@@ -243,7 +225,6 @@ class PaketEntityTest {
    assertEquals(ttlSeconds, domainModel.meta.ttlSeconds)
    assertEquals(priority, domainModel.meta.priority)
    assertEquals(sizeBytes, domainModel.sizeBytes)
-   assertEquals(sha256, domainModel.sha256)
    assertEquals(fileCount, domainModel.fileCount)
    assertEquals(createdUtc, domainModel.createdUtc)
    assertEquals(fileEntries, domainModel.files)
@@ -260,12 +241,10 @@ class PaketEntityTest {
     description = null,
     tags = emptyList(),
     sizeBytes = 0L,
-    sha256 = "",
     fileCount = 0,
     ttlSeconds = 3600,
     priority = 1,
     hopLimit = null,
-    manifestHash = "",
     createdUtc = 1620000000000L
    )
 

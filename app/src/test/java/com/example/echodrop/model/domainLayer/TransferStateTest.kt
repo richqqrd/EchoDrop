@@ -16,11 +16,16 @@ class TransferStateTest {
         @DisplayName("Enum contains all expected states")
         fun enumContainsAllExpectedStates() {
             val states = TransferState.entries.toTypedArray()
-            assertEquals(4, states.size)
-            assertTrue(states.contains(TransferState.QUEUED))
-            assertTrue(states.contains(TransferState.ACTIVE))
-            assertTrue(states.contains(TransferState.DONE))
-            assertTrue(states.contains(TransferState.FAILED))
+            // Should contain all defined states
+            assertEquals(6, states.size)
+            assertTrue(states.toList().containsAll(listOf(
+                TransferState.QUEUED,
+                TransferState.ACTIVE,
+                TransferState.PAUSED,
+                TransferState.DONE,
+                TransferState.FAILED,
+                TransferState.CANCELLED
+            )))
         }
 
         @Test
@@ -39,6 +44,8 @@ class TransferStateTest {
             assertEquals("ACTIVE", TransferState.ACTIVE.name)
             assertEquals("DONE", TransferState.DONE.name)
             assertEquals("FAILED", TransferState.FAILED.name)
+            assertEquals("PAUSED", TransferState.PAUSED.name)
+            assertEquals("CANCELLED", TransferState.CANCELLED.name)
         }
     }
 
@@ -58,10 +65,10 @@ class TransferStateTest {
         @Test
         @DisplayName("Enum values have the correct ordinal values")
         fun enumValuesHaveCorrectOrdinalValues() {
-            assertEquals(0, TransferState.QUEUED.ordinal)
-            assertEquals(1, TransferState.ACTIVE.ordinal)
-            assertEquals(2, TransferState.DONE.ordinal)
-            assertEquals(3, TransferState.FAILED.ordinal)
+            val values = TransferState.entries.toTypedArray()
+            values.forEachIndexed { index, state ->
+                assertEquals(index, state.ordinal)
+            }
         }
     }
 

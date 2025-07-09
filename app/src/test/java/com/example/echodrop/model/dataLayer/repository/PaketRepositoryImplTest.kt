@@ -21,6 +21,10 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.never
 import kotlinx.coroutines.flow.first
+import android.util.Log
+import io.mockk.mockkStatic
+import io.mockk.every
+import io.mockk.unmockkAll
 
 /**
  * Test class for the `PaketRepositoryImpl` implementation.
@@ -41,12 +45,10 @@ class PaketRepositoryImplTest {
   description = "Test description",
   tags = listOf("test", "unit"),
   sizeBytes = 1024L,
-  sha256 = "test-hash",
   fileCount = 2,
   ttlSeconds = 3600,
   priority = 1,
   hopLimit = null,
-  manifestHash = "test-manifest",
   createdUtc = 1620000000000L
  )
 
@@ -79,6 +81,15 @@ class PaketRepositoryImplTest {
   mockPaketDao = mock(PaketDao::class.java)
   mockFileEntryDao = mock(FileEntryDao::class.java)
   repository = PaketRepositoryImpl(mockPaketDao, mockFileEntryDao)
+
+  // Stub android.util.Log to prevent runtime exceptions in unit tests
+  mockkStatic(Log::class)
+  every { Log.d(any(), any()) } returns 0
+ }
+
+ @org.junit.jupiter.api.AfterEach
+ fun tearDown() {
+  unmockkAll()
  }
 
  @Test
