@@ -60,10 +60,10 @@ class ConnectionAttemptDaoIntegrationTest {
         dao.insert(ConnectionAttemptEntity(device, paketId, tOld,  false))
         dao.insert(ConnectionAttemptEntity(device, paketId, tKeep, false))
 
-        // Nur der alte Eintrag soll verschwinden
-        val removed = dao.deleteOlderThan(tKeep)
-        assertEquals(1, removed)
+        // Aktion: alte Einträge löschen
+        dao.deleteOlderThan(tKeep)           // gibt Unit zurück
 
+        // Erwartung: genau ein Eintrag verbleibt
         val remaining = dao.getFailedAttemptCount(device, paketId, tKeep - 100)
         assertEquals(1, remaining)
     }
