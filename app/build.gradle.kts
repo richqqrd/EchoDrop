@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlinAndroidKsp)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.kotlin.compose)
+    id("jacoco")
+
 
 }
 
@@ -117,6 +119,41 @@ dependencies {
 
 }
 
-tasks.withType<Test> {
+// Jacoco version configuration
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+// --- Jacoco report task ----------------------------------------------------
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest") // ensure unit tests run first
+
+    val execData = file("$buildDir/jacoco/testDebugUnitTest.exec")
+    executionData.setFrom(execData)
+
+    val kotlinDebugTree = fileTree("$buildDir/tmp/kotlin-classes/debug") {
+        exclude(
+            "**/di/**",
+            "**/ui/**",
+            "**/BuildConfig.*",
+            "**/R.class",
+            "**/R$*.class"
+        )
+    }
+
+    classDirectories.setFrom(kotlinDebugTree)
+    sourceDirectories.setFrom(files("src/main/java"))
+
+    reports {
+        html.required.set(true)
+        xml.required.set(false)
+        csv.required.set(false)
+    }
+}
+
+// Configure all unit test tasks to use JUnit 5 and generate coverage afterwards
+tasks.withType<Test>().configureEach {
     useJUnitPlatform()
+    finalizedBy("jacocoTestReport")
 }
