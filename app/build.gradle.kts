@@ -75,6 +75,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    debugImplementation("com.google.dagger:hilt-android-testing:2.51.1")
+    kspDebug("com.google.dagger:hilt-compiler:2.51.1")
 
 
     implementation("com.google.code.gson:gson:2.10.1")
@@ -112,10 +114,19 @@ dependencies {
 
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
 
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.6.0")
+androidTestImplementation("androidx.test.espresso:espresso-intents:3.5.1")
+debugImplementation("androidx.compose.ui:ui-test-manifest:1.6.0")
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+    androidTestImplementation("com.google.dagger:hilt-android-testing:2.51.1")
+    kspAndroidTest("com.google.dagger:hilt-compiler:2.51.1")
+    androidTestImplementation(libs.hilt.android)
+    kspAndroidTest(libs.hilt.compiler)
+    androidTestImplementation("androidx.test:rules:1.5.0")
 
 }
 
