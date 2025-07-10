@@ -33,12 +33,10 @@ class FileEntryDaoIntegrationTest {
         description = "Test description",
         tags = listOf("test"),
         sizeBytes = 2048L,
-        sha256 = "test-hash",
         fileCount = 2,
         ttlSeconds = 3600,
         priority = 1,
         hopLimit = null,
-        manifestHash = "test-manifest-hash",
         createdUtc = System.currentTimeMillis()
     )
 

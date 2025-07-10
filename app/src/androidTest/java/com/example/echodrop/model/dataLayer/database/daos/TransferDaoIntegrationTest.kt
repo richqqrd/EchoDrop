@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.example.echodrop.model.dataLayer.datasource.persistence.EchoDatabase
 import com.example.echodrop.model.domainLayer.model.TransferState
+import com.example.echodrop.model.domainLayer.model.TransferDirection
 import com.example.echodrop.model.dataLayer.datasource.persistence.daos.PaketDao
 import com.example.echodrop.model.dataLayer.datasource.persistence.daos.PeerDao
 import com.example.echodrop.model.dataLayer.datasource.persistence.daos.TransferDao
@@ -52,12 +53,10 @@ class TransferDaoIntegrationTest {
                 description = "Test description",
                 tags = listOf("test"),
                 sizeBytes = 1024L,
-                sha256 = "test-hash",
                 fileCount = 1,
                 ttlSeconds = 3600,
                 priority = 1,
                 hopLimit = null,
-                manifestHash = "test-manifest-hash",
                 createdUtc = System.currentTimeMillis()
             )
             paketDao.upsert(paketEntity)
@@ -82,6 +81,7 @@ class TransferDaoIntegrationTest {
             paketId = testPaketId,
             peerId = testPeerId,
             state = TransferState.QUEUED,
+            direction = TransferDirection.OUTGOING,
             progressPct = 0,
             lastUpdateUtc = System.currentTimeMillis()
         )
@@ -101,6 +101,7 @@ class TransferDaoIntegrationTest {
             paketId = testPaketId,
             peerId = testPeerId,
             state = TransferState.ACTIVE,
+            direction = TransferDirection.OUTGOING,
             progressPct = 50,
             lastUpdateUtc = System.currentTimeMillis()
         )
@@ -128,6 +129,7 @@ class TransferDaoIntegrationTest {
             paketId = testPaketId,
             peerId = testPeerId,
             state = TransferState.QUEUED,
+            direction = TransferDirection.OUTGOING,
             progressPct = 0,
             lastUpdateUtc = System.currentTimeMillis()
         )
@@ -152,6 +154,7 @@ class TransferDaoIntegrationTest {
             paketId = testPaketId,
             peerId = testPeerId,
             state = TransferState.ACTIVE,
+            direction = TransferDirection.OUTGOING,
             progressPct = 50,
             lastUpdateUtc = System.currentTimeMillis()
         )
@@ -171,6 +174,7 @@ class TransferDaoIntegrationTest {
             paketId = testPaketId,
             peerId = testPeerId,
             state = TransferState.ACTIVE,
+            direction = TransferDirection.OUTGOING,
             progressPct = 50,
             lastUpdateUtc = System.currentTimeMillis()
         )
@@ -190,6 +194,7 @@ class TransferDaoIntegrationTest {
                 paketId = "non-existent-paket",
                 peerId = "non-existent-peer",
                 state = TransferState.QUEUED,
+                direction = TransferDirection.OUTGOING,
                 progressPct = 0,
                 lastUpdateUtc = System.currentTimeMillis()
             )

@@ -47,12 +47,10 @@ class ChunkDaoIntegrationTest {
                 description = "Test description",
                 tags = emptyList(),
                 sizeBytes = 1024L,
-                sha256 = "test-hash",
                 fileCount = 1,
                 ttlSeconds = 3600,
                 priority = 1,
                 hopLimit = null,
-                manifestHash = "test-manifest-hash",
                 createdUtc = System.currentTimeMillis()
             )
             paketDao.upsert(paketEntity)
@@ -82,7 +80,6 @@ class ChunkDaoIntegrationTest {
                 fileId = "file-123",
                 offset = 0L,
                 size = 512,
-                sha256 = "hash1",
                 completed = false
             ),
             ChunkEntity(
@@ -90,7 +87,6 @@ class ChunkDaoIntegrationTest {
                 fileId = "file-123",
                 offset = 512L,
                 size = 512,
-                sha256 = "hash2",
                 completed = true
             )
         )
@@ -113,7 +109,6 @@ class ChunkDaoIntegrationTest {
                 fileId = "file-123",
                 offset = 0L,
                 size = 512,
-                sha256 = "hash1",
                 completed = false
             ),
             ChunkEntity(
@@ -121,7 +116,6 @@ class ChunkDaoIntegrationTest {
                 fileId = "file-123",
                 offset = 512L,
                 size = 512,
-                sha256 = "hash2",
                 completed = true
             )
         )

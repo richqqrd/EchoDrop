@@ -64,12 +64,10 @@ class FileRepositoryIntegrationImplTest {
                     description = "Test Description",
                     tags = listOf("test"),
                     sizeBytes = 0L,
-                    sha256 = "test-hash",
                     fileCount = 0,
                     ttlSeconds = 3600,
                     priority = 1,
                     hopLimit = null,
-                    manifestHash = "test-manifest",
                     createdUtc = System.currentTimeMillis()
                 )
             )
@@ -120,12 +118,10 @@ class FileRepositoryIntegrationImplTest {
                 description = "Test Description",
                 tags = listOf("test"),
                 sizeBytes = 0L,
-                sha256 = "test-hash",
                 fileCount = 0,
                 ttlSeconds = 3600,
                 priority = 1,
                 hopLimit = null,
-                manifestHash = "test-manifest",
                 createdUtc = System.currentTimeMillis()
             )
         )

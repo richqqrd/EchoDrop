@@ -46,12 +46,10 @@ class TransferRepositoryImplIntegrationTest {
                     description = "Test Description",
                     tags = listOf("test"),
                     sizeBytes = 1024L,
-                    sha256 = "test-hash",
                     fileCount = 1,
                     ttlSeconds = 3600,
                     priority = 1,
                     hopLimit = null,
-                    manifestHash = "test-manifest",
                     createdUtc = System.currentTimeMillis()
                 )
             )
@@ -128,12 +126,10 @@ class TransferRepositoryImplIntegrationTest {
                 description = "Another test",
                 tags = listOf("test"),
                 sizeBytes = 2048L,
-                sha256 = "test-hash-2",
                 fileCount = 1,
                 ttlSeconds = 3600,
                 priority = 2,
                 hopLimit = null,
-                manifestHash = "test-manifest-2",
                 createdUtc = System.currentTimeMillis()
             )
         )

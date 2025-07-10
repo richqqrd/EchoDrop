@@ -10,6 +10,13 @@ import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectS
 import com.example.echodrop.model.dataLayer.impl.transport.TransportManagerImpl
 import com.example.echodrop.model.domainLayer.model.*
 import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
+import com.example.echodrop.model.domainLayer.repository.ConnectionAttemptRepository
+import com.example.echodrop.model.domainLayer.repository.PeerRepository
+import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
+import com.example.echodrop.model.domainLayer.transport.ManifestParser
+import com.example.echodrop.model.domainLayer.transport.ChunkIO
+import com.example.echodrop.model.domainLayer.transport.Forwarder
+import com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
 import com.example.echodrop.model.domainLayer.repository.TransferRepository
 import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.SavePaketUseCase
@@ -46,10 +53,31 @@ class TransportManagerImplIntegrationTest {
     private lateinit var transferRepository: TransferRepository
 
     @MockK(relaxed = true)
+    private lateinit var connectionAttemptRepository: ConnectionAttemptRepository
+
+    @MockK(relaxed = true)
+    private lateinit var peerRepository: PeerRepository
+
+    @MockK(relaxed = true)
     private lateinit var savePaketUseCase: SavePaketUseCase
 
     @MockK(relaxed = true)
     private lateinit var getPaketDetailUseCase: GetPaketDetailUseCase
+
+    @MockK(relaxed = true)
+    private lateinit var manifestBuilder: ManifestBuilder
+
+    @MockK(relaxed = true)
+    private lateinit var manifestParser: ManifestParser
+
+    @MockK(relaxed = true)
+    private lateinit var chunkIO: ChunkIO
+
+    @MockK(relaxed = true)
+    private lateinit var forwarder: Forwarder
+
+    @MockK(relaxed = true)
+    private lateinit var maintenanceScheduler: MaintenanceScheduler
 
     private lateinit var transportManager: TransportManagerImpl
     
@@ -73,13 +101,19 @@ class TransportManagerImplIntegrationTest {
         transportManager = TransportManagerImpl(
             wifiDirectService = wifiDirectService,
             wifiDirectDiscovery = wifiDirectDiscovery,
-            context = ApplicationProvider.getApplicationContext(),
-            progressCallback = progressCallback,
-            savePeerUseCase = savePeerUseCase,
             transferRepository = transferRepository,
+            connectionAttemptRepository = connectionAttemptRepository,
+            peerRepository = peerRepository,
+            context = ApplicationProvider.getApplicationContext(),
             savePaketUseCase = savePaketUseCase,
             getPaketDetailUseCase = getPaketDetailUseCase,
-            _receivedManifests = receivedManifests
+            progressCallback = progressCallback,
+            manifestBuilder = manifestBuilder,
+            manifestParser = manifestParser,
+            _receivedManifests = receivedManifests,
+            chunkIO = chunkIO,
+            forwarder = forwarder,
+            maintenanceScheduler = maintenanceScheduler
         )
     }
 

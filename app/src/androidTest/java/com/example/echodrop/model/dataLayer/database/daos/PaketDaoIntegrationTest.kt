@@ -30,12 +30,10 @@ class PaketDaoIntegrationTest {
         description = "Test description 1",
         tags = listOf("test", "first"),
         sizeBytes = 1024L,
-        sha256 = "hash1",
         fileCount = 2,
         ttlSeconds = 3600,
         priority = 1,
         hopLimit = null,
-        manifestHash = "manifest-hash-1",
         createdUtc = System.currentTimeMillis()
     )
 
@@ -46,12 +44,10 @@ class PaketDaoIntegrationTest {
         description = "Test description 2",
         tags = listOf("test", "second"),
         sizeBytes = 2048L,
-        sha256 = "hash2",
         fileCount = 3,
         ttlSeconds = 7200,
         priority = 2,
         hopLimit = 5,
-        manifestHash = "manifest-hash-2",
         createdUtc = System.currentTimeMillis() - 1000
     )
 
