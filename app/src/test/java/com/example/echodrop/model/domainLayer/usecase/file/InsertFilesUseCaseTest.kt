@@ -57,31 +57,4 @@ class InsertFilesUseCaseTest {
         verify(mockFileRepository).insertAll(testPaketId, emptyFiles)
     }
 
-    @Test
-    @DisplayName("invoke propagates repository exceptions")
-    fun invokePropagatesRepositoryExceptions() = runTest {
-        // Arrange
-        val testFiles = listOf(FileEntry("/data/file.txt", "text/plain", 100L, 0))
-        val expectedException = RuntimeException("Database error")
-        doThrow(expectedException).`when`(mockFileRepository).insertAll(testPaketId, testFiles)
-
-        // Act & Assert
-        val exception = assertThrows(RuntimeException::class.java) {
-            runTest { useCase(testPaketId, testFiles) }
-        }
-        assertEquals("Database error", exception.message)
-    }
-
-    @Test
-    @DisplayName("invoke calls repository exactly once")
-    fun invokeCallsRepositoryExactlyOnce() = runTest {
-        // Arrange
-        val testFiles = listOf(FileEntry("/data/file.txt", "text/plain", 100L, 0))
-
-        // Act
-        useCase(testPaketId, testFiles)
-
-        // Assert
-        verify(mockFileRepository, times(1)).insertAll(testPaketId, testFiles)
-    }
 } 

@@ -1,41 +1,56 @@
-@file:OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-
 package com.example.echodrop.viewmodel
 
+import com.example.echodrop.model.domainLayer.model.*
 import com.example.echodrop.model.domainLayer.usecase.paket.ObserveInboxUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.PurgeExpiredUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.ObserveTransfersUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
-import io.mockk.every
-import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.resetMain
-import org.junit.jupiter.api.Assertions.assertEquals
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.junit.jupiter.api.DisplayName
+import org.mockito.Mockito.*
+import org.mockito.kotlin.whenever
 
+@OptIn(ExperimentalCoroutinesApi::class)
+@DisplayName("InboxViewModel Tests")
 class InboxViewModelTest {
 
-    private lateinit var vm: InboxViewModel
-    private val observeInbox: ObserveInboxUseCase = mockk()
-    private val observeTransfers: ObserveTransfersUseCase = mockk()
-    private val startTransfer: StartTransferUseCase = mockk(relaxed = true)
-    private val purgeExpired: PurgeExpiredUseCase = mockk(relaxed = true)
+    private lateinit var viewModel: InboxViewModel
+    private lateinit var mockObserveInbox: ObserveInboxUseCase
+    private lateinit var mockObserveTransfers: ObserveTransfersUseCase
+    private lateinit var mockStartTransfer: StartTransferUseCase
+    private lateinit var mockPurgeExpired: PurgeExpiredUseCase
     private val testDispatcher = UnconfinedTestDispatcher()
 
     @BeforeEach
     fun setup() {
         Dispatchers.setMain(testDispatcher)
-        every { observeInbox.invoke() } returns flowOf(emptyList())
-        every { observeTransfers.invoke() } returns flowOf(emptyList())
 
-        vm = InboxViewModel(observeInbox, observeTransfers, startTransfer, purgeExpired)
+        // Create mocks
+        mockObserveInbox = mock(ObserveInboxUseCase::class.java)
+        mockObserveTransfers = mock(ObserveTransfersUseCase::class.java)
+        mockStartTransfer = mock(StartTransferUseCase::class.java)
+        mockPurgeExpired = mock(PurgeExpiredUseCase::class.java)
+
+        // Setup default mock behavior
+        whenever(mockObserveInbox.invoke()).thenReturn(flowOf(emptyList()))
+        whenever(mockObserveTransfers.invoke()).thenReturn(flowOf(emptyList()))
+
+        // Korrekte Konstruktor-Parameter-Reihenfolge
+        viewModel = InboxViewModel(
+            mockObserveInbox,        // 1. ObserveInboxUseCase
+            mockObserveTransfers,    // 2. ObserveTransfersUseCase 
+            mockStartTransfer,       // 3. StartTransferUseCase
+            mockPurgeExpired         // 4. PurgeExpiredUseCase
+        )
     }
 
     @AfterEach
@@ -44,8 +59,28 @@ class InboxViewModelTest {
     }
 
     @Test
-    fun `initial state is empty`() = runTest {
-        val list = vm.paketList.value
-        assertEquals(0, list.size)
+    @DisplayName("ViewModel can be created successfully")
+    fun viewModelCanBeCreatedSuccessfully() {
+        assertNotNull(viewModel)
     }
-} 
+
+    @Test
+    @DisplayName("initial paketList is empty")
+    fun initialPaketListIsEmpty() {
+        assertTrue(viewModel.paketList.value.isEmpty())
+    }
+
+    @Test
+    @DisplayName("onShareClicked with correct parameter types")
+    fun onShareClickedWithCorrectParameterTypes() {
+        // Arrange
+        val paketId = PaketId("test-paket-123")
+        val peerId = PeerId("test-peer-456")
+
+        // Act - This should not throw an exception
+        viewModel.onShareClicked(paketId, peerId)
+
+        // Assert
+        assertTrue(true) // No exception means success
+    }
+}
