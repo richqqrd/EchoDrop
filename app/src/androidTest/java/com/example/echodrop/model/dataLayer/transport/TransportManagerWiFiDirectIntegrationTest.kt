@@ -1,6 +1,5 @@
 package com.example.echodrop.model.dataLayer.transport
 
-import android.content.Context
 import android.net.wifi.p2p.WifiP2pDevice
 import android.net.wifi.p2p.WifiP2pInfo
 import androidx.test.core.app.ApplicationProvider
@@ -9,15 +8,8 @@ import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectD
 import com.example.echodrop.model.dataLayer.datasource.platform.wifi.WiFiDirectService
 import com.example.echodrop.model.dataLayer.impl.transport.TransportManagerImpl
 import com.example.echodrop.model.domainLayer.model.*
-import com.example.echodrop.model.domainLayer.transport.TransferProgressCallback
-import com.example.echodrop.model.domainLayer.repository.ConnectionAttemptRepository
-import com.example.echodrop.model.domainLayer.repository.PeerRepository
-import com.example.echodrop.model.domainLayer.transport.ManifestBuilder
-import com.example.echodrop.model.domainLayer.transport.ManifestParser
-import com.example.echodrop.model.domainLayer.transport.ChunkIO
-import com.example.echodrop.model.domainLayer.transport.Forwarder
-import com.example.echodrop.model.domainLayer.transport.MaintenanceScheduler
-import com.example.echodrop.model.domainLayer.repository.TransferRepository
+import com.example.echodrop.model.domainLayer.transport.*
+import com.example.echodrop.model.domainLayer.repository.*
 import com.example.echodrop.model.domainLayer.usecase.paket.GetPaketDetailUseCase
 import com.example.echodrop.model.domainLayer.usecase.paket.SavePaketUseCase
 import com.example.echodrop.model.domainLayer.usecase.peer.SavePeerUseCase
@@ -32,10 +24,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Integrationstest für TransportManagerImpl
+ * Integrationstest zwischen `TransportManagerImpl` und WiFi-Direkt-Schicht
+ * (`WiFiDirectDiscovery`, `WiFiDirectService`).
  */
 @RunWith(AndroidJUnit4::class)
-class TransportManagerImplIntegrationTest {
+class TransportManagerWiFiDirectIntegrationTest {
 
     @MockK(relaxed = true)
     private lateinit var wifiDirectService: WiFiDirectService
@@ -80,24 +73,24 @@ class TransportManagerImplIntegrationTest {
     private lateinit var maintenanceScheduler: MaintenanceScheduler
 
     private lateinit var transportManager: TransportManagerImpl
-    
+
     private val receivedManifests = MutableSharedFlow<Pair<PaketId, PeerId>>()
     private val connectionInfoFlow = MutableStateFlow<WifiP2pInfo?>(null)
     private val discoveredDevicesFlow = MutableStateFlow<List<WifiP2pDevice>>(emptyList())
     private val thisDeviceFlow = MutableStateFlow<WifiP2pDevice?>(null)
-    
+
     @Before
     fun setup() {
         MockKAnnotations.init(this)
-        
+
         every { wifiDirectDiscovery.connectionInfo } returns connectionInfoFlow
         every { wifiDirectDiscovery.discoveredDevices } returns discoveredDevicesFlow as StateFlow<List<WifiP2pDevice>>
         every { wifiDirectDiscovery.thisDevice } returns thisDeviceFlow as StateFlow<WifiP2pDevice?>
-        
+
         coEvery { wifiDirectDiscovery.startDiscovery() } returns Unit
         coEvery { wifiDirectDiscovery.stopDiscovery() } returns Unit
         coEvery { wifiDirectDiscovery.connectToDevice(any()) } returns Unit
-        
+
         transportManager = TransportManagerImpl(
             wifiDirectService = wifiDirectService,
             wifiDirectDiscovery = wifiDirectDiscovery,
@@ -118,21 +111,21 @@ class TransportManagerImplIntegrationTest {
     }
 
     @Test
-    fun testStartDiscovery() = runTest {
+    fun startDiscovery_triggersDiscoveryService() = runTest {
         transportManager.startDiscovery()
         coVerify(exactly = 1) { wifiDirectDiscovery.startDiscovery() }
     }
 
     @Test
-    fun testStopDiscovery() = runTest {
+    fun stopDiscovery_stopsDiscoveryService() = runTest {
         transportManager.stopDiscovery()
         coVerify(exactly = 1) { wifiDirectDiscovery.stopDiscovery() }
     }
 
     @Test
-    fun testConnectToDevice() = runTest {
+    fun connectToDevice_forwardsCallToDiscoveryService() = runTest {
         val deviceId = "test-id"
         transportManager.connectToDevice(deviceId)
         coVerify(exactly = 1) { wifiDirectDiscovery.connectToDevice(deviceId) }
     }
-}
+} 
