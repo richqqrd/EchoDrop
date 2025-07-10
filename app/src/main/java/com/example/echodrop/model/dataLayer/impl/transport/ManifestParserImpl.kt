@@ -56,7 +56,13 @@ class ManifestParserImpl @Inject constructor(
 
                 val filesDir = File(context.filesDir, "received_files")
                 if (!filesDir.exists()) filesDir.mkdirs()
-                val filePath = File(filesDir, "${fileId}_${fileName}").absolutePath
+
+                // NEU: doppeltes Präfix verhindern
+                val normalizedName =
+                    if (fileName.startsWith("${fileId}_")) fileName     // Präfix ist schon drin
+                    else "${fileId}_${fileName}"                        // Präfix ergänzen
+
+                val filePath = File(filesDir, normalizedName).absolutePath
 
                 files += FileEntry(
                     path = filePath,

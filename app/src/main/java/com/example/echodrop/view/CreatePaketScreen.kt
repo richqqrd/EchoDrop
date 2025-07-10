@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -80,10 +81,13 @@ fun CreatePaketScreen(
         ) {
             item {
                 OutlinedTextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("titleField"),
                     value = state.title,
                     onValueChange = { viewModel.setTitle(it) },
                     label = { Text("Titel") },
-                    modifier = Modifier.fillMaxWidth()
+                    // width bereits oben gesetzt
                 )
             }
 
@@ -170,7 +174,9 @@ item {
             item {
                 Button(
                     onClick = { filePickerLauncher.launch("*/*") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("addFilesButton")
                 ) {
                     Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
