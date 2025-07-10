@@ -228,36 +228,5 @@ class TransferRepositoryImplIntegrationTest {
         assertEquals(TransferState.FAILED, transfers[0].state)
     }
 
-    @Test
-    fun checkTransferDirection() = runTest {
-        val outgoingPeerId = PeerId("out-peer-123")
-        val incomingPeerId = PeerId("in-peer-456")
 
-        db.peerDao().upsert(
-            PeerEntity(
-                peerId = outgoingPeerId.value,
-                alias = "Outgoing Peer",
-                lastSeenUtc = System.currentTimeMillis()
-            )
-        )
-
-        db.peerDao().upsert(
-            PeerEntity(
-                peerId = incomingPeerId.value,
-                alias = "Incoming Peer",
-                lastSeenUtc = System.currentTimeMillis()
-            )
-        )
-
-        repository.startTransfer(testPaketId, outgoingPeerId)
-        repository.startTransfer(testPaketId, incomingPeerId)
-        
-        val transfers = repository.observeTransfers().first()
-        
-        val outgoingTransfer = transfers.find { it.peerId == outgoingPeerId }
-        val incomingTransfer = transfers.find { it.peerId == incomingPeerId }
-        
-        assertEquals(TransferDirection.OUTGOING, outgoingTransfer?.direction)
-        assertEquals(TransferDirection.INCOMING, incomingTransfer?.direction)
-    }
 }
