@@ -42,7 +42,6 @@ class EchoDropEndToEndUiTest {
     }
     @get:Rule
     val hiltRule = HiltAndroidRule(this)
-    // Grant all runtime permissions required by the app so that no OS dialog blocks the UI test
     @get:Rule
     val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
         Manifest.permission.ACCESS_FINE_LOCATION,

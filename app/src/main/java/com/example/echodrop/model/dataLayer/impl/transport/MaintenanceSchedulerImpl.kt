@@ -26,7 +26,7 @@ class MaintenanceSchedulerImpl @Inject constructor(
 
     companion object {
         private const val TAG = "MaintenanceScheduler"
-        private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L // 24 h (ConnectionAttempt-Retention)
+        private const val CLEANUP_TIMEOUT = 24 * 60 * 60 * 1000L 
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -36,7 +36,6 @@ class MaintenanceSchedulerImpl @Inject constructor(
         if (started) return
         started = true
 
-        // ConnectionAttempts aufräumen
         scope.launch {
             while (isActive) {
                 try {
@@ -49,10 +48,9 @@ class MaintenanceSchedulerImpl @Inject constructor(
             }
         }
 
-        // Stale Peers bereinigen
         scope.launch {
-            val interval = TimeUnit.HOURS.toMillis(6) // alle 6 h prüfen
-            val peerCutoff = TimeUnit.DAYS.toMillis(7) // 7 Tage
+            val interval = TimeUnit.HOURS.toMillis(6) 
+            val peerCutoff = TimeUnit.DAYS.toMillis(7) 
             while (isActive) {
                 try {
                     val deleted = peerRepository.purgeStalePeers(System.currentTimeMillis() - peerCutoff)
@@ -70,6 +68,6 @@ class MaintenanceSchedulerImpl @Inject constructor(
     }
 
     init {
-        start() // auto-start beim Injizieren
+        start() 
     }
 }

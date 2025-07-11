@@ -33,7 +33,7 @@ object DatabaseModule {
     @Singleton
     fun provideDatabase(@ApplicationContext ctx: Context): EchoDatabase =
     Room.databaseBuilder(ctx, EchoDatabase::class.java, "echo.db")
-    .fallbackToDestructiveMigration() //nur für Entwicklung
+    .fallbackToDestructiveMigration() 
     .build()
 
     /**

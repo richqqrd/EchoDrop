@@ -41,9 +41,7 @@ class CreatePaketViewModel @Inject constructor(
 
     fun addFiles(uris: List<Uri>) {
         viewModelScope.launch {
-            // Verarbeite nur gültige URIs
             val processedUris = uris.filter { uri ->
-                // URI ist gültig, wenn wir sie lesen können
                 try {
                     application.contentResolver.openInputStream(uri)?.close()
                     true
@@ -62,24 +60,19 @@ class CreatePaketViewModel @Inject constructor(
     fun onSaveClicked() = viewModelScope.launch {
         val currentState = _state.value
         
-        // Überprüfe, ob es Dateien gibt
         if (currentState.uris.isEmpty()) {
             _state.update { it.copy(error = "Bitte füge mindestens eine Datei hinzu") }
             return@launch
         }
         
-        // Dateien in den App-Speicher kopieren und Metadaten abrufen
         val files = currentState.uris.mapIndexed { index, uri ->
-            // Kopiere die Datei in den internen Speicher
             val localPath = FileUtils.copyUriToAppFile(application, uri) 
                 ?: return@mapIndexed null
             
             Log.d("CreatePaketViewModel", "Copied file to local path: $localPath")
             
-            // Ermittle den MIME-Typ
             val mime = getMimeType(uri) ?: "application/octet-stream"
             
-            // Ermittle die tatsächliche Dateigröße
             val size = File(localPath).length()
             
             FileEntry(
@@ -95,8 +88,6 @@ class CreatePaketViewModel @Inject constructor(
             return@launch
         }
         
-        // Hier wird das Paket mit den tatsächlichen FileEntry-Objekten erstellt,
-        // die auf lokale Dateien verweisen, nicht auf URIs
         val id = createPaket(
             PaketMeta(
                 title = state.value.title,
@@ -106,7 +97,7 @@ class CreatePaketViewModel @Inject constructor(
                 priority = state.value.priority,
                 maxHops = state.value.maxHops
             ),
-            files  // Verwende die FileEntry-Objekte mit lokalen Pfaden
+            files 
         )
         
         _state.update { it.copy(saved = true) }
@@ -115,7 +106,6 @@ class CreatePaketViewModel @Inject constructor(
     private fun getMimeType(uri: Uri): String? {
         val contentResolver = application.contentResolver
         return contentResolver.getType(uri) ?: run {
-            // Fallback: Bestimme MIME-Typ anhand des Dateinamens
             val fileName = getFileName(uri)
             when {
                 fileName?.endsWith(".jpg", true) == true || fileName?.endsWith(".jpeg", true) == true -> "image/jpeg"
@@ -152,9 +142,9 @@ data class CreatePaketState(
     val title: String = "",
     val description: String? = null,
     val tags: List<String> = emptyList(),
-    val ttl: Int = 3600, // Lebensdauer in Sekunden (bereits vorhanden)
+    val ttl: Int = 3600, 
     val priority: Int = 1,
-    val maxHops: Int? = 3, // Default-Wert für max. Weiterleitungen
+    val maxHops: Int? = 3, 
     val uris: List<Uri> = emptyList(),
     val saved: Boolean = false,
     val error: String? = null

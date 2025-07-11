@@ -32,7 +32,6 @@ class PaketDetailScreenTest {
 
     @Before
     fun setup() {
-        // Create a relaxed mock ViewModel
         fakeViewModel = mockk(relaxed = true)
 
         val paket = PaketUi(

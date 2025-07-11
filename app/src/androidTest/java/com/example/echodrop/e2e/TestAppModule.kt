@@ -31,5 +31,4 @@ object TestAppModule {
     @Provides fun provideConnectionAttemptDao(db: EchoDatabase): ConnectionAttemptDao = db.connectionAttemptDao()
     @Provides fun providePeerDao(db: EchoDatabase): PeerDao = db.peerDao()
 
-    // Keine WiFi-Fakes nötig – wir verwenden die Original-Bindings
 } 

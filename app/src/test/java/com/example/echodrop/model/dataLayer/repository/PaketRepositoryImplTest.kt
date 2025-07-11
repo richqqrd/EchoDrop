@@ -82,7 +82,6 @@ class PaketRepositoryImplTest {
   mockFileEntryDao = mock(FileEntryDao::class.java)
   repository = PaketRepositoryImpl(mockPaketDao, mockFileEntryDao)
 
-  // Stub android.util.Log to prevent runtime exceptions in unit tests
   mockkStatic(Log::class)
   every { Log.d(any(), any()) } returns 0
  }

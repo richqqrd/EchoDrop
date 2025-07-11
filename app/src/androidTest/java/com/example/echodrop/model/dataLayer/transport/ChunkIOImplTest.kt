@@ -33,7 +33,7 @@ class ChunkIOImplTest {
     @Test
     fun splitFile_splitsIntoExpectedChunks() {
         val tmp = File.createTempFile("split", ".bin", ctx.cacheDir)
-        tmp.writeBytes(ByteArray(150 * 1024) { Random.nextBytes(1)[0] }) // 150 KiB
+        tmp.writeBytes(ByteArray(150 * 1024) { Random.nextBytes(1)[0] }) 
 
         val chunks = chunkIO.splitFile(tmp, "pref").toList()
 

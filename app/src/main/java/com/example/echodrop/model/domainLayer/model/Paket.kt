@@ -22,7 +22,7 @@ data class Paket (
     val maxHopCount: Int? = null
 ) {
         fun canBeForwarded(): Boolean {
-        if (maxHopCount == null) return true // Unbegrenzte Weitergabe
+        if (maxHopCount == null) return true 
         return currentHopCount < maxHopCount
     }
 

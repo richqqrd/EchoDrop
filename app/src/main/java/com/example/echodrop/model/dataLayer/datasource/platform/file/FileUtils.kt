@@ -144,20 +144,16 @@ fun exportToDownloads(context: Context, fileEntryUi: FileEntryUi): Uri? {
  */
 fun copyUriToAppFile(context: Context, uri: Uri, nameHint: String? = null): String? {
     try {
-        // Dateinamen aus URI extrahieren oder Hinweis verwenden
         val fileName = nameHint ?: getFileNameFromUri(context, uri) ?: "file_${System.currentTimeMillis()}"
         
-        // Zielverzeichnis erstellen
         val filesDir = File(context.filesDir, "app_files")
         if (!filesDir.exists()) {
             filesDir.mkdirs()
         }
         
-        // Datei mit eindeutigem Namen erstellen
         val uniqueFileName = "file_${System.currentTimeMillis()}_$fileName"
         val destinationFile = File(filesDir, uniqueFileName)
         
-        // Inhalt kopieren
         context.contentResolver.openInputStream(uri)?.use { input ->
             destinationFile.outputStream().use { output ->
                 input.copyTo(output)
@@ -189,7 +185,6 @@ fun getFileNameFromUri(context: Context, uri: Uri): String? {
         }
     }
     
-    // Fallback: Versuche den letzten Pfadteil zu extrahieren
     return uri.lastPathSegment
 }
 }

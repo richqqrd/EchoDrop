@@ -160,7 +160,6 @@ class PaketEntityTest {
    val differentHopLimit = baseEntity.copy(hopLimit = 10)
    val differentCreatedUtc = baseEntity.copy(createdUtc = 1630000000000L)
 
-   // Assert - test each property difference causes inequality
    assertNotEquals(baseEntity, differentId)
    assertNotEquals(baseEntity, differentVersion)
    assertNotEquals(baseEntity, differentTitle)

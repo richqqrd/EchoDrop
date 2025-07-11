@@ -45,25 +45,19 @@ class WiFiDirectDiscovery @Inject constructor(
         manager.initialize(context, Looper.getMainLooper(), null)
     }
 
-    // Flow für gefundene Geräte
     private val _discoveredDevices = MutableStateFlow<List<WifiP2pDevice>>(emptyList())
     override val discoveredDevices: StateFlow<List<WifiP2pDevice>> = _discoveredDevices.asStateFlow()
 
-    // Flow für Verbindungsinformationen (wenn eine Verbindung hergestellt wurde)
     private val _connectionInfo = MutableStateFlow<WifiP2pInfo?>(null)
     override val connectionInfo: StateFlow<WifiP2pInfo?> = _connectionInfo.asStateFlow()
 
-    // Flow für das aktuelle Gerät
     private val _thisDevice = MutableStateFlow<WifiP2pDevice?>(null)
     override val thisDevice: StateFlow<WifiP2pDevice?> = _thisDevice.asStateFlow()
 
-    // Flag, ob Discovery aktiv ist
     private var isDiscoveryActive = false
 
-    // Neu: Merkt, ob der BroadcastReceiver bereits registriert wurde
     private var receiverRegistered = false
 
-    // IntentFilter für die WiFi P2P Broadcasts
     private val intentFilter = IntentFilter().apply {
         addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION)
         addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION)
@@ -77,7 +71,6 @@ class WiFiDirectDiscovery @Inject constructor(
     override fun startDiscovery() {
         Log.d(TAG, "Starting discovery")
 
-        // Prüfe Berechtigungen
         if (!hasRequiredPermissions()) {
             Log.e(TAG, "Missing required permissions for WiFi Direct")
             return
@@ -85,7 +78,6 @@ class WiFiDirectDiscovery @Inject constructor(
 
         isDiscoveryActive = true
 
-        // Registriere den BroadcastReceiver nur, wenn er noch nicht registriert ist
         if (!receiverRegistered) {
             try {
                 context.registerReceiver(receiver, intentFilter)
@@ -95,10 +87,8 @@ class WiFiDirectDiscovery @Inject constructor(
             }
         }
 
-        // Starte die Peer-Discovery
         discoverPeers()
 
-        // Versuche die eigenen Geräteinformationen (inkl. MAC) sofort zu laden
         updateThisDeviceInfo()
     }
 
@@ -122,12 +112,11 @@ class WiFiDirectDiscovery @Inject constructor(
 
         _discoveredDevices.value = emptyList()
 
-        // Stoppe die Peer-Discovery
         manager.stopPeerDiscovery(channel, null)
     }
 
     /**
-     * Startet die Peer-Discovery abhängig vom API-Level
+     * Startet die Peer-Discovery
      */
     private fun discoverPeers() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -138,7 +127,7 @@ class WiFiDirectDiscovery @Inject constructor(
     }
 
     /**
-     * Starten der Peer-Discovery für Android 13+ (API 33+)
+     * Starten der Peer-Discovery für Android 13+
      */
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private fun discoverPeersApi33() {
@@ -166,7 +155,7 @@ class WiFiDirectDiscovery @Inject constructor(
     }
 
     /**
-     * Starten der Peer-Discovery für ältere Android-Versionen
+     * Starten der Peer-Discovery für ältere Android-Versionen (
      */
     private fun discoverPeersLegacy() {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -242,14 +231,12 @@ class WiFiDirectDiscovery @Inject constructor(
     override fun connectToDevice(deviceAddress: String) {
         Log.d(TAG, "Attempting to connect to device: $deviceAddress")
 
-        // Prüfe aktiven Verbindungszustand
         if (_connectionInfo.value != null && _connectionInfo.value!!.groupFormed) {
             Log.d(TAG, "Currently in a group – disconnecting before connecting to $deviceAddress")
             disconnectFromCurrentGroup()
         }
         val device = _discoveredDevices.value.find { it.deviceAddress == deviceAddress }
 
-        // Wenn das Gerät nicht (mehr) in der aktuellen Liste ist, versuche trotzdem eine Direktverbindung
         if (device == null) {
             Log.w(TAG, "Device $deviceAddress nicht in aktueller Peer-Liste – versuche Direktverbindung")
 
@@ -329,8 +316,7 @@ class WiFiDirectDiscovery @Inject constructor(
 
         val config = WifiP2pConfig().apply {
             deviceAddress = device.deviceAddress
-            // Füge Gruppenbesitzer-Intent hinzu - hilft bei Verbindungen
-            groupOwnerIntent = 0 // 0=neutral, 15=maximum intention to be group owner
+            groupOwnerIntent = 0
         }
 
         try {
@@ -350,10 +336,8 @@ class WiFiDirectDiscovery @Inject constructor(
                 }
             })
         } catch (e: Exception) {
-            // Fange die Exception ab und protokolliere sie
             Log.e(TAG, "Exception during connect attempt: ${e.message}", e)
 
-            // Versuche den vorherigen Gruppenstatus zurückzusetzen
             try {
                 manager.cancelConnect(channel, null)
                 manager.removeGroup(channel, null)
@@ -368,7 +352,6 @@ class WiFiDirectDiscovery @Inject constructor(
      */
     private fun hasRequiredPermissions(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            // Ab Android 13 (API 33)
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.NEARBY_WIFI_DEVICES
@@ -382,7 +365,6 @@ class WiFiDirectDiscovery @Inject constructor(
                         Manifest.permission.CHANGE_WIFI_STATE
                     ) == PackageManager.PERMISSION_GRANTED
         } else {
-            // Für ältere Android-Versionen
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -404,11 +386,9 @@ class WiFiDirectDiscovery @Inject constructor(
     private val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             when (intent.action) {
-                // Verbindungsstatus hat sich geändert (verbunden/getrennt)
                 WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION -> {
                     Log.d(TAG, "Connection state changed")
 
-                    // Abhängig vom API-Level den Verbindungsstatus prüfen
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         handleConnectionChangedApi33(intent)
                     } else {
@@ -416,7 +396,6 @@ class WiFiDirectDiscovery @Inject constructor(
                     }
                 }
 
-                // Informationen über das eigene Gerät haben sich geändert
                 WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION -> {
                     Log.d(TAG, "This device changed")
 
@@ -445,13 +424,11 @@ class WiFiDirectDiscovery @Inject constructor(
                     }
                 }
 
-                // Peers-Liste hat sich geändert
                 WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION -> {
                     Log.d(TAG, "Peers list changed")
                     requestPeers()
                 }
 
-                // WiFi P2P Status hat sich geändert (aktiviert/deaktiviert)
                 WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION -> {
                     val state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE, -1)
                     val enabled = state == WifiP2pManager.WIFI_P2P_STATE_ENABLED
@@ -473,11 +450,9 @@ class WiFiDirectDiscovery @Inject constructor(
                 val isConnected = wifiP2pInfo?.groupFormed == true
 
                 if (isConnected) {
-                    // Wir sind mit einem Peer verbunden
                     _connectionInfo.value = wifiP2pInfo
                     Log.d(TAG, "Connected to group: ${wifiP2pInfo.groupOwnerAddress?.hostAddress}")
                 } else {
-                    // Verbindung getrennt
                     _connectionInfo.value = null
                     Log.d(TAG, "Disconnected from group")
                 }
@@ -502,11 +477,9 @@ class WiFiDirectDiscovery @Inject constructor(
                 val isConnected = wifiP2pInfo?.groupFormed == true || networkInfo?.isConnected == true
 
                 if (isConnected) {
-                    // Wir sind mit einem Peer verbunden
                     _connectionInfo.value = wifiP2pInfo
                     Log.d(TAG, "Connected to group: ${wifiP2pInfo?.groupOwnerAddress?.hostAddress}")
                 } else {
-                    // Verbindung getrennt
                     _connectionInfo.value = null
                     Log.d(TAG, "Disconnected from group")
                 }
@@ -522,13 +495,11 @@ class WiFiDirectDiscovery @Inject constructor(
     override fun disconnectFromCurrentGroup() {
         Log.d(TAG, "Disconnecting from current group")
 
-        // Prüfe, ob eine aktive Verbindung vorhanden ist
         if (_connectionInfo.value == null) {
             Log.d(TAG, "No active connection to disconnect from")
             return
         }
 
-        // Gruppe entfernen
         manager.removeGroup(channel, object : WifiP2pManager.ActionListener {
             override fun onSuccess() {
                 Log.d(TAG, "Successfully disconnected from group")
@@ -547,7 +518,6 @@ class WiFiDirectDiscovery @Inject constructor(
         })
     }
 
-    // Aktualisiert die Informationen über das eigene Gerät, wenn die Berechtigungen vorhanden sind
     private fun updateThisDeviceInfo() {
         if (!hasRequiredPermissions()) return
 

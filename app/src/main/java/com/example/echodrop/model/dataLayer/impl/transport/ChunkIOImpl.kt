@@ -58,7 +58,6 @@ class ChunkIOImpl @Inject constructor(
                 FileOutputStream(targetFile, true).use { it.write(data) }
 
                 if (fileEntry == null) {
-                    // update DB with correct path once we know it
                     paket?.let {
                         val updated = it.copy(files = it.files.map { fe ->
                             if (fe.path.contains(fileId)) fe.copy(path = targetFile.absolutePath) else fe

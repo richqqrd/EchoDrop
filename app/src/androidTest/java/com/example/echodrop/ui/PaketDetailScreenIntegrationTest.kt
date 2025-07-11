@@ -14,8 +14,8 @@ import com.example.echodrop.model.domainLayer.usecase.peer.SavePeerUseCase
 import com.example.echodrop.model.domainLayer.usecase.transfer.StartTransferUseCase
 import com.example.echodrop.view.PaketDetailScreen
 import com.example.echodrop.viewmodel.PaketDetailViewModel
-import io.mockk.every          // für normale (nicht-suspend) Aufrufe
-import io.mockk.coEvery        // für suspend-Funktionen
+import io.mockk.every          
+import io.mockk.coEvery         
 import io.mockk.mockk
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Before
@@ -97,9 +97,9 @@ class PaketDetailScreenIntegrationTest {
         composeRule.waitUntil(timeoutMillis = 5_000) {
             try {
                 composeRule.onNodeWithText("Demo-Paket").assertExists()
-                true               // Node gefunden
+                true               
             } catch (e: AssertionError) {
-                false              // Noch nicht da → weiter warten
+                false              
             }
         }
         composeRule.onNodeWithText("Demo-Paket").assertIsDisplayed()

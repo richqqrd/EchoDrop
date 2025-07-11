@@ -119,7 +119,6 @@ class PaketDaoIntegrationTest {
 
     @Test
     fun observeAllReturnsAllPaketsOrderedByPriorityAndCreatedUtc() = runBlocking {
-        // Erstelle zwei Pakete mit unterschiedlichen Prioritäten
         val highPriorityPaket = testPaketEntity1.copy(
             paketId = "paket-123",
             priority = 2,
@@ -129,7 +128,7 @@ class PaketDaoIntegrationTest {
         val lowPriorityPaket = testPaketEntity2.copy(
             paketId = "paket-456",
             priority = 1,
-            createdUtc = System.currentTimeMillis() + 1000 // Neueres Datum
+            createdUtc = System.currentTimeMillis() + 1000
         )
     
         paketDao.upsert(lowPriorityPaket)
@@ -138,14 +137,12 @@ class PaketDaoIntegrationTest {
         val pakets = paketDao.observeAll().first()
     
         assertEquals(2, pakets.size)
-        // Das Paket mit höherer Priorität sollte zuerst kommen
         assertEquals(highPriorityPaket.paketId, pakets[0].paketId)
         assertEquals(lowPriorityPaket.paketId, pakets[1].paketId)
     }
     
     @Test
     fun observeAllReturnsAllPaketsSamePriorityOrderedByCreatedUtc() = runBlocking {
-        // Erstelle zwei Pakete mit gleicher Priorität aber unterschiedlichen Zeitstempeln
         val olderPaket = testPaketEntity1.copy(
             paketId = "paket-123",
             priority = 1,
@@ -155,7 +152,7 @@ class PaketDaoIntegrationTest {
         val newerPaket = testPaketEntity2.copy(
             paketId = "paket-456",
             priority = 1,
-            createdUtc = System.currentTimeMillis() + 1000 // 1 Sekunde später
+            createdUtc = System.currentTimeMillis() + 1000
         )
     
         paketDao.upsert(olderPaket)
@@ -164,7 +161,6 @@ class PaketDaoIntegrationTest {
         val pakets = paketDao.observeAll().first()
     
         assertEquals(2, pakets.size)
-        // Bei gleicher Priorität sollte das neuere Paket zuerst kommen (DESC Sortierung)
         assertEquals(newerPaket.paketId, pakets[0].paketId)
         assertEquals(olderPaket.paketId, pakets[1].paketId)
     }

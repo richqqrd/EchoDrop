@@ -115,7 +115,6 @@ class TransferLogEntityTest {
   @Test
   @DisplayName("Can create TransferLogEntity with different transfer states")
   fun createTransferLogEntityWithDifferentStates() {
-   // Arrange & Act - Create entities with different states
    val queuedEntity = TransferLogEntity(
     paketId = "package-123",
     peerId = "peer-456",

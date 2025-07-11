@@ -96,7 +96,6 @@ class PaketRepositoryImpl @Inject constructor(
     }
 
         override suspend fun upsert(paket: Paket) {
-    // Speichere das Paket-Entity
     val paketEntity = PaketEntity(
         paketId = paket.id.value,
         version = 1,
@@ -112,11 +111,9 @@ class PaketRepositoryImpl @Inject constructor(
         createdUtc = paket.createdUtc
     )
     paketDao.upsert(paketEntity)
-
-    // Lösche vorhandene Dateien für dieses Paket
+            
     fileEntryDao.deleteByPaket(paket.id.value)
 
-    // Speichere die Dateien
     val fileEntities = paket.files.map { file ->
         FileEntryEntity(
             fileId = UUID.randomUUID().toString(),

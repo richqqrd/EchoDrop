@@ -39,14 +39,12 @@ class InboxScreenIntegrationTest {
 
     @Before
     fun setUp() {
-        // Repository-Flows stubben
         every { paketRepo.observeInbox() } returns inboxFlow
         every { transferRepo.observeTransfers() } returns transferFlow
 
         val observeInbox     = ObserveInboxUseCase(paketRepo)
         val observeTransfers = ObserveTransfersUseCase(transferRepo)
 
-        // nicht Teil dieses Szenarios → als relaxed Mock
         val startTransfer: StartTransferUseCase = mockk(relaxed = true)
         val purgeExpired : PurgeExpiredUseCase  = mockk(relaxed = true)
 
@@ -55,7 +53,6 @@ class InboxScreenIntegrationTest {
 
     @Test
     fun uiDisplaysPaketTitle_whenUseCaseEmits() {
-        // Arrange – Domain-Objekt in Flow einspeisen
         val paket = Paket(
             id = PaketId("p-1"),
             meta = PaketMeta("Demo-Titel", "Desc", emptyList(), 3600, 1),
@@ -66,7 +63,6 @@ class InboxScreenIntegrationTest {
         )
         inboxFlow.value = listOf(paket)
 
-        // Act – UI rendern
         composeRule.setContent {
             InboxScreen(
                 viewModel = vm,
@@ -76,7 +72,6 @@ class InboxScreenIntegrationTest {
             )
         }
 
-        // Assert – Titel erscheint auf dem Screen
         composeRule.onNodeWithText("Demo-Titel").assertIsDisplayed()
     }
 } 

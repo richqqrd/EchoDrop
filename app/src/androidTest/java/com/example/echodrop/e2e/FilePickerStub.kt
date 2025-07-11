@@ -17,6 +17,5 @@ object FilePickerStub {
     }
 
     fun unregister() {
-        // Intents library resets stubs on release()
     }
 } 

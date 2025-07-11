@@ -19,7 +19,7 @@ class MaintenanceSchedulerImplTest {
 
         val scheduler = MaintenanceSchedulerImpl(connRepo, peerRepo)
 
-        // keine Exception beim mehrfachen Aufruf
+   
         scheduler.start()
         scheduler.stop()
     }

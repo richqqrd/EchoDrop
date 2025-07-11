@@ -25,30 +25,24 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var permissionManager: PermissionManager
     
-    // Status für den Berechtigungsdialog
     private var showPermissionDialog = false
     private var permissionsToRequest: List<String> = emptyList()
     
-    // Erstelle einen ActivityResultLauncher für Berechtigungsanfragen
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val allGranted = permissions.entries.all { it.value }
         if (allGranted) {
-            // Alle Berechtigungen wurden erteilt
             Toast.makeText(
                 this,
                 "Alle Berechtigungen erteilt!",
                 Toast.LENGTH_SHORT
             ).show()
             
-            // App neu starten ohne Dialog
             showPermissionDialog = false
             recreateContent()
         } else {
-            // Einige Berechtigungen wurden verweigert
             val missing = permissions.entries.filter { !it.value }.map { it.key }
-            // Erkläre dem Benutzer, warum die Berechtigungen wichtig sind
             permissionsToRequest = missing
             showPermissionDialog = true
             recreateContent()
@@ -58,7 +52,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Prüfe Berechtigungen beim Start
         checkAndRequestPermissions()
     }
     
@@ -76,7 +69,6 @@ class MainActivity : ComponentActivity() {
                                 requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
                             },
                             onDismiss = {
-                                // Bei Ablehnung trotzdem die App anzeigen, aber mit eingeschränkter Funktionalität
                                 Toast.makeText(
                                     this,
                                     "Einige Funktionen sind ohne die benötigten Berechtigungen nicht verfügbar.",

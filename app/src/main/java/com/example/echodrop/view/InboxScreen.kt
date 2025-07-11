@@ -59,7 +59,7 @@ fun InboxScreen(
     viewModel: InboxViewModel = hiltViewModel(),
     onCreatePaket: () -> Unit,
     onSharePaket: (PaketId) -> Unit,
-    onOpenTransferManager: () -> Unit  // Neuer Parameter
+    onOpenTransferManager: () -> Unit 
 ) {
     val paketList by viewModel.paketList.collectAsState()
     val transferLogs by viewModel.transferLogs.collectAsState()
@@ -69,10 +69,9 @@ fun InboxScreen(
             TopAppBar(
                 title = { Text("EchoDrop") },
                 actions = {
-                    // Button zum TransferManager hinzufügen
                     IconButton(onClick = onOpenTransferManager) {
                         Icon(
-                            Icons.Default.SwapHoriz,  // oder ein anderes passendes Icon
+                            Icons.Default.SwapHoriz,  
                             contentDescription = "Transfer Manager"
                         )
                     }
@@ -120,7 +119,6 @@ fun PaketListItem(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Prioritätszahl als Chip/Kreis
             Box(
                 modifier = Modifier
                     .size(28.dp)
@@ -145,7 +143,6 @@ fun PaketListItem(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Datei-Info und Hop-Info
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         Icons.Default.InsertDriveFile,
@@ -162,7 +159,6 @@ fun PaketListItem(
 
                     Spacer(modifier = Modifier.width(16.dp))
 
-                    // Hop-Info
                     if (paket.maxHops != null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(
@@ -181,7 +177,6 @@ fun PaketListItem(
                     }
                 }
 
-                // Tags als Chips
                 if (paket.tags.isNotEmpty()) {
                     androidx.compose.foundation.lazy.LazyRow(
                         modifier = Modifier
@@ -198,7 +193,6 @@ fun PaketListItem(
                                 )
                             )
                         }
-                        // Zeige Indikator, wenn es mehr Tags gibt
                         if (paket.tags.size > 3) {
                             item {
                                 Text(

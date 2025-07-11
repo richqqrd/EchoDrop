@@ -40,29 +40,24 @@ class WiFiDirectService @Inject constructor(
     companion object {
         private const val TAG = "WiFiDirectService"
         private const val PORT = 8988
-        // Größe der Daten-Chunks (sowohl zum Senden als auch Empfangen) – 64 KB
         private const val BUFFER_SIZE = 64 * 1024
     }
 
-private val serverLock = Any()  // Synchronisierungsobjekt
+private val serverLock = Any()
 
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _connectionEstablished = MutableStateFlow(false)
     val connectionEstablished: StateFlow<Boolean> = _connectionEstablished.asStateFlow()
 
-    // Flow für eingehende Daten (Quell-Adresse, Daten)
     private val _incomingData =
         MutableSharedFlow<Pair<String, ByteArray>>(replay = 0, extraBufferCapacity = 10)
 
-    // Flow für Transferstatus-Updates (PaketId, Fortschritt in Prozent)
     private val _transferProgress =
         MutableSharedFlow<Triple<PaketId, String, Int>>(replay = 0, extraBufferCapacity = 10)
 
-    // Verbindungsinformationen
     private var groupOwnerAddress: InetAddress? = null
     private var isGroupOwner = false
 
-    // Server-Socket
     private var serverSocket: ServerSocket? = null
     private val isRunning = AtomicBoolean(false)
 
@@ -112,11 +107,9 @@ private val serverLock = Any()  // Synchronisierungsobjekt
         val actualTargetAddress: String
 
         if (isGroupOwner) {
-            // Als Group Owner verwenden wir die übergebene Adresse (Client-Adresse)
             actualTargetAddress = targetAddress
             Log.d(TAG, "Group Owner sending to client at $actualTargetAddress")
         } else {
-            // Als Client MÜSSEN wir die Group Owner Adresse verwenden
             actualTargetAddress = groupOwnerAddress?.hostAddress ?: targetAddress
             Log.d(TAG, "Client sending to Group Owner at $actualTargetAddress")
         }
@@ -130,11 +123,9 @@ private val serverLock = Any()  // Synchronisierungsobjekt
                 try {
                     Log.d(TAG, "Attempt ${retryCount + 1} to connect socket")
 
-                    // Erstelle Socket und verbinde zum Ziel
                     socket = Socket()
-                    socket.soTimeout = 15000 // Lese-Timeout setzen
+                    socket.soTimeout = 15000
 
-                    // Korrigiere Adresse, wenn es sich um localhost handelt (für Tests)
                     val finalAddress = if (actualTargetAddress == "localhost") {
                         "127.0.0.1"
                     } else {
@@ -144,21 +135,19 @@ private val serverLock = Any()  // Synchronisierungsobjekt
                     val socketAddress = InetSocketAddress(finalAddress, port)
 
                     Log.d(TAG, "Connecting to $socketAddress with timeout 15000ms")
-                    socket.connect(socketAddress, 15000) // 15 Sekunden Timeout
+                    socket.connect(socketAddress, 15000) 
 
                     Log.d(TAG, "Socket connected successfully")
 
                     val outputStream = socket.getOutputStream()
                     val inputStream = socket.getInputStream()
 
-                    // Sende zuerst die PaketID
                     val paketIdBytes = paketId.value.toByteArray()
                     val paketIdLength = paketIdBytes.size
-                    outputStream.write(paketIdLength) // Länge der PaketID
-                    outputStream.write(paketIdBytes)  // PaketID selbst
+                    outputStream.write(paketIdLength)
+                    outputStream.write(paketIdBytes)
                     outputStream.flush()
 
-                    // Sende zuerst die Größe der Nachricht (4 Bytes)
                     val size = data.size
                     val sizeBytes = byteArrayOf(
                         (size shr 24).toByte(),
@@ -170,11 +159,9 @@ private val serverLock = Any()  // Synchronisierungsobjekt
                     outputStream.write(sizeBytes)
                     outputStream.flush()
 
-                    // Sende die eigentlichen Daten in Chunks
                     var bytesSent = 0
                     val chunkSize = BUFFER_SIZE
 
-                    // Emittiere 0% Fortschritt beim Start
                     _transferProgress.emit(Triple(paketId, finalAddress, 0))
 
                     while (bytesSent < data.size) {
@@ -186,18 +173,15 @@ private val serverLock = Any()  // Synchronisierungsobjekt
 
                         bytesSent += bytesToSend
 
-                        // Aktualisiere den Fortschritt
                         val progress = (bytesSent * 100) / data.size
                         Log.d(TAG, "Sent $bytesSent/${data.size} bytes ($progress%)")
                         _transferProgress.emit(Triple(paketId, finalAddress, progress))
 
-                        // Kleine Pause, um UI-Updates zu ermöglichen
                         delay(50)
                     }
 
-                    // Warte auf Bestätigung
                     Log.d(TAG, "Waiting for ACK from receiver")
-                    val responseBuffer = ByteArray(3) // "ACK" ist 3 Bytes
+                    val responseBuffer = ByteArray(3) 
                     val bytesRead = inputStream.read(responseBuffer)
 
                     if (bytesRead == 3 && String(responseBuffer) == "ACK") {
@@ -216,19 +200,16 @@ private val serverLock = Any()  // Synchronisierungsobjekt
                         )
                     }
 
-                    // Erfolgreich gesendet, Schleife verlassen
                     break
 
                 } catch (e: IOException) {
                     retryCount++
                     Log.e(TAG, "Connection attempt $retryCount failed: ${e.message}", e)
 
-                    // Kurze Pause vor dem nächsten Versuch
                     if (retryCount < maxRetries) {
                         delay(1000)
                         Log.d(TAG, "Retrying connection after delay...")
                     } else {
-                        // Bei maximalem Retry-Count den Fehler werfen
                         Log.e(TAG, "All retry attempts failed. Giving up.")
                         throw e
                     }
@@ -275,7 +256,6 @@ private val serverLock = Any()  // Synchronisierungsobjekt
             Log.d(TAG, "Starting server as Group Owner")
             startServer()
 
-            // kleine Verzögerung, um sicherzustellen, dass der Server läuft
             coroutineScope.launch {
                 delay(1000)
                 Log.d(
@@ -287,11 +267,9 @@ private val serverLock = Any()  // Synchronisierungsobjekt
             Log.d(TAG, "Client mode - will connect to server at ${groupOwnerAddress?.hostAddress}")
         }
 
-        // Notify observers
         _connectionEstablished.value = true
     }
 
-    // Füge diese Methode am Ende der Klasse hinzu
     /**
      * Nur für Tests: Emittiert einen Fortschrittswert
      */
@@ -311,7 +289,6 @@ private val serverLock = Any()  // Synchronisierungsobjekt
             val inputStream = clientSocket.getInputStream()
             val outputStream = clientSocket.getOutputStream()
 
-                        // Lese zuerst die PaketID
             val paketIdLength = inputStream.read()
             if (paketIdLength <= 0) {
                 Log.e(TAG, "Invalid paketId length: $paketIdLength")
@@ -324,7 +301,6 @@ private val serverLock = Any()  // Synchronisierungsobjekt
                 return
             }
             val paketId = PaketId(String(paketIdBytes))
-                // Lese zuerst die Größe (4 Bytes)
             Log.d(TAG, "Reading size header from $clientAddress")
             val sizeBuffer = ByteArray(4)
             val bytesRead = inputStream.read(sizeBuffer)
@@ -342,7 +318,6 @@ private val serverLock = Any()  // Synchronisierungsobjekt
 
             Log.d(TAG, "Receiving message of size: $messageSize bytes from $clientAddress")
 
-            // Lese die eigentlichen Daten
             var totalBytesRead = 0
             val buffer = ByteArray(messageSize)
 
@@ -370,11 +345,9 @@ private val serverLock = Any()  // Synchronisierungsobjekt
             if (totalBytesRead == messageSize) {
                 Log.d(TAG, "Successfully received all data from $clientAddress")
 
-                // Sende Bestätigung (ACK)
                 outputStream.write("ACK".toByteArray())
                 outputStream.flush()
 
-                // Emittiere die empfangenen Daten
                 _incomingData.emit(Pair(clientAddress, buffer))
             } else {
                 Log.e(TAG, "Incomplete data transfer: $totalBytesRead/$messageSize bytes")
@@ -395,14 +368,12 @@ private val serverLock = Any()  // Synchronisierungsobjekt
      * Group-Owner ist. Läuft in einer IO-Coroutine und ruft für jeden Client `handleClient()` auf.
      */
     private fun startServer() {
-        // Erst evtl. alten Server stoppen
         stopServer()
 
         isRunning.set(true)
 
         coroutineScope.launch {
             try {
-                // ServerSocket erstellen und binden
                 serverSocket = withContext(Dispatchers.IO) {
                     ServerSocket().apply {
                         reuseAddress = true
@@ -412,7 +383,6 @@ private val serverLock = Any()  // Synchronisierungsobjekt
 
                 Log.d(TAG, "Server started on port ${serverSocket?.localPort}")
 
-                // Haupt-Accept-Schleife
                 while (isRunning.get() && serverSocket?.isClosed == false) {
                     val client = withContext(Dispatchers.IO) {
                         try {

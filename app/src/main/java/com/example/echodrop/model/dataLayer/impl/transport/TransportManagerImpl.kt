@@ -65,7 +65,7 @@ class TransportManagerImpl @Inject constructor(
         private const val MANIFEST_PREFIX = "MAN|"
         private const val CHUNK_PREFIX = "CHK|"
         private const val MAX_ATTEMPTS = 3
-        private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
+        private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L 
 
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d",
@@ -82,7 +82,6 @@ class TransportManagerImpl @Inject constructor(
         MutableSharedFlow<IncomingFrame>(replay = 0, extraBufferCapacity = 10)
     private val connectionAttempts = mutableMapOf<String, MutableList<ConnectionAttempt>>()
 
-    // Liste aller noch laufenden Auto-Forward Jobs, damit wir sie bei Beacon-Stopp abbrechen können
     private val forwardJobs = mutableListOf<Job>()
 
     /**
@@ -95,7 +94,6 @@ class TransportManagerImpl @Inject constructor(
     private val receivedBytesMap = mutableMapOf<String, Long>()
 
     init {
-        // Beobachte eingehende Daten vom WiFiDirectService
         coroutineScope.launch {
             wifiDirectService.observeIncomingData().collect { (sourceAddress, data) ->
                 try {
@@ -107,7 +105,6 @@ class TransportManagerImpl @Inject constructor(
             }
         }
 
-        // Beobachte Verbindungsänderungen
         coroutineScope.launch {
             wifiDirectDiscovery.connectionInfo.collect { connectionInfo ->
                 if (connectionInfo != null) {
@@ -123,7 +120,6 @@ class TransportManagerImpl @Inject constructor(
             }
         }
 
-        // Wartungs-Aufgaben werden nun vom MaintenanceScheduler erledigt
     }
 
     override fun startBeaconing() {
@@ -131,10 +127,8 @@ class TransportManagerImpl @Inject constructor(
 
         beaconingActive = true
 
-        // Starte die Entdeckung von Geräten
         wifiDirectDiscovery.startDiscovery()
 
-        // Starte den Service zum Empfangen von Daten
         wifiDirectService.startService()
     }
 
@@ -143,13 +137,11 @@ class TransportManagerImpl @Inject constructor(
 
         beaconingActive = false
 
-        // Laufende Auto-Forward-Jobs abbrechen
         synchronized(forwardJobs) {
             forwardJobs.forEach { it.cancel() }
             forwardJobs.clear()
         }
 
-        // Stoppe alle WiFi Direct-Aktivitäten
         wifiDirectDiscovery.stopDiscovery()
         wifiDirectService.stopService()
     }
@@ -157,10 +149,8 @@ class TransportManagerImpl @Inject constructor(
     override suspend fun sendManifest(paketId: String, manifestJson: String) {
         Log.d(TAG, "Sending manifest for paket $paketId")
 
-        // Formatiere Manifest-Daten mit Präfix und Paket-ID
         val dataToSend = "$MANIFEST_PREFIX$paketId|$manifestJson"
 
-        // Prüfe Verbindungsstatus explizit
         val connectionState = wifiDirectDiscovery.connectionInfo.value
         if (connectionState == null || !connectionState.groupFormed) {
             throw IllegalStateException("No active WiFi Direct connection. Please ensure devices are connected.")
@@ -171,7 +161,6 @@ class TransportManagerImpl @Inject constructor(
 
         Log.d(TAG, "Using target address: $targetAddress for group owner: ${connectionState.isGroupOwner}")
 
-        // Sende die Daten über den Service
         wifiDirectService.sendData(
             dataToSend.toByteArray(),
             targetAddress,
@@ -182,23 +171,18 @@ class TransportManagerImpl @Inject constructor(
     override suspend fun sendChunk(chunkId: String, data: ByteArray) {
         Log.d(TAG, "Sending chunk $chunkId")
 
-        // Aktueller Verbindungspartner
         val connectionState = wifiDirectDiscovery.connectionInfo.value
         val targetAddress = connectionState?.groupOwnerAddress?.hostAddress
             ?: throw IllegalStateException("No connected device to send data to")
 
-        // Extrahiere die Paket-ID aus der Chunk-ID (Annahme: Format "chunkX_paketId")
         val paketId = chunkId.substringAfter("_")
 
-        // Erstelle das Präfix für den Chunk
         val prefix = "$CHUNK_PREFIX$chunkId|".toByteArray()
 
-        // Kombiniere Präfix und Daten
         val combined = ByteArray(prefix.size + data.size)
         System.arraycopy(prefix, 0, combined, 0, prefix.size)
         System.arraycopy(data, 0, combined, prefix.size, data.size)
 
-        // Sende die kombinierten Daten
         wifiDirectService.sendData(combined, targetAddress, PaketId(paketId))
     }
 
@@ -265,16 +249,14 @@ class TransportManagerImpl @Inject constructor(
             val deviceAddress = if (peerId.value.startsWith("direct-")) {
                 peerId.value.substringAfter("direct-")
             } else {
-                return // Keine WiFi Direct Adresse
+                return 
             }
 
-            // Prüfe Blacklist **vor** jeglichen weiteren Aktionen
             if (DEVICE_BLACKLIST.contains(deviceAddress)) {
                 Log.d(TAG, "Device $deviceAddress is blacklisted – not sending paket ${paketId.value}")
                 return
             }
 
-            // Prüfe Hop-Limit
             val paket = getPaketDetailUseCase(paketId) ?: run {
                 Log.e(TAG, "Paket ${paketId.value} nicht gefunden – Abbruch")
                 return
@@ -285,11 +267,9 @@ class TransportManagerImpl @Inject constructor(
                 return
             }
 
-            // Hop-Counter erhöhen und speichern
             val forwarded = paket.incrementHopCount()
             savePaketUseCase(forwarded)
 
-            // Stelle sicher, dass ein Peer-Eintrag existiert (erforderlich für FK in transfer_log)
             val peerIdEntity = PeerId("direct-$deviceAddress")
             val minimalPeer = Peer(
                 id = peerIdEntity,
@@ -298,7 +278,6 @@ class TransportManagerImpl @Inject constructor(
             )
             peerRepository.upsertPeer(minimalPeer)
 
-            // Erst jetzt loggen, dass der Versand tatsächlich versucht wird
             Log.d(TAG, "Sending paket ${paketId.value} to peer ${peerId.value}")
 
             if (isDeviceAlreadyTried(deviceAddress, paketId)) {
@@ -336,13 +315,11 @@ class TransportManagerImpl @Inject constructor(
     }
 
     private suspend fun sendChunksForPaket(paketId: String, peerId: String) {
-        // Lade Paket inkl. Dateien
         val paket = getPaketDetailUseCase(PaketId(paketId)) ?: run {
             Log.e(TAG, "Paket $paketId nicht gefunden – breche Chunk-Versand ab")
             return
         }
 
-        // Iteriere über Dateien
         paket.files.forEachIndexed { idx, entry ->
             val f = File(entry.path)
             if (!f.exists()) {
@@ -357,7 +334,6 @@ class TransportManagerImpl @Inject constructor(
         }
     }
 
-    // Diese Hilfsklasse sollte auch definiert werden
     private data class Chunk(val id: String, val data: ByteArray) {
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -378,9 +354,7 @@ class TransportManagerImpl @Inject constructor(
         }
     }
 
-    // Dummy-Implementierung für Test-Zwecke
     private fun getChunksForPaket(paketId: String): List<Chunk> {
-        // Erstelle einen Dummy-Chunk für Tests
         val dummyData = "Das ist ein Test-Chunk für Paket $paketId".toByteArray()
         return listOf(Chunk("chunk1_$paketId", dummyData))
     }
@@ -390,7 +364,6 @@ class TransportManagerImpl @Inject constructor(
      */
     private suspend fun processReceivedData(sourceAddress: String, dataAsString: String, data: ByteArray) {
         try {
-            // Prüfe, ob es sich um ein Manifest handelt
             if (dataAsString.startsWith(MANIFEST_PREFIX)) {
                 val content = dataAsString.substring(MANIFEST_PREFIX.length)
                 val parts = content.split("|", limit = 2)
@@ -401,7 +374,6 @@ class TransportManagerImpl @Inject constructor(
 
                     Log.d(TAG, "Received manifest for paket $paketId")
 
-                    // Erstelle einen Peer-Eintrag für den Absender
                     val peerId = PeerId("direct-$sourceAddress")
                     val peer = Peer(
                         id = peerId,
@@ -410,17 +382,15 @@ class TransportManagerImpl @Inject constructor(
                     )
                     peerRepository.upsertPeer(peer)
 
-                    // Manifest in Paket umwandeln
                     val paket = manifestParser.parse(paketId, manifestJson, peerId)
 
-                    // Speichere das Paket in der Datenbank
                     savePaketUseCase(paket)
 
                     if (paket.canBeForwarded()) {
                         if (beaconingActive) {
                             Log.d(TAG, "[Forward] Paket ${paket.id.value} wird in 10s weitergeleitet (Hop ${paket.currentHopCount}/${paket.maxHopCount}). Beaconing ist aktiv.")
                             val job = coroutineScope.launch {
-                                delay(10_000) // Kurze Pause, um UI/Transfers zu initialisieren
+                                delay(10_000) 
                                 autoForwardPaket(paket, sourceAddress)
                             }
                             synchronized(forwardJobs) { forwardJobs += job }
@@ -431,22 +401,16 @@ class TransportManagerImpl @Inject constructor(
                         Log.d(TAG, "[Forward] Paket ${paket.id.value} hat maximale Hop-Anzahl erreicht (${paket.currentHopCount}/${paket.maxHopCount})")
                     }
 
-                    // Erstelle ein IncomingFrame für das Manifest und emittiere es
                     val frame = IncomingFrame.Manifest(sourceAddress, paketId, manifestJson)
                     incomingFrames.emit(frame)
 
-                    // 1) Persistiere einen TransferLog-Eintrag, damit UI/Fortschritt sichtbar wird
                     transferRepository.startTransfer(PaketId(paketId), peerId)
 
-                    // 2) Optionale Notification über SharedFlow
                     _receivedManifests.emit(Pair(PaketId(paketId), peerId))
 
-                    // Setze den Transfer auf ACTIVE
                     progressCallback.updateProgress(PaketId(paketId), peerId, 10)
-                    // startTransfer hat den Status bereits auf ACTIVE gesetzt, daher kein zweites Update nötig
                 }
             }
-            // Prüfe, ob es sich um einen Chunk handelt
             else if (dataAsString.startsWith(CHUNK_PREFIX)) {
                 val headerEndIndex = dataAsString.indexOf('|', CHUNK_PREFIX.length)
                 if (headerEndIndex != -1) {
@@ -455,56 +419,44 @@ class TransportManagerImpl @Inject constructor(
 
                     Log.d(TAG, "Received chunk $chunkId with ${chunkData.size} bytes")
 
-                    // Extrahiere die Paket-ID und Datei-ID aus der Chunk-ID
-                    // Format: "chunkX_paketId_fileId"
                     val idParts = chunkId.split("_")
                     if (idParts.size >= 2) {
                         val paketId = idParts[1]
-                        // fileId kann selbst Unterstriche enthalten (z. B. "file_0_<paket>") -> alle restlichen Teile wieder zusammenfügen
                         val fileId = if (idParts.size >= 3) idParts.subList(2, idParts.size).joinToString("_") else "file_0_$paketId"
 
-                        // Speichere die Chunk-Daten in einer temporären Datei
                         val success = chunkIO.appendChunk(PaketId(paketId), fileId, chunkData)
                         if (success) {
                             val peerId = PeerId("direct-$sourceAddress")
 
-                            // Lade das aktuelle Paket
                             val paket = getPaketDetailUseCase(PaketId(paketId))
                             if (paket != null) {
-                                // Aktualisiere empfangene Bytes für dieses Paket
                                 val currentReceived = receivedBytesMap.getOrDefault(paketId, 0L)
                                 val newReceived = currentReceived + chunkData.size
                                 receivedBytesMap[paketId] = newReceived
 
-                                // Berechne den tatsächlichen Fortschritt
                                 val totalBytes = paket.sizeBytes
                                 val currentProgress = if (totalBytes > 0) {
                                     ((newReceived * 100) / totalBytes).toInt()
                                 } else {
-                                    50 // Fallback wenn keine Größe bekannt
+                                    50 
                                 }
 
-                                // Verhindere, dass ein höherer Fortschritt (z. B. 100 %) durch einen niedrigeren Wert überschrieben wird
                                 val previousProgress = receivedBytesMap.getOrDefault("${paketId}_lastProgress", 0L).toInt()
                                 val effectiveProgress = maxOf(currentProgress, previousProgress)
 
                                 Log.d(TAG, "Paket $paketId: Empfangen $newReceived von $totalBytes Bytes ($currentProgress%), wir melden $effectiveProgress%")
                                 progressCallback.updateProgress(PaketId(paketId), peerId, effectiveProgress)
 
-                                // Merke uns den zuletzt gemeldeten Fortschritt
                                 receivedBytesMap["${paketId}_lastProgress"] = effectiveProgress.toLong()
 
-                                // Wenn alle Bytes empfangen wurden
                                 if (newReceived >= totalBytes) {
                                     Log.d(TAG, "Paket $paketId vollständig empfangen, setze auf 100%")
                                     progressCallback.updateProgress(PaketId(paketId), peerId, 100)
                                     transferRepository.updateState(PaketId(paketId), peerId, TransferState.DONE)
-                                    // Cleanup
                                     receivedBytesMap.remove(paketId)
                                     Log.d(TAG, "Transfer completed for paket $paketId")
                                 }
 
-                                // Erstelle ein IncomingFrame für den Chunk und emittiere es
                                 val frame = IncomingFrame.Chunk(sourceAddress, chunkId, chunkData)
                                 incomingFrames.emit(frame)
                             } else {
@@ -514,7 +466,6 @@ class TransportManagerImpl @Inject constructor(
                     }
                 }
             }
-            // Unbekanntes Format
             else {
                 Log.d(TAG, "Received unknown data format from $sourceAddress")
             }
@@ -536,7 +487,6 @@ class TransportManagerImpl @Inject constructor(
             return
         }
 
-        // Delegiere an Forwarder-Komponente
         forwarder.autoForward(paket, excludeAddress)
     }
 

@@ -33,7 +33,6 @@ fun CreatePaketScreen(
     val state by viewModel.state.collectAsState()
     var saveClicked by remember { mutableStateOf(false) }
 
-    // Datei-Auswahl-Launcher
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetMultipleContents()
     ) { uris: List<Uri> ->
@@ -42,7 +41,6 @@ fun CreatePaketScreen(
         }
     }
 
-    // Effect für erfolgreichen Speichervorgang
     LaunchedEffect(saveClicked, state.saved) {
         if (saveClicked && state.saved) {
             onSaveSuccess()
@@ -87,7 +85,6 @@ fun CreatePaketScreen(
                     value = state.title,
                     onValueChange = { viewModel.setTitle(it) },
                     label = { Text("Titel") },
-                    // width bereits oben gesetzt
                 )
             }
 
@@ -159,7 +156,6 @@ item {
         OutlinedTextField(
             value = state.maxHops?.toString() ?: "",
             onValueChange = { input ->
-                // Versuche, den Input in eine Zahl umzuwandeln
                 val maxHops = input.toIntOrNull()
                 viewModel.setMaxHops(maxHops)
             },
@@ -184,7 +180,6 @@ item {
                 }
             }
 
-            // Anzeige der ausgewählten Dateien
             if (state.uris.isNotEmpty()) {
                 item {
                     Text(
@@ -195,7 +190,6 @@ item {
 
                 items(state.uris) { uri ->
                     val context = LocalContext.current
-                    // Ermittle den echten Dateinamen über DISPLAY_NAME des ContentResolvers.
                     val fileName = remember(uri) {
                         FileUtils.getFileNameFromUri(context, uri) ?: uri.lastPathSegment ?: "Unbekannte Datei"
                     }

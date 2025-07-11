@@ -28,22 +28,17 @@ class EchoDropUiNavigationFlowTest {
 
     @Test
     fun navigateThroughMainScreens() {
-        // ----- Inbox sollte initial offen sein -----
         composeRule.onNodeWithText("EchoDrop").assertIsDisplayed()
 
-        // ----- Schritt 1: FAB ➔ CreatePaket -----
         composeRule.onNodeWithContentDescription("Create Paket").performClick()
         composeRule.onNodeWithText("Neues Paket erstellen").assertIsDisplayed()
 
-        // Back-Pfeil anklicken
         composeRule.onNode(hasContentDescription("Zurück")).performClick()
         composeRule.onNodeWithText("EchoDrop").assertIsDisplayed()
 
-        // ----- Schritt 2: TransferManager-Icon -----
         composeRule.onNode(hasContentDescription("Transfer Manager")).performClick()
         composeRule.onNodeWithText("Transfer-Manager").assertIsDisplayed()
 
-        // Zurück zur Inbox
         composeRule.onNode(hasContentDescription("Zurück")).performClick()
         composeRule.onNodeWithText("EchoDrop").assertIsDisplayed()
     }

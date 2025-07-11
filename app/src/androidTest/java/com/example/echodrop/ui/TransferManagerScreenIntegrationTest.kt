@@ -94,9 +94,9 @@ class TransferManagerScreenIntegrationTest {
         composeRule.waitUntil(timeoutMillis = 5_000) {
             try {
                 composeRule.onNodeWithText("1").assertExists()
-                true        // Node gefunden -> Bedingung erfüllt
+                true            
             } catch (e: AssertionError) {
-                false       // Noch nicht vorhanden -> weiter warten
+                false       
             }
         }
         composeRule.onNodeWithText("1").assertIsDisplayed()

@@ -77,7 +77,6 @@ class PaketDetailViewModel @Inject constructor(
     val isDiscoveryActive: StateFlow<Boolean> = _isDiscoveryActive.asStateFlow()
 
     init {
-        // Beobachte gefundene Geräte
         viewModelScope.launch {
             observeDiscoveredDevicesUseCase().collect { devices ->
                 _nearbyDevices.value = devices.map { it.toWifiP2pDevice() }
@@ -94,10 +93,8 @@ class PaketDetailViewModel @Inject constructor(
             try {
                 val paket = getPaketDetail(id)
                 if (paket != null) {
-                    // Lade die Dateien für das Paket
                     val files = getFilesForPaket(id)
 
-                    // Wandle das Paket in ein UI-Modell um und aktualisiere den State
                     _state.update {
                         it.copy(
                             paket = paket.toDetailUi(files.map { file -> file.toUi() }),
@@ -129,13 +126,10 @@ class PaketDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Rufe den UseCase auf, um die Paket-Metadaten zu aktualisieren
                 updatePaketMeta(currentPaket.id, ttlSeconds, priority)
 
-                // Lade das Paket neu, um die aktualisierten Werte zu zeigen
                 loadPaketDetail(currentPaket.id.value)
 
-                // Deaktiviere den Bearbeitungsmodus
                 _state.update { it.copy(isEditing = false) }
             } catch (e: Exception) {
                 _state.update {
@@ -154,10 +148,8 @@ class PaketDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // Rufe den UseCase auf, um das Paket zu löschen
                 deletePaket(currentPaket.id)
                 _state.update { it.copy(isDeleting = false) }
-                // Nach dem Löschen wird in der UI zur vorherigen Ansicht zurücknavigiert
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
@@ -178,24 +170,19 @@ class PaketDetailViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                // NEU: Erstelle einen Peer-Eintrag für diese PeerId
                 val peer = Peer(
                     id = peerId,
                     alias = "Manuell eingegebener Peer",
                     lastSeenUtc = System.currentTimeMillis()
                 )
 
-                // Speichere den Peer in der Datenbank
                 savePeerUseCase(peer)
 
-                // Rest wie bisher
                 startTransfer(currentPaket.id, peerId)
-                // Paket neu laden, um aktualisierten Hop-Count anzuzeigen
                 loadPaketDetail(currentPaket.id.value)
                 _state.update {
                     it.copy(message = "Paket wird gesendet", navigateToManager = true)
                 }
-                // Nach dem Start reload, um Hop-Count zu aktualisieren
                 loadPaketDetail(currentPaket.id.value)
             } catch (e: Exception) {
                 _state.update {
@@ -214,8 +201,6 @@ class PaketDetailViewModel @Inject constructor(
     fun clearError() {
         _state.update { it.copy(error = null) }
     }
-
-    // WiFi Direct Methoden
 
     fun toggleDiscovery() {
         if (_isDiscoveryActive.value) {
@@ -247,7 +232,6 @@ class PaketDetailViewModel @Inject constructor(
                 stopBeaconingUseCase()
                 _isDiscoveryActive.value = false
             } catch (e: Exception) {
-                // Fehler beim Stoppen der Discovery ist weniger kritisch
                 Log.e(TAG, "Error stopping discovery", e)
             }
         }
@@ -275,26 +259,20 @@ class PaketDetailViewModel @Inject constructor(
                 Log.d(TAG, "Connecting to device: $deviceAddress")
                 _state.update { it.copy(isLoading = true) }
 
-                // Erstelle und speichere einen Peer-Eintrag bevor der Transfer gestartet wird
                 val peerId = PeerId("direct-$deviceAddress")
 
-                // Hole den Device-Namen aus der nearbyDevices-Liste
                 val deviceName = nearbyDevices.value.find { it.deviceAddress == deviceAddress }?.deviceName ?: "Unbekanntes Gerät"
 
-                // Erstelle einen Peer-Eintrag für dieses Gerät
                 val peer = Peer(
                     id = peerId,
                     alias = deviceName,
                     lastSeenUtc = System.currentTimeMillis()
                 )
 
-                // Speichere den Peer in der Datenbank
                 savePeerUseCase(peer)
 
-                // Verbinde mit dem Gerät
                 connectToDeviceUseCase(deviceAddress)
 
-                // Warte bis die Verbindung steht (max 30 s)
                 val connected = withTimeoutOrNull(30_000) {
                     observeConnectionStateUseCase()
                         .first { it.isConnected }
@@ -305,7 +283,6 @@ class PaketDetailViewModel @Inject constructor(
                     throw IOException("WiFi Direct Verbindung wurde nicht hergestellt")
                 }
 
-                // Starte den Transfer
                 startTransfer(currentPaket.id, peerId)
 
                 _state.update {

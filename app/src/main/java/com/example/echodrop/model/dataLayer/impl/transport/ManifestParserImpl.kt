@@ -30,7 +30,6 @@ class ManifestParserImpl @Inject constructor(
         return try {
             val jsonObject = JSONObject(manifestJson)
 
-            // Metadaten
             val meta = PaketMeta(
                 title = jsonObject.optString("title", "Unbekanntes Paket"),
                 description = jsonObject.optString("description", ""),
@@ -44,7 +43,6 @@ class ManifestParserImpl @Inject constructor(
 
             val currentHopCount = jsonObject.optInt("currentHopCount", 0)
 
-            // Dateien
             val filesArray = jsonObject.optJSONArray("files") ?: JSONArray()
             val files = mutableListOf<FileEntry>()
             for (i in 0 until filesArray.length()) {
@@ -57,10 +55,9 @@ class ManifestParserImpl @Inject constructor(
                 val filesDir = File(context.filesDir, "received_files")
                 if (!filesDir.exists()) filesDir.mkdirs()
 
-                // NEU: doppeltes Präfix verhindern
                 val normalizedName =
-                    if (fileName.startsWith("${fileId}_")) fileName     // Präfix ist schon drin
-                    else "${fileId}_${fileName}"                        // Präfix ergänzen
+                    if (fileName.startsWith("${fileId}_")) fileName    
+                    else "${fileId}_${fileName}"                        
 
                 val filePath = File(filesDir, normalizedName).absolutePath
 
@@ -84,7 +81,6 @@ class ManifestParserImpl @Inject constructor(
             )
         } catch (e: Exception) {
             Log.e(TAG, "Error parsing manifest", e)
-            // Fallback-Paket minimal
             Paket(
                 id = PaketId(paketId),
                 meta = PaketMeta(

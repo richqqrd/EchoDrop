@@ -28,7 +28,6 @@ class InboxScreenTest {
     fun setUp() {
         fakeVm = mockk(relaxed = true)
 
-        // Paket-Beispieldaten
         val paket = PaketUi(
             id = PaketId("paket-123"),
             title = "Test Paket",
@@ -59,16 +58,12 @@ class InboxScreenTest {
             )
         }
 
-        // Top-Bar-Titel
         composeRule.onNodeWithText("EchoDrop").assertIsDisplayed()
 
-        // Floating-Action-Button (Icon Add mit CD „Create Paket“)
         composeRule.onNodeWithContentDescription("Create Paket").assertIsDisplayed()
 
-        // Transfer-Manager-Icon-Button
         composeRule.onNodeWithContentDescription("Transfer Manager").assertIsDisplayed()
 
-        // Paket-Titel aus der Liste
         composeRule.onNodeWithText("Test Paket").assertIsDisplayed()
     }
 }

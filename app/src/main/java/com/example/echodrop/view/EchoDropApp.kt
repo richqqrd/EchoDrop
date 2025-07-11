@@ -19,14 +19,12 @@ fun EchoDropApp() {
             InboxScreen(
                 onCreatePaket = {
                     navController.navigate("createPaket") {
-                        // Configure navigation options
                         launchSingleTop = true
                     }
                 },
                 onSharePaket = { paketId ->
                     println("Navigating to paketDetail with ID: $paketId")
                     navController.navigate("paketDetail/${paketId.value}") {
-                        // Configure navigation options
                         launchSingleTop = true
                     }
                 },
@@ -54,12 +52,10 @@ fun EchoDropApp() {
                 return@composable
             }
 
-            // Using PaketDetailScreen with PaketDetailViewModel
             PaketDetailScreen(
                 paketId = paketId,
                 onBackClick = { navController.popBackStack() },
                 onOpenTransferManager = {
-                    // Erst den PaketDetailScreen aus dem Backstack entfernen, dann zum TransferManager navigieren
                     navController.popBackStack()
                     navController.navigate("transferManager") {
                         launchSingleTop = true
@@ -68,7 +64,6 @@ fun EchoDropApp() {
             )
         }
 
-        // Neue Route für den TransferManagerScreen
         composable("transferManager") {
             TransferManagerScreen(
                 onBackClick = { navController.popBackStack() }

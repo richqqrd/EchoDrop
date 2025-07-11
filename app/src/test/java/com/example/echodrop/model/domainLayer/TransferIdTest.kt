@@ -234,13 +234,13 @@ class TransferIdTest {
             // Arrange
             val id1 = TransferId("transfer-1")
             val id2 = TransferId("transfer-2")
-            val id3 = TransferId("transfer-1") // duplicate
+            val id3 = TransferId("transfer-1")
 
             // Act
             val transferIdSet = setOf(id1, id2, id3)
 
             // Assert
-            assertEquals(2, transferIdSet.size) // duplicates removed
+            assertEquals(2, transferIdSet.size) 
             assertTrue(transferIdSet.contains(id1))
             assertTrue(transferIdSet.contains(id2))
         }

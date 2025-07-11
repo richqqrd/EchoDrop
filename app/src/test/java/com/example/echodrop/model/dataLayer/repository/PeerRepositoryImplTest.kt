@@ -131,7 +131,6 @@ class PeerRepositoryImplTest {
  fun purgeStalePeersCallsDaoWithCorrectTimestamp() = runTest {
   val cutoffTime = 1620000000000L
 
-  // Stub return value to avoid NullPointer when unboxing
   whenever(mockPeerDao.purgeStale(cutoffTime)).thenReturn(2)
 
   repository.purgeStalePeers(cutoffTime)

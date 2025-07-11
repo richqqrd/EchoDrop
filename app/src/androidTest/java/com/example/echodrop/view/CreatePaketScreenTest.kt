@@ -34,7 +34,7 @@ class CreatePaketScreenTest {
                 ttl = 3600,
                 priority = 1,
                 maxHops = 3,
-                uris = listOf(Uri.parse("file://dummy.txt")), // at least one file to enable Save button
+                uris = listOf(Uri.parse("file://dummy.txt")), 
                 saved = false,
                 error = null
             )
@@ -52,9 +52,9 @@ class CreatePaketScreenTest {
             )
         }
 
-        // Title label
+
         composeRule.onNodeWithText("Titel").assertIsDisplayed()
-        // Button for adding files
+        
         composeRule.onNodeWithText("Dateien hinzufügen").assertIsDisplayed()
     }
 } 

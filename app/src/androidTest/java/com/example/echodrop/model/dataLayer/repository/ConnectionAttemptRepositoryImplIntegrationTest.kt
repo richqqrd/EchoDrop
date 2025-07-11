@@ -39,7 +39,6 @@ class ConnectionAttemptRepositoryImplIntegrationTest {
 
     @Test
     fun trackAttempt_persistsData_andFailedCountIsCorrect() = runTest {
-        // 2 Fehl- und 1 Erfolgsversuch protokollieren
         repo.trackAttempt(device, paketId, successful = false)
         repo.trackAttempt(device, paketId, successful = false)
         repo.trackAttempt(device, paketId, successful = true)
@@ -57,7 +56,6 @@ class ConnectionAttemptRepositoryImplIntegrationTest {
         val oldTs = System.currentTimeMillis() - 120_000
         val okTs  = System.currentTimeMillis()
 
-        // Direkt über DAO zwei Zeilen einfügen (eine alt, eine neu)
         db.connectionAttemptDao().insert(
             com.example.echodrop.model.dataLayer.datasource.persistence.entities.ConnectionAttemptEntity(
                 device, paketId.value, oldTs, false
@@ -69,10 +67,9 @@ class ConnectionAttemptRepositoryImplIntegrationTest {
             )
         )
 
-        // Aufräumen
         repo.cleanupOldAttempts(okTs - 1)
 
         val remaining = repo.getFailedAttemptCount(device, paketId, 0)
-        assertEquals(1, remaining)   // nur der neue Eintrag ist übrig
+        assertEquals(1, remaining)
     }
 } 

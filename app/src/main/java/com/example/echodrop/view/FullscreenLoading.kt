@@ -34,7 +34,6 @@ fun FullscreenLoading(message: String = "") {
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background.copy(alpha = 0.85f))
     ) {
-        // Pulsierende Rotation + Farbe, damit deutlich sichtbar
         val transition = rememberInfiniteTransition()
         val scale by transition.animateFloat(
             initialValue = 1f,
@@ -45,7 +44,6 @@ fun FullscreenLoading(message: String = "") {
             )
         )
 
-        // Rotierendes Sync-Icon – deutlich erkennbar auf allen Hintergründen
         val rotation by transition.animateFloat(
             initialValue = 0f,
             targetValue = 360f,

@@ -41,11 +41,9 @@ class WiFiDirectServiceTest {
     @Test
     @DisplayName("Test message size encoding and decoding")
     fun testMessageSizeEncodingDecoding() {
-        // Testgrößen
         val testSizes = listOf(10, 255, 1024, 65536, 1048576)
 
         for (originalSize in testSizes) {
-            // Enkodiere die Größe
             val encodedSize = byteArrayOf(
                 (originalSize shr 24).toByte(),
                 (originalSize shr 16).toByte(),
@@ -53,13 +51,11 @@ class WiFiDirectServiceTest {
                 originalSize.toByte()
             )
 
-            // Dekodiere die Größe
             val decodedSize = ((encodedSize[0].toInt() and 0xFF) shl 24) or
                     ((encodedSize[1].toInt() and 0xFF) shl 16) or
                     ((encodedSize[2].toInt() and 0xFF) shl 8) or
                     (encodedSize[3].toInt() and 0xFF)
 
-            // Überprüfe, ob die Dekodierung korrekt ist
             assertEquals(originalSize, decodedSize, "Size encoding/decoding should be identical")
         }
     }
@@ -67,7 +63,6 @@ class WiFiDirectServiceTest {
     @Test
     @DisplayName("Test data transfer progress calculation")
     fun testDataTransferProgressCalculation() {
-        // Teste die Fortschrittsberechnung für verschiedene Datengrößen
         val dataSize = 1000
         val bytesSent = listOf(0, 100, 250, 500, 750, 1000)
         val expectedProgress = listOf(0, 10, 25, 50, 75, 100)

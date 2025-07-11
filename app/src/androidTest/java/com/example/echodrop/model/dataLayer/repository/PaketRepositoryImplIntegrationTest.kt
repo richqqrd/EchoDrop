@@ -176,7 +176,7 @@ class PaketRepositoryImplIntegrationTest {
         assertNotNull(retrievedPaket)
         retrievedPaket?.let { paket ->
             assertEquals(1000, paket.files.size)
-            assertEquals(100_000L, paket.files.sumOf { it.sizeBytes }) // Gesamtgröße überprüfen
+            assertEquals(100_000L, paket.files.sumOf { it.sizeBytes }) 
         }
     }
 

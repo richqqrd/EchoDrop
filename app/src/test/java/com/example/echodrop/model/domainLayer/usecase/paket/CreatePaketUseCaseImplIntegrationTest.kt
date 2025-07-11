@@ -28,23 +28,17 @@ class CreatePaketUseCaseImplIntegrationTest {
 
     @Test
     fun insertsPaket_andFiles_viaRepositoryImpl() = runTest {
-        // Arrange – Metadaten & leere File-Liste
         val meta  = PaketMeta("Titel-A", null, emptyList(), 3600, 1)
         val files = listOf<FileEntry>()
 
-        // PaketDao.upsert() soll ID-Collision verhindern → wir wollen auf den
-        // Parameter zugreifen.  Verwende capture().
         val captured = slot<com.example.echodrop.model.dataLayer.datasource.persistence.entities.PaketEntity>()
         coEvery { paketDao.upsert(capture(captured)) } returns Unit
 
-        // Act
         val id = useCase(meta, files)
 
-        // Assert – Repository hat DAO korrekt aufgerufen
         coVerify(exactly = 1) { paketDao.upsert(any()) }
         coVerify(exactly = 1) { fileDao.insertAll(any()) }
 
-        // und der Use-Case liefert dieselbe ID zurück
         assertEquals(captured.captured.paketId, id.value)
     }
 } 

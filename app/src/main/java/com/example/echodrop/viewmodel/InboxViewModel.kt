@@ -21,12 +21,11 @@ class InboxViewModel @Inject constructor(
     private val observeInbox: ObserveInboxUseCase,
     private val observeTransfers: ObserveTransfersUseCase,
     private val startTransfer: StartTransferUseCase,
-    private val purgeExpiredUseCase: PurgeExpiredUseCase // Füge das UseCase als Dependency hinzu
+    private val purgeExpiredUseCase: PurgeExpiredUseCase 
 
 ) : ViewModel() {
 
     init {
-        // Starte das Purge beim Initialisieren des ViewModels
         viewModelScope.launch {
             purgeExpiredUseCase(System.currentTimeMillis())
         }

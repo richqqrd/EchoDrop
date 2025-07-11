@@ -42,10 +42,8 @@ class ConnectionAttemptDaoIntegrationTest {
     @Test
     fun insertAndQueryFailedAttempts() = runBlocking {
         val now = System.currentTimeMillis()
-        // 2 Fehlversuche
         dao.insert(ConnectionAttemptEntity(device, paketId, now - 1000, false))
         dao.insert(ConnectionAttemptEntity(device, paketId, now - 500,  false))
-        // 1 Erfolgsversuch
         dao.insert(ConnectionAttemptEntity(device, paketId, now - 200,  true))
 
         val fails = dao.getFailedAttemptCount(device, paketId, now - 2_000)
@@ -60,10 +58,8 @@ class ConnectionAttemptDaoIntegrationTest {
         dao.insert(ConnectionAttemptEntity(device, paketId, tOld,  false))
         dao.insert(ConnectionAttemptEntity(device, paketId, tKeep, false))
 
-        // Aktion: alte Einträge löschen
-        dao.deleteOlderThan(tKeep)           // gibt Unit zurück
+        dao.deleteOlderThan(tKeep)
 
-        // Erwartung: genau ein Eintrag verbleibt
         val remaining = dao.getFailedAttemptCount(device, paketId, tKeep - 100)
         assertEquals(1, remaining)
     }

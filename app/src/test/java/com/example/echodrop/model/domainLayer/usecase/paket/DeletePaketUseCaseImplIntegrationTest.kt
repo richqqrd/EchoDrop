@@ -27,7 +27,6 @@ class DeletePaketUseCaseImplIntegrationTest {
         // Act
         useCase(paketId)
 
-        // Assert – Repository hat richtigen DAO-Call ausgeführt
         coVerify(exactly = 1) { paketDao.deleteById(paketId.value) }
     }
 } 

@@ -32,7 +32,6 @@ fun TransferManagerScreen(
         viewModel.startDiscovery()
     }
 
-    // Stop Beaconing automatically when this Composable leaves the composition
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopDiscovery()
@@ -73,7 +72,6 @@ fun TransferManagerScreen(
                 .padding(16.dp)
                 .verticalScroll(scrollState)
         ) {
-            // Status-Anzeige
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -122,9 +120,8 @@ fun TransferManagerScreen(
                         )
                     }
 
-// Eigene Geräte-Infos
                     if (uiState.thisDevice != null) {
-                        val device = uiState.thisDevice  // Lokale Variable erstellen
+                        val device = uiState.thisDevice 
                         Spacer(modifier = Modifier.height(8.dp))
                         Divider()
                         Spacer(modifier = Modifier.height(8.dp))
@@ -134,14 +131,13 @@ fun TransferManagerScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = device?.deviceName ?: "Unbekannt",  // Lokale Variable nutzen
+                            text = device?.deviceName ?: "Unbekannt",  
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
             }
 
-            // Verfügbare Peers
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -213,7 +209,6 @@ fun TransferManagerScreen(
                 }
             }
 
-            // Forward Log Card
             Spacer(modifier = Modifier.height(16.dp))
             Card(
                 modifier = Modifier.fillMaxWidth()
@@ -251,7 +246,6 @@ fun TransferManagerScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Transfers
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -269,7 +263,6 @@ fun TransferManagerScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Sendende Transfers
                     if (uiState.sendingTransfers.isNotEmpty()) {
                         Text(
                             text = "Sending",
@@ -332,7 +325,6 @@ fun TransferManagerScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Empfangende Transfers
                     if (uiState.receivingTransfers.isNotEmpty()) {
                         Text(
                             text = "Receiving",
@@ -393,7 +385,6 @@ fun TransferManagerScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
 
-                    // Abgeschlossene Transfers
                     if (uiState.completedTransfers.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -435,7 +426,6 @@ fun TransferManagerScreen(
                         Text("Keine abgeschlossenen Transfers", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                     }
 
-                    // Debugmodus Bereich
                     if (uiState.isDebugMode) {
                         Spacer(modifier = Modifier.height(16.dp))
                         Divider()

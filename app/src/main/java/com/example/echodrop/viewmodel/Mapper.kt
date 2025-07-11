@@ -11,7 +11,7 @@ fun Paket.toUi(isSending: Boolean = false): PaketUi = PaketUi(
     tags = this.meta.tags,
     fileCount = this.fileCount,
     isSending = isSending,
-    files = emptyList(), // Leere Liste, da im einfachen UI nicht benötigt
+    files = emptyList(), 
     ttlSeconds = this.meta.ttlSeconds,
     priority = this.meta.priority,
     maxHops = this.meta.maxHops,

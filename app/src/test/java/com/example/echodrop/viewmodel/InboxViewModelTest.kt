@@ -34,17 +34,14 @@ class InboxViewModelTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        // Create mocks
         mockObserveInbox = mock(ObserveInboxUseCase::class.java)
         mockObserveTransfers = mock(ObserveTransfersUseCase::class.java)
         mockStartTransfer = mock(StartTransferUseCase::class.java)
         mockPurgeExpired = mock(PurgeExpiredUseCase::class.java)
 
-        // Setup default mock behavior
         whenever(mockObserveInbox.invoke()).thenReturn(flowOf(emptyList()))
         whenever(mockObserveTransfers.invoke()).thenReturn(flowOf(emptyList()))
 
-        // Korrekte Konstruktor-Parameter-Reihenfolge
         viewModel = InboxViewModel(
             mockObserveInbox,        // 1. ObserveInboxUseCase
             mockObserveTransfers,    // 2. ObserveTransfersUseCase 
@@ -73,14 +70,11 @@ class InboxViewModelTest {
     @Test
     @DisplayName("onShareClicked with correct parameter types")
     fun onShareClickedWithCorrectParameterTypes() {
-        // Arrange
         val paketId = PaketId("test-paket-123")
         val peerId = PeerId("test-peer-456")
 
-        // Act - This should not throw an exception
         viewModel.onShareClicked(paketId, peerId)
 
-        // Assert
-        assertTrue(true) // No exception means success
+        assertTrue(true) 
     }
 }

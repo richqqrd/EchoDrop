@@ -20,10 +20,15 @@ interface TransportManager {
     fun observeIncoming(): Flow<IncomingFrame>
 
     suspend fun startDiscovery()
+
     suspend fun stopDiscovery()
+
     suspend fun connectToDevice(deviceAddress: String)
+
     fun observeDiscoveredDevices(): Flow<List<DeviceInfo>>
+
     fun observeThisDevice(): Flow<DeviceInfo?>
+    
     fun observeConnectionState(): Flow<ConnectionState>
 
     suspend fun sendPaket(paketId: PaketId, peerId: PeerId)
@@ -32,9 +37,6 @@ interface TransportManager {
 
     suspend fun forwardPaket(paketId: PaketId)
 
-    /**
-     * Liefert Echtzeitinformationen über automatische Weiterleitungsversuche. Nur aktiv, wenn Beaconing läuft.
-     */
     fun observeForwardEvents(): Flow<ForwardEvent>
 
 }

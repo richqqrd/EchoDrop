@@ -97,7 +97,7 @@ class ChunkDaoIntegrationTest {
         assertEquals(2, retrievedChunks.size)
         assertEquals(chunks[0].chunkId, retrievedChunks[0].chunkId)
         assertEquals(chunks[1].chunkId, retrievedChunks[1].chunkId)
-        assertEquals(0L, retrievedChunks[0].offset) // Should be ordered by offset
+        assertEquals(0L, retrievedChunks[0].offset) 
         assertEquals(512L, retrievedChunks[1].offset)
     }
 

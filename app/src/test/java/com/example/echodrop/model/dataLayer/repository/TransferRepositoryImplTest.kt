@@ -135,7 +135,6 @@ class TransferRepositoryImplTest {
       PeerId(testPeerId)
   )
 
-  // Verify findById was called, then verify no other methods were called
   verify(mockTransferDao).findById(testPaketId, testPeerId)
   verifyNoMoreInteractions(mockTransferDao)
  }
@@ -182,7 +181,6 @@ class TransferRepositoryImplTest {
       PeerId(testPeerId)
   )
 
-  // Verify findById was called, then verify no other methods were called
   verify(mockTransferDao).findById(testPaketId, testPeerId)
   verifyNoMoreInteractions(mockTransferDao)
  }

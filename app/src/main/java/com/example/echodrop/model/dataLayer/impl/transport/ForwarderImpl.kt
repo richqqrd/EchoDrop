@@ -29,7 +29,7 @@ class ForwarderImpl @Inject constructor(
     companion object {
         private const val TAG = "ForwarderImpl"
         private const val MAX_ATTEMPTS = 3
-        private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L // 1 Stunde
+        private const val ATTEMPT_TIMEOUT = 60 * 60 * 1000L 
 
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d",
@@ -46,29 +46,25 @@ class ForwarderImpl @Inject constructor(
         try {
             Log.d(TAG, "[Forward] Starte automatische Weiterleitung für Paket ${paket.id.value}")
 
-            // 1. Starte Discovery (falls nicht bereits aktiv)
             deviceDiscovery.startDiscovery()
 
-            delay(5_000) // Gib der Peer-Discovery etwas Zeit
+            delay(5_000) 
 
-            // 2. Geräte ermitteln & filtern
             val allDevices = deviceDiscovery.discoveredDevices.value
             val candidates = allDevices
                 .filterNot { DEVICE_BLACKLIST.contains(it.deviceAddress) }
                 .filterNot { excludeAddress != null && it.deviceAddress == excludeAddress }
                 .shuffled()
-                .take(3) // max. 3 Versuche pro Weiterleitung
+                .take(3) 
 
             if (candidates.isEmpty()) {
                 Log.d(TAG, "[Forward] Keine geeigneten Peers gefunden – Abbruch")
                 return
             }
 
-            // 4. Iteriere über Kandidaten
             for (device in candidates) {
                 val devAddr = device.deviceAddress
 
-                // Falls wir noch in einer bestehenden Gruppe sind, zuerst trennen und warten
                 if (deviceDiscovery.connectionInfo.value?.groupFormed == true) {
                     Log.d(TAG, "[Forward] Bestehende Gruppe erkannt – trenne, bevor ich zu $devAddr verbinde")
                     deviceDiscovery.disconnectFromCurrentGroup()
@@ -78,13 +74,11 @@ class ForwarderImpl @Inject constructor(
                         continue
                     }
 
-                    // Neue Peer-Discovery starten, damit das zuvor verlassene Gerät uns wieder sieht
                     Log.d(TAG, "[Forward] Starte erneute Peer-Discovery nach Gruppen-Trennung")
                     deviceDiscovery.startDiscovery()
                     delay(4_000)
                 }
 
-                // Retry-Limit prüfen
                 if (isDeviceAlreadyTried(devAddr, paket.id)) {
                     Log.d(TAG, "[Forward] $devAddr bereits $MAX_ATTEMPTS× erfolglos – überspringe")
                     continue
@@ -101,10 +95,8 @@ class ForwarderImpl @Inject constructor(
                 )
 
                 try {
-                    // Verbindungsaufbau
                     deviceDiscovery.connectToDevice(devAddr)
 
-                    // Warte, bis die Gruppe steht
                     val connected = waitForGroup()
                     if (!connected) {
                         Log.d(TAG, "[Forward] Timeout – Gruppe mit $devAddr nicht aufgebaut")
@@ -122,7 +114,6 @@ class ForwarderImpl @Inject constructor(
 
                     val peerId = PeerId("direct-$devAddr")
 
-                    // Paket senden – über TransportManager
                     transportManagerLazy.get().sendPaket(paket.id, peerId)
                     forwardFlow.emit(
                         ForwardEvent(paket.id, peerId, ForwardEvent.Stage.SENT, "Paket gesendet")
@@ -132,7 +123,6 @@ class ForwarderImpl @Inject constructor(
 
                     Log.d(TAG, "[Forward] Paket ${paket.id.value} erfolgreich an ${device.deviceName} weitergeleitet")
 
-                    // Nachgelagertes Disconnect
                     deviceDiscovery.disconnectFromCurrentGroup()
                 } catch (e: Exception) {
                     Log.e(TAG, "[Forward] Fehler beim Weiterleiten an ${device.deviceName}: ${e.message}")
@@ -151,7 +141,6 @@ class ForwarderImpl @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "[Forward] Unerwarteter Fehler: ${e.message}", e)
         } finally {
-            // Discovery beenden, damit UI-State sauber bleibt
             deviceDiscovery.stopDiscovery()
         }
     }

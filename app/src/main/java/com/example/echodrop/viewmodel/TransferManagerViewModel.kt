@@ -52,7 +52,6 @@ data class TransferItem(
 
 @HiltViewModel
 class TransferManagerViewModel @Inject constructor(
-    // Network Use Cases
     private val startBeaconingUseCase: StartBeaconingUseCase,
     private val stopBeaconingUseCase: StopBeaconingUseCase,
     private val observeDiscoveredDevicesUseCase: ObserveDiscoveredDevicesUseCase,
@@ -60,13 +59,11 @@ class TransferManagerViewModel @Inject constructor(
     private val observeConnectionStateUseCase: ObserveConnectionStateUseCase,
     private val connectToDeviceUseCase: ConnectToDeviceUseCase,
 
-    // Transfer Use Cases
     private val observeTransfersUseCase: ObserveTransfersUseCase,
     private val pauseTransferUseCase: PauseTransferUseCase,
     private val resumeTransferUseCase: ResumeTransferUseCase,
     private val cancelTransferUseCase: CancelTransferUseCase,
 
-    // Paket Use Cases
     private val observeInboxUseCase: ObserveInboxUseCase,
     private val startTransferUseCase: StartTransferUseCase,
     private val observeForwardEventsUseCase: ObserveForwardEventsUseCase
@@ -74,7 +71,6 @@ class TransferManagerViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(TransferUiState())
 
-    // Kombiniere alle Datenströme in einen einzigen UI-State
     val uiState: StateFlow<TransferUiState> = combine(
         _state,
         observeDiscoveredDevicesUseCase(),
@@ -94,7 +90,6 @@ class TransferManagerViewModel @Inject constructor(
     )
 
     companion object {
-        // Blacklist von Geräte-Adressen (MAC-Adressen)
         private val DEVICE_BLACKLIST = setOf(
             "f6:30:b9:4a:18:9d",  
             "f6:30:b9:51:fe:4b",
@@ -108,7 +103,6 @@ class TransferManagerViewModel @Inject constructor(
 
 
     init {
-        // collect forward events
         viewModelScope.launch {
             observeForwardEventsUseCase().collect { event ->
                 _state.update { st ->
@@ -121,7 +115,6 @@ class TransferManagerViewModel @Inject constructor(
         viewModelScope.launch {
             observeTransfersUseCase().collect { transfers ->
                 val sending = transfers.filter {
-                    // Berücksichtige auch QUEUED-Transfers
                     (it.state == TransferState.ACTIVE || it.state == TransferState.QUEUED) &&
                             it.direction == TransferDirection.OUTGOING
                 }
@@ -230,7 +223,6 @@ class TransferManagerViewModel @Inject constructor(
             ?: _state.value.receivingTransfers.find { it.id == id }
     }
 
-    // Debug-Methode für Tests
     fun generateTestTransfer(isSending: Boolean) {
         testTransferJob?.cancel()
 
@@ -245,7 +237,6 @@ class TransferManagerViewModel @Inject constructor(
                     sendingTransfers = it.sendingTransfers + transferItem
                 ) }
 
-                // Simuliere Fortschritt
                 var progress = 0.0f
                 while (progress < 1.0f) {
                     delay(500)
@@ -261,7 +252,6 @@ class TransferManagerViewModel @Inject constructor(
                     }
                 }
 
-                // Bei Abschluss zur Completed-Liste hinzufügen
                 _state.update { state ->
                     state.copy(
                         sendingTransfers = state.sendingTransfers.filter { it.id != id },
@@ -273,7 +263,6 @@ class TransferManagerViewModel @Inject constructor(
                     receivingTransfers = it.receivingTransfers + transferItem
                 ) }
 
-                // Simuliere Fortschritt
                 var progress = 0.0f
                 while (progress < 1.0f) {
                     delay(300)
@@ -289,7 +278,6 @@ class TransferManagerViewModel @Inject constructor(
                     }
                 }
 
-                // Bei Abschluss zur Completed-Liste hinzufügen
                 _state.update { state ->
                     state.copy(
                         receivingTransfers = state.receivingTransfers.filter { it.id != id },
@@ -300,7 +288,6 @@ class TransferManagerViewModel @Inject constructor(
         }
     }
 
-    // Hilfsmethoden zur Umwandlung von Domain-Modellen zu UI-Modellen
     private fun DeviceInfo.toWifiP2pDevice(): WifiP2pDevice {
         return WifiP2pDevice().apply {
             deviceName = this@toWifiP2pDevice.deviceName

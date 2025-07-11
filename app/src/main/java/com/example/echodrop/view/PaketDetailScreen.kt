@@ -33,7 +33,6 @@ fun PaketDetailScreen(
     onOpenTransferManager: () -> Unit,
     viewModel: PaketDetailViewModel = hiltViewModel()
 ) {
-    // Load package details when the screen is displayed
     LaunchedEffect(paketId) {
         viewModel.loadPaketDetail(paketId)
     }
@@ -45,12 +44,12 @@ fun PaketDetailScreen(
     var showShareDialog by remember { mutableStateOf(false) }
     var peerIdInput by remember { mutableStateOf("") }
 
-    // Temporäre Werte für Bearbeitung
+
     var editTtl by remember { mutableStateOf(3600) }
     var editPriority by remember { mutableStateOf(1) }
     var editMaxHops by remember { mutableStateOf<Int?>(3) }
 
-    // Initialisiere die Bearbeitungswerte, wenn das Paket geladen wurde
+
     LaunchedEffect(state.paket) {
         state.paket?.let {
             editTtl = it.ttlSeconds
@@ -68,7 +67,7 @@ fun PaketDetailScreen(
         }
     }
 
-    // Stop Beaconing when we leave the screen via toggle function (public)
+
     DisposableEffect(Unit) {
         onDispose {
             if (viewModel.isDiscoveryActive.value) {
@@ -94,7 +93,7 @@ fun PaketDetailScreen(
                     }
                 },
                 actions = {
-                    // Bearbeiten-Button
+
                     IconButton(
                         onClick = { viewModel.toggleEditMode() }
                     ) {
@@ -104,13 +103,13 @@ fun PaketDetailScreen(
                         )
                     }
 
-                    // Teilen-Button (deaktiviert, wenn Hop-Limit erreicht)
+
                     val canShare = state.paket?.let { it.maxHops == null || it.currentHopCount < it.maxHops } ?: true
                     IconButton(onClick = { if (canShare) showShareDialog = true }, enabled = canShare) {
                         Icon(Icons.Default.Share, contentDescription = "Teilen")
                     }
 
-                    // Löschen-Button
+
                     IconButton(
                         onClick = { showDeleteDialog = true }
                     ) {
@@ -128,7 +127,7 @@ fun PaketDetailScreen(
             if (state.isLoading) {
                 FullscreenLoading("Übertrage Dateien …")
             } else if (state.error != null) {
-                // Show error message
+
                 Column(
                     modifier = Modifier
                         .align(Alignment.Center)
@@ -146,7 +145,7 @@ fun PaketDetailScreen(
                     }
                 }
             } else if (state.paket != null) {
-                // Show package details
+
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -159,7 +158,7 @@ fun PaketDetailScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // Tags anzeigen, falls vorhanden
+
                         if (state.paket!!.tags.isNotEmpty()) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -186,7 +185,7 @@ fun PaketDetailScreen(
                         }
                     }
 
-                    // Bearbeitungsmodus
+
                     if (state.isEditing) {
                         item {
                             Card(
@@ -243,7 +242,7 @@ fun PaketDetailScreen(
                         }
                     }
 
-                    // Metadaten-Karte
+
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth()
@@ -308,7 +307,7 @@ Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
 
-                    // Dateien anzeigen
+                    
                     if (state.paket!!.files.isNotEmpty()) {
                         item {
                             Spacer(modifier = Modifier.height(16.dp))
@@ -326,7 +325,7 @@ Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
 
-                // Loading-Overlay für das Löschen
+                
                 if (state.isDeleting) {
                     Box(
                         modifier = Modifier
@@ -340,7 +339,7 @@ Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             } else {
-                // No package loaded
+                
                 Text(
                     text = "Kein Paket gefunden",
                     modifier = Modifier.align(Alignment.Center)
@@ -348,7 +347,7 @@ Spacer(modifier = Modifier.height(8.dp))
             }
         }
 
-        // Löschen-Dialog
+        
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
@@ -359,8 +358,7 @@ Spacer(modifier = Modifier.height(8.dp))
                         onClick = {
                             viewModel.onDeletePaket()
                             showDeleteDialog = false
-                            // Nach dem Löschen würde man normalerweise zurücknavigieren,
-                            // dies ist aber bereits im ViewModel implementiert
+                            
                             onBackClick()
                         },
                         colors = ButtonDefaults.buttonColors(
@@ -378,18 +376,18 @@ Spacer(modifier = Modifier.height(8.dp))
             )
         }
 
-        // Share-Dialog
+        
         if (showShareDialog) {
             AlertDialog(
                 onDismissRequest = { showShareDialog = false },
                 title = { Text("Paket teilen") },
                 text = {
                     Column {
-                        // Zeige nur den WiFi Direct-Inhalt an (ohne Tabs)
+                        
                         Text("Wähle ein Gerät zum Teilen des Pakets:")
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // WiFi Direct Gerätesuche aktivieren
+                        
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -408,7 +406,7 @@ Spacer(modifier = Modifier.height(8.dp))
                         
                         Spacer(modifier = Modifier.height(8.dp))
                         
-                        // Gerätelist anzeigen
+                        
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -489,13 +487,13 @@ fun FileItem(file: FileEntryUi) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Dateinamen extrahieren
+            
             val fileName = remember(file.path) {
                 val raw = File(file.path).name
                 raw.substringAfterLast('_', raw)
             }
             
-            // Dateigröße formatieren
+            
             val formattedSize = remember(file.sizeBytes) {
                 when {
                     file.sizeBytes < 1024 -> "${file.sizeBytes} B"
@@ -520,12 +518,11 @@ fun FileItem(file: FileEntryUi) {
             
             Spacer(modifier = Modifier.height(8.dp))
             
-            // Nur Download-Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
-                // Download-Button
+                
                 IconButton(
                     onClick = { 
                         val uri = FileUtils.exportToDownloads(context, file)
